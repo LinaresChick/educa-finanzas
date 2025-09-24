@@ -11,6 +11,11 @@ class AuthController extends BaseController {
     private $usuarioModel;
 
     public function __construct() {
+        // Asegurar que la sesión está iniciada
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $this->usuarioModel = new UsuarioModel();
     }
 
@@ -19,14 +24,29 @@ class AuthController extends BaseController {
             $correo = $_POST['correo'] ?? '';
             $clave = $_POST['clave'] ?? '';
 
+            // Obtener usuario desde el modelo
             $usuario = $this->usuarioModel->obtenerPorCorreo($correo);
 
-            if ($usuario && password_verify($clave, $usuario['password'])) {
-                $_SESSION['usuario'] = $usuario;
-                header("Location: index.php?controller=Panel&action=dashboard");
-                exit;
+            if ($usuario) {
+                // Debug temporal para confirmar qué devuelve el modelo
+                // Quitar después de probar
+                // var_dump($usuario); die;
+
+                if (password_verify($clave, $usuario['password'])) {
+                    $_SESSION['usuario'] = $usuario;
+
+                    // Debug temporal para confirmar login
+                    // Quitar después de probar
+                    // echo "Login exitoso. Redirigiendo..."; exit;
+
+                    header("Location: index.php?controller=Panel&action=dashboard");
+                    exit;
+                } else {
+                    $error = "La contraseña es incorrecta";
+                    $this->render("auth/login", compact('error'));
+                }
             } else {
-                $error = "Credenciales incorrectas";
+                $error = "No existe un usuario con ese correo";
                 $this->render("auth/login", compact('error'));
             }
         } else {
@@ -35,7 +55,11 @@ class AuthController extends BaseController {
     }
 
     public function logout() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         session_destroy();
         header("Location: index.php?controller=Auth&action=login");
+        exit;
     }
 }

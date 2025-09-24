@@ -18,4 +18,4 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Configuración de seguridad
 define('PASSWORD_COST', 12);
-?>s
+?>

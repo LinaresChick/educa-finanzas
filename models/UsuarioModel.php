@@ -22,13 +22,13 @@ class UsuarioModel {
     }
 
     public function crear($data) {
-        $sql = "INSERT INTO usuarios (nombre, correo, `contraseña`, rol, estado) 
-                VALUES (:nombre, :correo, :contraseña, :rol, :estado)";
+        $sql = "INSERT INTO usuarios (nombre, correo, `password`, rol, estado) 
+                VALUES (:nombre, :correo, :password, :rol, :estado)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':nombre' => $data['nombre'],
             ':correo' => $data['correo'],
-            ':contraseña' => password_hash($data['contraseña'], PASSWORD_BCRYPT, ['cost' => 12]),
+            ':password' => password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]),
             ':rol' => $data['rol'],
             ':estado' => $data['estado']
         ]);
