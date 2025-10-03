@@ -30,6 +30,9 @@ class PanelController extends BaseController {
             case 'Colaborador':
                 $this->render("panel/dashboard_colaborador");
                 break;
+            case 'Docente':
+                $this->render("panel/dashboard_docente");
+                break;
             case 'Padre':
                 $this->render("panel/dashboard_padre");
                 break;
