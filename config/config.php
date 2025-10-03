@@ -2,7 +2,7 @@
 // Configuración de la aplicación
 define('APP_NAME', 'Sistema Gestión Educativa');
 define('APP_VERSION', '1.0.0');
-define('BASE_URL', 'http://localhost/educa-finanzas/');
+define('BASE_URL', 'http://localhost/educa-finanzas/public');
 
 // Configuración de paths
 define('ROOT_PATH', dirname(dirname(__FILE__)));

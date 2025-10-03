@@ -1,6 +1,6 @@
 <?php
 /**
- * Vista de formulario para crear un nuevo usuario
+ * Vista para crear un usuario para un estudiante
  */
 require_once 'views/templates/header.php';
 require_once 'views/templates/navbar.php';
@@ -12,13 +12,14 @@ require_once 'views/templates/sidebar.php';
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Crear Nuevo Usuario</h1>
+                    <h1 class="m-0">Crear Acceso para Estudiante</h1>
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="/usuarios">Usuarios</a></li>
-                        <li class="breadcrumb-item active">Crear</li>
+                        <li class="breadcrumb-item"><a href="/estudiantes">Estudiantes</a></li>
+                        <li class="breadcrumb-item"><a href="/estudiantes/detalle/<?= $estudiante['id_estudiante'] ?>">Detalle</a></li>
+                        <li class="breadcrumb-item active">Crear Acceso</li>
                     </ol>
                 </div>
             </div>
@@ -48,24 +49,44 @@ require_once 'views/templates/sidebar.php';
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
 
+            <!-- Información del estudiante -->
+            <div class="card">
+                <div class="card-header bg-info">
+                    <h3 class="card-title">Información del Estudiante</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Nombre:</strong> <?= htmlspecialchars($estudiante['nombres'] . ' ' . $estudiante['apellidos']) ?></p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>DNI:</strong> <?= htmlspecialchars($estudiante['dni']) ?></p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Grado/Sección:</strong> <?= htmlspecialchars($estudiante['grado'] . ' ' . $estudiante['seccion']) ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card card-primary">
                 <div class="card-header">
-                    <h3 class="card-title">Datos del Usuario</h3>
+                    <h3 class="card-title">Datos de Acceso</h3>
                 </div>
 
-                <form action="/usuarios/guardar" method="POST" id="formUsuario">
+                <form action="/usuarios/crear_estudiante/<?= $estudiante['id_estudiante'] ?>" method="POST" id="formUsuario">
                     <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Está a punto de crear una cuenta de acceso al sistema para este estudiante. Se creará un usuario con rol de "Estudiante" y acceso limitado.</span>
+                        </div>
+
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="nombre">Nombre Completo <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="nombre" name="nombre" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="correo">Correo Electrónico <span class="text-danger">*</span></label>
                                     <input type="email" class="form-control" id="correo" name="correo" required>
+                                    <small class="form-text text-muted">Este será el nombre de usuario para acceder al sistema.</small>
                                 </div>
                             </div>
                         </div>
@@ -86,51 +107,19 @@ require_once 'views/templates/sidebar.php';
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="rol">Rol <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="rol" name="rol" required>
-                                        <option value="">-- Seleccione un rol --</option>
-                                        <?php foreach ($roles as $valor => $nombre): ?>
-                                            <option value="<?= $valor ?>"><?= htmlspecialchars($nombre) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="estado">Estado <span class="text-danger">*</span></label>
-                                    <select class="form-control" id="estado" name="estado" required>
-                                        <option value="activo">Activo</option>
-                                        <option value="inactivo">Inactivo</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col-md-12">
-                                <div class="alert alert-info">
-                                    <h5><i class="icon fas fa-info-circle"></i> Información sobre roles</h5>
-                                    <ul class="mb-0">
-                                        <li><strong>Super Administrador:</strong> Acceso total al sistema sin restricciones.</li>
-                                        <li><strong>Administrador:</strong> Gestión de usuarios, estudiantes, padres y reportes.</li>
-                                        <li><strong>Tesorería:</strong> Gestión de pagos, deudas y reportes financieros.</li>
-                                        <li><strong>Colaborador:</strong> Solo consulta de información y reportes básicos.</li>
-                                        <li><strong>Estudiante:</strong> Para asociar a un estudiante registrado. Vea solo su información.</li>
-                                        <li><strong>Padre/Tutor:</strong> Para asociar a un padre registrado. Vea información de sus hijos.</li>
-                                    </ul>
-                                </div>
+                        <div class="form-group mt-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="confirmar" name="confirmar" required>
+                                <label class="form-check-label" for="confirmar">He verificado que la información es correcta</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Guardar
+                            <i class="fas fa-user-plus"></i> Crear Cuenta
                         </button>
-                        <a href="/usuarios" class="btn btn-secondary">
+                        <a href="/estudiantes/detalle/<?= $estudiante['id_estudiante'] ?>" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
                     </div>
@@ -159,20 +148,13 @@ $(document).ready(function() {
             return false;
         }
         
-        return true;
-    });
-    
-    // Al cambiar el rol, mostrar/ocultar campos adicionales
-    $('#rol').change(function() {
-        var rol = $(this).val();
-        
-        if (rol === 'estudiante') {
-            alert('Para crear un usuario de tipo estudiante, vaya a la sección de estudiantes y cree un usuario desde allí.');
-            $(this).val('');
-        } else if (rol === 'padre') {
-            alert('Para crear un usuario de tipo padre/tutor, vaya a la sección de padres y cree un usuario desde allí.');
-            $(this).val('');
+        if (!$('#confirmar').is(':checked')) {
+            e.preventDefault();
+            alert('Debe confirmar que la información es correcta');
+            return false;
         }
+        
+        return true;
     });
 });
 </script>

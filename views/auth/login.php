@@ -64,7 +64,7 @@
                     <button type="submit" class="login__button">Registrar</button>
 
                     <div>
-                        <span class="login__account">¿Ya tienes cuenta?</span>
+                        <span class="login__account">¿fdfdYa tienes cuenta?</span>
                         <span class="login__signup" id="sign-in">Inicia Sesión</span>
                     </div>
                 </form>
