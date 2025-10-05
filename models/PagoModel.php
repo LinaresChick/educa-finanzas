@@ -31,6 +31,32 @@ class PagoModel extends Modelo {
     }
 
     /**
+     * Calcula el ingreso total de todos los pagos procesados
+     * 
+     * @return float Total de ingresos
+     */
+    public function calcularIngresoTotal(): float {
+        $sql = "SELECT COALESCE(SUM(monto), 0) as total FROM pagos WHERE estado = 'procesado'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (float)$resultado['total'];
+    }
+
+    /**
+     * Cuenta el total de pagos procesados
+     * 
+     * @return int Total de pagos procesados
+     */
+    public function contarPagosProcesados(): int {
+        $sql = "SELECT COUNT(*) as total FROM pagos WHERE estado = 'procesado'";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)$resultado['total'];
+    }
+
+    /**
      * Cuenta el número de pagos procesados hoy
      * 
      * @return int Número de pagos procesados hoy
