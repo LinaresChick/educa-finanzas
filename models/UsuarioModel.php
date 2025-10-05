@@ -32,6 +32,85 @@ class UsuarioModel extends Modelo {
     }
 
     /**
+     * Obtiene la lista de roles disponibles
+     */
+    public function obtenerRoles(): array {
+        return [
+            'superadmin' => 'Super Administrador',
+            'admin' => 'Administrador',
+            'tesoreria' => 'Tesorería',
+            'colaborador' => 'Colaborador',
+            'estudiante' => 'Estudiante',
+            'padre' => 'Padre/Tutor'
+        ];
+    }
+
+    /**
+     * Busca un usuario por su correo electrónico
+     */
+    public function buscarPorCorreo(string $correo) {
+        $sql = "SELECT * FROM usuarios WHERE correo = :correo LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':correo', $correo, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Crea un nuevo usuario
+     */
+    public function crearUsuario(array $datos): int {
+        try {
+            $this->db->beginTransaction();
+
+            // Validar datos mínimos requeridos
+            if (empty($datos['nombre']) || empty($datos['correo']) || empty($datos['password']) || empty($datos['rol'])) {
+                throw new Exception('Faltan datos requeridos para crear el usuario');
+            }
+
+            // Preparar datos para insertar
+            $datosInsertar = [
+                'nombre' => $datos['nombre'],
+                'correo' => $datos['correo'],
+                'password' => password_hash($datos['password'], PASSWORD_DEFAULT),
+                'rol' => $datos['rol'],
+                'estado' => $datos['estado'] ?? 'activo',
+                'creado' => date('Y-m-d H:i:s'),
+                'actualizado' => date('Y-m-d H:i:s')
+            ];
+
+            // Si es estudiante o padre, agregar el ID correspondiente
+            if ($datos['rol'] === 'estudiante' && !empty($datos['id_estudiante'])) {
+                $datosInsertar['id_estudiante'] = $datos['id_estudiante'];
+            }
+            if ($datos['rol'] === 'padre' && !empty($datos['id_padre'])) {
+                $datosInsertar['id_padre'] = $datos['id_padre'];
+            }
+
+            // Insertar el usuario
+            $columnas = implode(', ', array_keys($datosInsertar));
+            $valores = ':' . implode(', :', array_keys($datosInsertar));
+            
+            $sql = "INSERT INTO usuarios ($columnas) VALUES ($valores)";
+            $stmt = $this->db->prepare($sql);
+            
+            foreach ($datosInsertar as $campo => $valor) {
+                $stmt->bindValue(":$campo", $valor);
+            }
+            
+            $stmt->execute();
+            $id = $this->db->lastInsertId();
+            
+            $this->db->commit();
+            return $id;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * Cuenta el total de usuarios activos
      *
      * @return int Total de usuarios
@@ -51,7 +130,7 @@ class UsuarioModel extends Modelo {
      * @return array Lista de últimos usuarios
      */
     public function obtenerUltimosUsuarios($limite = 5) {
-        $sql = "SELECT id_usuario, nombre, correo, rol, estado, ultimo_acceso, creado
+        $sql = "SELECT id_usuario, nombre, correo, rol, estado, fecha_creacion, fecha_actualizacion
                 FROM usuarios
                 WHERE estado = 'activo'
                 ORDER BY id_usuario DESC
@@ -170,25 +249,7 @@ class UsuarioModel extends Modelo {
         return $stmt->fetchAll();
     }
     
-    /**
-     * Crea un nuevo usuario
-     * 
-     * @param array $datos Datos del usuario a crear
-     * @return int|false ID del usuario creado o false si falla
-     */
-    public function crearUsuario($datos) {
-        // Verificar si el correo ya está registrado
-        if ($this->correoExiste($datos['correo'])) {
-            return false;
-        }
-        
-        // Encriptar la contraseña
-        $datos['password'] = password_hash($datos['password'], PASSWORD_DEFAULT);
-        $datos['creado'] = date('Y-m-d H:i:s');
-        $datos['actualizado'] = date('Y-m-d H:i:s');
-        
-        return $this->insertar($datos);
-    }
+
     
     /**
      * Actualiza un usuario existente
@@ -245,20 +306,7 @@ class UsuarioModel extends Modelo {
         return $this->actualizar($idUsuario, $datos);
     }
     
-    /**
-     * Verifica si un correo ya está registrado
-     * 
-     * @param string $correo El correo a verificar
-     * @return bool True si el correo ya existe
-     */
-    public function correoExiste($correo) {
-        $sql = "SELECT COUNT(*) as count FROM usuarios WHERE correo = :correo";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':correo', $correo);
-        $stmt->execute();
-        $resultado = $stmt->fetch();
-        return $resultado['count'] > 0;
-    }
+
     
     /**
      * Verifica si un correo ya está registrado por otro usuario
@@ -376,21 +424,7 @@ class UsuarioModel extends Modelo {
         return $this->crearUsuario($datos);
     }
     
-    /**
-     * Obtiene la lista de roles disponibles en el sistema
-     * 
-     * @return array Lista de roles con sus descripciones
-     */
-    public function obtenerRoles() {
-        return [
-            'superadmin' => 'Super Administrador',
-            'admin' => 'Administrador',
-            'tesoreria' => 'Tesorería',
-            'colaborador' => 'Colaborador',
-            'estudiante' => 'Estudiante',
-            'padre' => 'Padre/Tutor'
-        ];
-    }
+
     
     /**
      * Verifica la relación entre un padre y un estudiante
