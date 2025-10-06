@@ -23,11 +23,8 @@ class UsuarioModel extends Modelo {
             'password',
             'rol',
             'estado',
-            'ultimo_acceso',
-            'creado',
-            'actualizado',
-            'id_estudiante',
-            'id_padre'
+            'fecha_creacion',
+            'fecha_actualizacion'
         ];
     }
 
@@ -43,6 +40,100 @@ class UsuarioModel extends Modelo {
             'estudiante' => 'Estudiante',
             'padre' => 'Padre/Tutor'
         ];
+    }
+
+    /**
+     * Obtiene un usuario por su ID
+     */
+    public function obtenerPorId(int $id): ?array {
+        $sql = "SELECT 
+            id_usuario,
+            nombre,
+            correo,
+            password,
+            rol,
+            estado,
+            fecha_creacion,
+            fecha_actualizacion
+        FROM {$this->tabla} 
+        WHERE {$this->primaryKey} = ?";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        
+        $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$usuario) {
+            return null;
+        }
+
+        // Mapear los nombres de las columnas a los esperados por la vista
+        $usuario['creado'] = $usuario['fecha_creacion'];
+        $usuario['actualizado'] = $usuario['fecha_actualizacion'];
+        $usuario['ultimo_acceso'] = 'Nunca'; // Este campo no existe en la DB
+        $usuario['id_estudiante'] = 0; // Estos campos se manejarán después
+        $usuario['id_padre'] = 0;
+        
+        unset($usuario['fecha_creacion']);
+        unset($usuario['fecha_actualizacion']);
+        
+        return $usuario;
+    }
+
+    /**
+     * Verifica si un correo ya existe en la base de datos
+     */
+    public function correoExiste(string $correo, ?int $exceptUserId = null): bool {
+        $sql = "SELECT COUNT(*) FROM {$this->tabla} WHERE correo = ?";
+        $params = [$correo];
+
+        if ($exceptUserId !== null) {
+            $sql .= " AND {$this->primaryKey} != ?";
+            $params[] = $exceptUserId;
+        }
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        
+        return (int)$stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Elimina un usuario (lo marca como inactivo)
+     */
+    public function eliminar($id) {
+        try {
+            $sql = "UPDATE {$this->tabla} SET estado = 'inactivo' WHERE {$this->primaryKey} = ?";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$id]);
+        } catch (\PDOException $e) {
+            error_log("Error al eliminar usuario: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Actualiza el estado de un usuario
+     * 
+     * @param int $id ID del usuario
+     * @param string $estado Nuevo estado ('activo' o 'inactivo')
+     * @return bool True si se actualizó correctamente, False si hubo error
+     */
+    public function actualizarEstado(int $id, string $estado): bool {
+        try {
+            // Validar el estado
+            if (!in_array($estado, ['activo', 'inactivo'])) {
+                return false;
+            }
+
+            $sql = "UPDATE {$this->tabla} SET estado = :estado WHERE {$this->primaryKey} = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return false;
+        }
     }
 
     /**
