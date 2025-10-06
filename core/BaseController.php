@@ -21,7 +21,11 @@ class BaseController {
     }
 
     protected function redireccionar($ruta) {
-        header("Location: index.php?ruta=" . $ruta);
+        $partes = explode('/', $ruta);
+        $controller = ucfirst($partes[0]);
+        $action = $partes[1] ?? 'index';
+        
+        header("Location: /educa-finanzas/public/index.php?controller={$controller}&action={$action}");
         exit();
     }
 }
