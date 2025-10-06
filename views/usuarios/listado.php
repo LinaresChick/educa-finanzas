@@ -23,7 +23,7 @@ function getRoleBadgeClass($rol) {
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="/educa-finanzas/public/index.php?controller=Panel&action=index">Inicio</a></li>
                         <li class="breadcrumb-item active">Usuarios</li>
                     </ol>
                 </div>
@@ -102,31 +102,44 @@ function getRoleBadgeClass($rol) {
                                                 </span>
                                             </td>
                                             <td>
-                                                <?php if ($usuario['estado'] === 'activo'): ?>
-                                                    <span class="badge badge-success">Activo</span>
-                                                <?php else: ?>
-                                                    <span class="badge badge-danger">Inactivo</span>
-                                                <?php endif; ?>
+                                                <div class="form-check form-switch">
+                                                    <input type="checkbox" 
+                                                           class="form-check-input toggle-estado" 
+                                                           id="estado_<?= $usuario['id_usuario'] ?>"
+                                                           data-id="<?= $usuario['id_usuario'] ?>"
+                                                           <?= $usuario['estado'] === 'activo' ? 'checked' : '' ?>
+                                                           <?= ($usuario['id_usuario'] == $_SESSION['usuario']['id_usuario'] || 
+                                                               ($usuario['rol'] === 'superadmin' && $_SESSION['usuario']['rol'] !== 'superadmin')) ? 'disabled' : '' ?>>
+                                                    <label class="form-check-label" for="estado_<?= $usuario['id_usuario'] ?>">
+                                                        <span class="estado-texto <?= $usuario['estado'] === 'activo' ? 'text-success' : 'text-danger' ?>">
+                                                            <?= $usuario['estado'] === 'activo' ? 'Activo' : 'Inactivo' ?>
+                                                        </span>
+                                                    </label>
+                                                </div>
                                             </td>
                                             <td>
-                                                <?= $usuario['ultimo_acceso'] ? date('d/m/Y H:i', strtotime($usuario['ultimo_acceso'])) : 'Nunca' ?>
+                                                <?= date('d/m/Y H:i', strtotime($usuario['fecha_creacion'])) ?>
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="/usuarios/editar/<?= $usuario['id_usuario'] ?>" class="btn btn-info btn-sm" title="Editar">
-                                                        <i class="fas fa-edit"></i>
+                                                    <a href="/educa-finanzas/public/index.php?controller=Usuario&action=editar&id=<?= $usuario['id_usuario'] ?>" 
+                                                       class="btn btn-info btn-sm" 
+                                                       title="Editar"
+                                                       <?= ($usuario['rol'] === 'superadmin' && $_SESSION['usuario']['rol'] !== 'superadmin') ? 'disabled' : '' ?>>
+                                                        <i class="fas fa-edit"></i> Editar
                                                     </a>
                                                     
                                                     <?php if ($usuario['id_usuario'] != $_SESSION['usuario']['id_usuario']): ?>
                                                         <?php if ($usuario['rol'] !== 'superadmin' || $_SESSION['usuario']['rol'] === 'superadmin'): ?>
-                                                            <button type="button" class="btn btn-danger btn-sm btn-eliminar" 
-                                                                    data-toggle="modal" 
-                                                                    data-target="#modalEliminar" 
-                                                                    data-id="<?= $usuario['id_usuario'] ?>"
-                                                                    data-nombre="<?= htmlspecialchars($usuario['nombre']) ?>"
-                                                                    title="Eliminar">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </button>
+                                                            <a href="#" 
+                                                               class="btn btn-danger btn-sm btn-eliminar" 
+                                                               data-toggle="modal" 
+                                                               data-target="#modalEliminar" 
+                                                               data-id="<?= $usuario['id_usuario'] ?>" 
+                                                               data-nombre="<?= htmlspecialchars($usuario['nombre']) ?>"
+                                                               title="Eliminar">
+                                                                <i class="fas fa-trash-alt"></i> Eliminar
+                                                            </a>
                                                         <?php endif; ?>
                                                     <?php endif; ?>
                                                 </div>
@@ -178,13 +191,84 @@ $(document).ready(function() {
     });
     
     // Configurar modal de eliminación
+    // Modal de eliminación
     $('#modalEliminar').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget);
         var id = button.data('id');
         var nombre = button.data('nombre');
         
         $('#nombreUsuario').text(nombre);
-        $('#btnConfirmarEliminar').attr('href', '/usuarios/eliminar/' + id);
+        $('#btnConfirmarEliminar').attr('href', '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=' + id);
+    });
+        $('#btnConfirmarEliminar').attr('href', '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=' + id);
+        $('#btnConfirmarEliminar').attr('href', '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=' + id);
+    });
+    
+    // Manejar el clic en el botón de confirmar eliminación
+    $('#btnConfirmarEliminar').click(function(e) {
+        e.preventDefault();
+        var eliminarUrl = $(this).attr('href');
+        
+        // Realizar la petición de eliminación
+        window.location.href = eliminarUrl;
+    });
+    });
+
+    // Manejar cambio de estado
+    $('.toggle-estado').on('click', function(e) {
+        e.preventDefault(); // Prevenir el comportamiento predeterminado
+        
+        var checkbox = $(this);
+        var id = checkbox.data('id');
+        var estadoActual = checkbox.prop('checked');
+        var nuevoEstado = 'inactivo'; // Siempre desactivamos al hacer clic
+        var label = checkbox.siblings('label').find('.estado-texto');
+
+        if (confirm('¿Estás seguro que deseas desactivar este usuario?')) {
+            // Mostrar indicador de carga
+            label.html('<i class="fas fa-spinner fa-spin"></i>');
+
+            // Enviar petición AJAX para cambiar el estado
+            $.ajax({
+                url: '/educa-finanzas/public/index.php?controller=Usuario&action=toggleEstado&id=' + id,
+                method: 'POST',
+                data: { estado: nuevoEstado },
+                success: function(response) {
+                    response = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (response.success) {
+                        // Actualizar el texto y color
+                        checkbox.prop('checked', false);
+                        label.removeClass('text-success text-danger')
+                            .addClass('text-danger')
+                            .html('Inactivo');
+                        
+                        alert('Usuario desactivado correctamente');
+                        // Recargar la página para actualizar la lista
+                        window.location.reload();
+                    } else {
+                        // Revertir el cambio en caso de error
+                        checkbox.prop('checked', estadoActual);
+                        label.removeClass('text-success text-danger')
+                            .addClass(estadoActual ? 'text-success' : 'text-danger')
+                            .html(estadoActual ? 'Activo' : 'Inactivo');
+                        alert(response.message || 'Error al desactivar el usuario');
+                    }
+                },
+                error: function(xhr) {
+                    // Revertir el cambio en caso de error
+                    checkbox.prop('checked', estadoActual);
+                    label.removeClass('text-success text-danger')
+                        .addClass(estadoActual ? 'text-success' : 'text-danger')
+                        .html(estadoActual ? 'Activo' : 'Inactivo');
+                    var response = xhr.responseJSON || {};
+                    alert(response.message || 'Error al desactivar el usuario');
+                }
+            });
+        } else {
+            // Si el usuario cancela, revertir el cambio visual
+            checkbox.prop('checked', estadoActual);
+        }
+    });
     });
 });
 </script>
@@ -216,4 +300,4 @@ function getBadgeClassForRole($rol) {
 }
 ?>
 
-<?php require_once 'views/templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>
