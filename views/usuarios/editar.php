@@ -2,11 +2,7 @@
 /**
  * Vista de formulario para editar un usuario existente
  */
-require_once 'views/templates/header.php';
-require_once 'views/templates/navbar.php';
-require_once 'views/templates/sidebar.php';
 ?>
-
 <div class="content-wrapper">
     <div class="content-header">
         <div class="container-fluid">
@@ -16,8 +12,8 @@ require_once 'views/templates/sidebar.php';
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="/usuarios">Usuarios</a></li>
+                        <li class="breadcrumb-item"><a href="/educa-finanzas/public/index.php?controller=Panel&action=index">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="/educa-finanzas/public/index.php?controller=Usuario&action=index">Usuarios</a></li>
                         <li class="breadcrumb-item active">Editar</li>
                     </ol>
                 </div>
@@ -53,7 +49,7 @@ require_once 'views/templates/sidebar.php';
                     <h3 class="card-title">Datos del Usuario</h3>
                 </div>
 
-                <form action="/usuarios/actualizar" method="POST" id="formUsuario">
+                <form action="/educa-finanzas/public/index.php?controller=Usuario&action=actualizar" method="POST" id="formUsuario">
                     <input type="hidden" name="id_usuario" value="<?= $usuario['id_usuario'] ?>">
                     
                     <div class="card-body">
@@ -185,6 +181,3 @@ $(document).ready(function() {
     $('#rol').attr('readonly', true).css('pointer-events', 'none');
     <?php endif; ?>
 });
-</script>
-
-<?php require_once 'views/templates/footer.php'; ?>
