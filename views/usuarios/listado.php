@@ -60,14 +60,6 @@ function getRoleBadgeClass($rol) {
                         <div class="col-md-8">
                             <h3 class="card-title">Listado de usuarios del sistema</h3>
                         </div>
-                        <div class="col-md-4 text-right">
-                            <a href="/usuarios/crear" class="btn btn-primary">
-                                <i class="fas fa-user-plus"></i> Crear Nuevo Usuario
-                            </a>
-                            <a href="/usuarios/roles" class="btn btn-info">
-                                <i class="fas fa-user-tag"></i> Roles
-                            </a>
-                        </div>
                     </div>
                 </div>
 
