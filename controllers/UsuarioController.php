@@ -535,4 +535,73 @@ class UsuarioController extends BaseController
         header("Location: /{$ruta}");
         exit;
     }
+    public function toggleEstado(): void
+{
+    header('Content-Type: application/json; charset=utf-8');
+
+    // Solo POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        exit;
+    }
+
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    $estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_STRING);
+
+    if (!$id || !in_array($estado, ['activo', 'inactivo'])) {
+        echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
+        exit;
+    }
+
+    $usuarioSesion = $this->sesion->get('usuario') ?? null;
+    if (!$usuarioSesion) {
+        echo json_encode(['success' => false, 'message' => 'Sesión inválida. Inicie sesión.']);
+        exit;
+    }
+
+    // No permitir cambiar su propio estado
+    if ($usuarioSesion['id_usuario'] == $id) {
+        echo json_encode(['success' => false, 'message' => 'No puede cambiar el estado de su propio usuario']);
+        exit;
+    }
+
+    // Obtener usuario objetivo
+    $usuarioObj = $this->usuarioModel->buscarPorId($id);
+    if (!$usuarioObj) {
+        echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
+        exit;
+    }
+
+    // VERIFICACIÓN DE PERMISOS - ACTUALIZAR ESTA PARTE
+    $rolUsuarioSesion = strtolower($usuarioSesion['rol']);
+    $rolUsuarioObj = strtolower($usuarioObj['rol']);
+
+    // Solo superadmin puede modificar a otros superadmins
+    if ($rolUsuarioObj === 'superadmin' && $rolUsuarioSesion !== 'superadmin') {
+        echo json_encode(['success' => false, 'message' => 'No tiene permiso para modificar usuarios Super Administrador']);
+        exit;
+    }
+
+    // Administradores pueden modificar todos excepto superadmins
+    if ($rolUsuarioSesion === 'administrador' && $rolUsuarioObj === 'superadmin') {
+        echo json_encode(['success' => false, 'message' => 'No tiene permiso para modificar usuarios Super Administrador']);
+        exit;
+    }
+
+    // Si pasa todas las validaciones, proceder con el cambio
+    $resultado = $this->usuarioModel->cambiarEstado($id, $estado);
+
+    if ($resultado) {
+        echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
+    }
+    exit;
+}
+
+
+
+
+
 }

@@ -109,7 +109,7 @@ function getRoleBadgeClass($rol) {
                                                            data-id="<?= $usuario['id_usuario'] ?>"
                                                            <?= $usuario['estado'] === 'activo' ? 'checked' : '' ?>
                                                            <?= ($usuario['id_usuario'] == $_SESSION['usuario']['id_usuario'] || 
-                                                               ($usuario['rol'] === 'superadmin' && $_SESSION['usuario']['rol'] !== 'superadmin')) ? 'disabled' : '' ?>>
+                                                               (strtolower($usuario['rol']) === 'superadmin' && strtolower($_SESSION['usuario']['rol']) !== 'superadmin')) ? 'disabled' : '' ?>>
                                                     <label class="form-check-label" for="estado_<?= $usuario['id_usuario'] ?>">
                                                         <span class="estado-texto <?= $usuario['estado'] === 'activo' ? 'text-success' : 'text-danger' ?>">
                                                             <?= $usuario['estado'] === 'activo' ? 'Activo' : 'Inactivo' ?>
@@ -125,12 +125,12 @@ function getRoleBadgeClass($rol) {
                                                     <a href="/educa-finanzas/public/index.php?controller=Usuario&action=editar&id=<?= $usuario['id_usuario'] ?>" 
                                                        class="btn btn-info btn-sm" 
                                                        title="Editar"
-                                                       <?= ($usuario['rol'] === 'superadmin' && $_SESSION['usuario']['rol'] !== 'superadmin') ? 'disabled' : '' ?>>
+                                                       <?= (strtolower($usuario['rol']) === 'superadmin' && strtolower($_SESSION['usuario']['rol']) !== 'superadmin') ? 'disabled' : '' ?>>
                                                         <i class="fas fa-edit"></i> Editar
                                                     </a>
                                                     
                                                     <?php if ($usuario['id_usuario'] != $_SESSION['usuario']['id_usuario']): ?>
-                                                        <?php if ($usuario['rol'] !== 'superadmin' || $_SESSION['usuario']['rol'] === 'superadmin'): ?>
+                                                        <?php if (strtolower($usuario['rol']) !== 'superadmin' || strtolower($_SESSION['usuario']['rol']) === 'superadmin'): ?>
                                                             <a href="#" 
                                                                class="btn btn-danger btn-sm btn-eliminar" 
                                                                data-toggle="modal" 
@@ -177,99 +177,137 @@ function getRoleBadgeClass($rol) {
         </div>
     </div>
 </div>
-
 <script>
 $(document).ready(function() {
+    console.log('Listado usuarios: script cargado');
+
     // Inicializar DataTable
-    $('.dataTable').DataTable({
+    var table = $('.dataTable').DataTable({
         "responsive": true,
         "autoWidth": false,
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
         },
-        "order": [[0, 'asc']]
+        "order": [[0, 'asc']],
+        "drawCallback": function(settings) {
+            // Re-asignar eventos después de cada redibujado de DataTable
+            console.log('DataTable redibujado, re-asignando eventos...');
+        }
     });
-    
-    // Configurar modal de eliminación
-    // Modal de eliminación
-    $('#modalEliminar').on('show.bs.modal', function (event) {
+
+    // Modal eliminar
+    $(document).on('show.bs.modal', '#modalEliminar', function (event) {
         var button = $(event.relatedTarget);
         var id = button.data('id');
         var nombre = button.data('nombre');
-        
         $('#nombreUsuario').text(nombre);
-        $('#btnConfirmarEliminar').attr('href', '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=' + id);
-    });
-        $('#btnConfirmarEliminar').attr('href', '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=' + id);
-        $('#btnConfirmarEliminar').attr('href', '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=' + id);
-    });
-    
-    // Manejar el clic en el botón de confirmar eliminación
-    $('#btnConfirmarEliminar').click(function(e) {
-        e.preventDefault();
-        var eliminarUrl = $(this).attr('href');
-        
-        // Realizar la petición de eliminación
-        window.location.href = eliminarUrl;
-    });
+        $('#btnConfirmarEliminar').attr('href', 'index.php?controller=Usuario&action=eliminar&id=' + id);
     });
 
-    // Manejar cambio de estado
-    $('.toggle-estado').on('click', function(e) {
-        e.preventDefault(); // Prevenir el comportamiento predeterminado
+    // MANEJO DEL CAMBIO DE ESTADO - VERSIÓN MEJORADA
+    $(document).on('change', '.toggle-estado', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
         var checkbox = $(this);
         var id = checkbox.data('id');
-        var estadoActual = checkbox.prop('checked');
-        var nuevoEstado = 'inactivo'; // Siempre desactivamos al hacer clic
-        var label = checkbox.siblings('label').find('.estado-texto');
-
-        if (confirm('¿Estás seguro que deseas desactivar este usuario?')) {
-            // Mostrar indicador de carga
-            label.html('<i class="fas fa-spinner fa-spin"></i>');
-
-            // Enviar petición AJAX para cambiar el estado
-            $.ajax({
-                url: '/educa-finanzas/public/index.php?controller=Usuario&action=toggleEstado&id=' + id,
-                method: 'POST',
-                data: { estado: nuevoEstado },
-                success: function(response) {
-                    response = typeof response === 'string' ? JSON.parse(response) : response;
-                    if (response.success) {
-                        // Actualizar el texto y color
-                        checkbox.prop('checked', false);
-                        label.removeClass('text-success text-danger')
-                            .addClass('text-danger')
-                            .html('Inactivo');
-                        
-                        alert('Usuario desactivado correctamente');
-                        // Recargar la página para actualizar la lista
-                        window.location.reload();
-                    } else {
-                        // Revertir el cambio en caso de error
-                        checkbox.prop('checked', estadoActual);
-                        label.removeClass('text-success text-danger')
-                            .addClass(estadoActual ? 'text-success' : 'text-danger')
-                            .html(estadoActual ? 'Activo' : 'Inactivo');
-                        alert(response.message || 'Error al desactivar el usuario');
-                    }
-                },
-                error: function(xhr) {
-                    // Revertir el cambio en caso de error
-                    checkbox.prop('checked', estadoActual);
-                    label.removeClass('text-success text-danger')
-                        .addClass(estadoActual ? 'text-success' : 'text-danger')
-                        .html(estadoActual ? 'Activo' : 'Inactivo');
-                    var response = xhr.responseJSON || {};
-                    alert(response.message || 'Error al desactivar el usuario');
-                }
-            });
-        } else {
-            // Si el usuario cancela, revertir el cambio visual
-            checkbox.prop('checked', estadoActual);
+        
+        if (!id) {
+            console.error('❌ ID no encontrado en checkbox');
+            return;
         }
+
+        // Obtener el estado actual antes del cambio
+        var estadoActual = checkbox.prop('checked') ? 'inactivo' : 'activo';
+        var nuevoEstado = checkbox.prop('checked') ? 'activo' : 'inactivo';
+        var label = checkbox.closest('.form-check').find('.estado-texto');
+
+        console.log('🔔 Cambio de estado detectado:');
+        console.log('   ID:', id);
+        console.log('   Estado actual:', estadoActual);
+        console.log('   Nuevo estado:', nuevoEstado);
+        console.log('   Checkbox checked:', checkbox.prop('checked'));
+
+        // Confirmación
+        if (!confirm('¿Estás seguro que deseas ' + (nuevoEstado === 'activo' ? 'activar' : 'desactivar') + ' este usuario?')) {
+            console.log('❌ Usuario canceló la acción');
+            // Revertir el cambio visual
+            checkbox.prop('checked', !checkbox.prop('checked'));
+            return;
+        }
+
+        // Mostrar loading
+        label.html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
+
+        // Construir URL correctamente
+        var url = 'index.php?controller=Usuario&action=toggleEstado&id=' + id;
+        console.log('📤 Enviando AJAX a:', url);
+        console.log('📤 Método: POST');
+        console.log('📤 Datos:', { estado: nuevoEstado });
+
+        // Realizar petición AJAX
+        $.ajax({
+            url: url,
+            method: 'POST',
+            dataType: 'json',
+            data: { 
+                estado: nuevoEstado
+            },
+            success: function(response) {
+                console.log('✅ Respuesta del servidor recibida:', response);
+                
+                if (response && response.success) {
+                    // Éxito - mantener el estado actual
+                    label.removeClass('text-success text-danger')
+                         .addClass(nuevoEstado === 'activo' ? 'text-success' : 'text-danger')
+                         .html(nuevoEstado === 'activo' ? 'Activo' : 'Inactivo');
+                    console.log('🎉 Estado actualizado correctamente a:', nuevoEstado);
+                    
+                    // Mostrar notificación de éxito
+                    showNotification('Estado actualizado correctamente', 'success');
+                } else {
+                    // Error - revertir visualmente
+                    console.error('❌ Error del servidor:', response);
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                    label.removeClass('text-success text-danger')
+                         .addClass(checkbox.prop('checked') ? 'text-success' : 'text-danger')
+                         .html(checkbox.prop('checked') ? 'Activo' : 'Inactivo');
+                    
+                    var mensajeError = (response && response.message) ? response.message : 'Error desconocido del servidor';
+                    console.error('❌ Mensaje de error:', mensajeError);
+                    showNotification('Error: ' + mensajeError, 'error');
+                }
+            },
+            error: function(xhr, status, err) {
+                console.error('❌ Error en la petición AJAX:');
+                console.error('   Status:', status);
+                console.error('   Error:', err);
+                console.error('   Response Text:', xhr.responseText);
+                
+                // Revertir visualmente
+                checkbox.prop('checked', !checkbox.prop('checked'));
+                label.removeClass('text-success text-danger')
+                     .addClass(checkbox.prop('checked') ? 'text-success' : 'text-danger')
+                     .html(checkbox.prop('checked') ? 'Activo' : 'Inactivo');
+                
+                showNotification('Error de conexión con el servidor', 'error');
+            }
+        });
     });
-    });
+
+    // Función para mostrar notificaciones
+    function showNotification(mensaje, tipo) {
+        // Puedes usar toastr o alertas simples
+        if (tipo === 'success') {
+            alert('✅ ' + mensaje);
+        } else {
+            alert('❌ ' + mensaje);
+        }
+    }
+
+    // Debug: Verificar que los eventos estén asignados
+    console.log('✅ Eventos asignados correctamente');
+    console.log('✅ Número de checkboxes encontrados:', $('.toggle-estado').length);
 });
 </script>
 

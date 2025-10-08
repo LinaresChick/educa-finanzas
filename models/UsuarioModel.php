@@ -80,6 +80,24 @@ class UsuarioModel extends Modelo {
     }
 
     /**
+     * Busca un usuario por su ID (alias de obtenerPorId para consistencia)
+     */
+    public function buscarPorId($id)
+{
+    try {
+        $sql = "SELECT * FROM usuarios WHERE id_usuario = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    } catch (Exception $e) {
+        error_log("Error al buscar usuario por ID: " . $e->getMessage());
+        return null;
+    }
+}
+
+
+    /**
      * Verifica si un correo ya existe en la base de datos
      */
     public function correoExiste(string $correo, ?int $exceptUserId = null): bool {
@@ -107,31 +125,6 @@ class UsuarioModel extends Modelo {
             return $stmt->execute([$id]);
         } catch (\PDOException $e) {
             error_log("Error al eliminar usuario: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Actualiza el estado de un usuario
-     * 
-     * @param int $id ID del usuario
-     * @param string $estado Nuevo estado ('activo' o 'inactivo')
-     * @return bool True si se actualizó correctamente, False si hubo error
-     */
-    public function actualizarEstado(int $id, string $estado): bool {
-        try {
-            // Validar el estado
-            if (!in_array($estado, ['activo', 'inactivo'])) {
-                return false;
-            }
-
-            $sql = "UPDATE {$this->tabla} SET estado = :estado WHERE {$this->primaryKey} = :id";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
-            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-            return $stmt->execute();
-        } catch (Exception $e) {
-            error_log($e->getMessage());
             return false;
         }
     }
@@ -166,8 +159,8 @@ class UsuarioModel extends Modelo {
                 'password' => password_hash($datos['password'], PASSWORD_DEFAULT),
                 'rol' => $datos['rol'],
                 'estado' => $datos['estado'] ?? 'activo',
-                'creado' => date('Y-m-d H:i:s'),
-                'actualizado' => date('Y-m-d H:i:s')
+                'fecha_creacion' => date('Y-m-d H:i:s'),
+                'fecha_actualizacion' => date('Y-m-d H:i:s')
             ];
 
             // Si es estudiante o padre, agregar el ID correspondiente
@@ -339,9 +332,7 @@ class UsuarioModel extends Modelo {
         $stmt->execute();
         return $stmt->fetchAll();
     }
-    
 
-    
     /**
      * Actualiza un usuario existente
      * 
@@ -351,7 +342,7 @@ class UsuarioModel extends Modelo {
      */
     public function actualizarUsuario($idUsuario, $datos) {
         // Verificar si el correo ya está registrado por otro usuario
-        if (isset($datos['correo']) && $this->correoExisteOtroUsuario($datos['correo'], $idUsuario)) {
+        if (isset($datos['correo']) && $this->correoExiste($datos['correo'], $idUsuario)) {
             return false;
         }
         
@@ -363,7 +354,7 @@ class UsuarioModel extends Modelo {
             unset($datos['password']);
         }
         
-        $datos['actualizado'] = date('Y-m-d H:i:s');
+        $datos['fecha_actualizacion'] = date('Y-m-d H:i:s');
         
         return $this->actualizar($idUsuario, $datos);
     }
@@ -391,14 +382,12 @@ class UsuarioModel extends Modelo {
         // Actualizar la contraseña
         $datos = [
             'password' => password_hash($passwordNueva, PASSWORD_DEFAULT),
-            'actualizado' => date('Y-m-d H:i:s')
+            'fecha_actualizacion' => date('Y-m-d H:i:s')
         ];
         
         return $this->actualizar($idUsuario, $datos);
     }
-    
 
-    
     /**
      * Verifica si un correo ya está registrado por otro usuario
      * 
@@ -423,16 +412,23 @@ class UsuarioModel extends Modelo {
      * @param string $estado El nuevo estado ('activo' o 'inactivo')
      * @return bool True si el cambio fue exitoso
      */
-    public function cambiarEstado($idUsuario, $estado) {
-        if ($estado !== 'activo' && $estado !== 'inactivo') {
+    public function cambiarEstado(int $idUsuario, string $estado): bool
+    {
+        // Validación básica
+        if (!in_array($estado, ['activo', 'inactivo'])) {
             return false;
         }
-        
-        $sql = "UPDATE usuarios SET estado = :estado, actualizado = NOW() WHERE id_usuario = :id_usuario";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':estado', $estado);
-        $stmt->bindValue(':id_usuario', $idUsuario);
-        return $stmt->execute();
+
+        try {
+            $sql = "UPDATE usuarios SET estado = :estado, fecha_actualizacion = NOW() WHERE id_usuario = :id_usuario";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':estado', $estado, PDO::PARAM_STR);
+            $stmt->bindValue(':id_usuario', $idUsuario, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("UsuarioModel::cambiarEstado error: " . $e->getMessage());
+            return false;
+        }
     }
     
     /**
@@ -514,9 +510,7 @@ class UsuarioModel extends Modelo {
         
         return $this->crearUsuario($datos);
     }
-    
 
-    
     /**
      * Verifica la relación entre un padre y un estudiante
      * 
