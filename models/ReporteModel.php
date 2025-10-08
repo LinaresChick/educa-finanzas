@@ -1,7 +1,4 @@
 <?php
-/**
- * Modelo para la gestión de reportes financieros y administrativos
- */
 namespace Models;
 
 require_once __DIR__ . '/../core/Modelo.php';
@@ -9,157 +6,186 @@ require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
 
 use Core\Modelo;
-use \Exception;
-use \PDO;
 
-class ReporteModel extends Modelo {
-    
-    /**
-     * Constructor de la clase
-     */
-    public function __construct() {
+class ReporteModel extends Modelo 
+{
+    protected $db;
+
+    public function __construct() 
+    {
         parent::__construct('reportes', 'id_reporte');
     }
-    
-    /**
-     * Genera un reporte de deudas por estudiante
-     * 
-     * @return array Datos del reporte de deudas
-     */
-    public function generarReporteDeudas() {
-        $sql = "SELECT e.id_estudiante, e.nombres, e.apellidos, e.dni, 
-                       s.nombre AS salon, s.grado, s.nivel,
-                       SUM(CASE WHEN p.estado = 'pendiente' THEN p.monto ELSE 0 END) AS total_deuda,
-                       COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) AS pagos_pendientes,
-                       MAX(p.fecha_vencimiento) AS proxima_fecha_vencimiento
-                FROM estudiantes e
-                LEFT JOIN pagos p ON e.id_estudiante = p.id_estudiante
-                LEFT JOIN salones s ON e.id_salon = s.id_salon
-                GROUP BY e.id_estudiante, e.nombres, e.apellidos, e.dni, s.nombre, s.grado, s.nivel
-                ORDER BY total_deuda DESC";
-                
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Genera un reporte financiero por períodos
-     * 
-     * @param string $fechaInicio Fecha de inicio del período
-     * @param string $fechaFin Fecha de fin del período
-     * @return array Datos del reporte financiero
-     */
-    public function generarReporteFinanciero($fechaInicio, $fechaFin) {
-        $sql = "SELECT 
-                    DATE_FORMAT(fecha_pago, '%Y-%m') AS periodo,
-                    COUNT(*) AS total_pagos,
-                    SUM(monto) AS total_ingresos,
-                    COUNT(CASE WHEN metodo_pago = 'efectivo' THEN 1 END) AS pagos_efectivo,
-                    SUM(CASE WHEN metodo_pago = 'efectivo' THEN monto ELSE 0 END) AS monto_efectivo,
-                    COUNT(CASE WHEN metodo_pago = 'transferencia' THEN 1 END) AS pagos_transferencia,
-                    SUM(CASE WHEN metodo_pago = 'transferencia' THEN monto ELSE 0 END) AS monto_transferencia,
-                    COUNT(CASE WHEN metodo_pago = 'tarjeta' THEN 1 END) AS pagos_tarjeta,
-                    SUM(CASE WHEN metodo_pago = 'tarjeta' THEN monto ELSE 0 END) AS monto_tarjeta,
-                    COUNT(CASE WHEN tipo_pago = 'matricula' THEN 1 END) AS pagos_matricula,
-                    SUM(CASE WHEN tipo_pago = 'matricula' THEN monto ELSE 0 END) AS monto_matricula,
-                    COUNT(CASE WHEN tipo_pago = 'mensualidad' THEN 1 END) AS pagos_mensualidad,
-                    SUM(CASE WHEN tipo_pago = 'mensualidad' THEN monto ELSE 0 END) AS monto_mensualidad,
-                    COUNT(CASE WHEN tipo_pago = 'uniforme' THEN 1 END) AS pagos_uniforme,
-                    SUM(CASE WHEN tipo_pago = 'uniforme' THEN monto ELSE 0 END) AS monto_uniforme,
-                    COUNT(CASE WHEN tipo_pago = 'material' THEN 1 END) AS pagos_material,
-                    SUM(CASE WHEN tipo_pago = 'material' THEN monto ELSE 0 END) AS monto_material,
-                    COUNT(CASE WHEN tipo_pago = 'actividad' THEN 1 END) AS pagos_actividad,
-                    SUM(CASE WHEN tipo_pago = 'actividad' THEN monto ELSE 0 END) AS monto_actividad,
-                    COUNT(CASE WHEN tipo_pago = 'otro' THEN 1 END) AS pagos_otro,
-                    SUM(CASE WHEN tipo_pago = 'otro' THEN monto ELSE 0 END) AS monto_otro
-                FROM pagos
-                WHERE estado = 'procesado'
-                AND fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
-                GROUP BY periodo
-                ORDER BY periodo";
-                
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':fecha_inicio', $fechaInicio);
-        $stmt->bindParam(':fecha_fin', $fechaFin);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Obtiene estadísticas generales del sistema
-     * 
-     * @return array Las estadísticas generales
-     */
-    public function obtenerEstadisticasGenerales() {
-        try {
-            // Calcular totales del mes actual
-            $sqlMensual = "SELECT 
-                SUM(CASE WHEN estado = 'completado' THEN monto ELSE 0 END) as total_ingresos,
-                COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as total_pendientes,
-                SUM(CASE WHEN estado = 'pendiente' THEN monto ELSE 0 END) as total_deudas
-                FROM pagos
-                WHERE MONTH(fecha_pago) = MONTH(CURRENT_DATE)
-                AND YEAR(fecha_pago) = YEAR(CURRENT_DATE)";
-            
-            $stmtMensual = $this->db->prepare($sqlMensual);
-            $stmtMensual->execute();
-            $resultadoMensual = $stmtMensual->fetch(PDO::FETCH_ASSOC);
 
+    protected function validarFechas($fechaInicio, $fechaFin) 
+    {
+        if (empty($fechaInicio) || empty($fechaFin)) {
+            return false;
+        }
+
+        $inicio = strtotime($fechaInicio);
+        $fin = strtotime($fechaFin);
+
+        if (!$inicio || !$fin) {
+            return false;
+        }
+
+        return $inicio <= $fin;
+    }
+
+    public function generarReporteFinanciero($fechaInicio, $fechaFin) 
+    {
+        try {
+            if (!$this->validarFechas($fechaInicio, $fechaFin)) {
+                return ['error' => 'Las fechas proporcionadas no son válidas'];
+            }
+
+            $sql = "SELECT 
+                    COALESCE(DATE_FORMAT(fecha_pago, '%Y-%m'), 'Sin Fecha') AS periodo,
+                    COUNT(1) as total_pagos,
+                    COALESCE(SUM(monto), 0) as total_ingresos,
+                    COUNT(DISTINCT id_estudiante) as estudiantes_pagaron,
+                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'efectivo' THEN monto ELSE 0 END), 0) as monto_efectivo,
+                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'transferencia' THEN monto ELSE 0 END), 0) as monto_transferencia,
+                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'tarjeta' THEN monto ELSE 0 END), 0) as monto_tarjeta,
+                    COUNT(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN 1 END) as pagos_matricula,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
+                    COUNT(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN monto ELSE 0 END), 0) as monto_mensualidad
+                FROM pagos
+                WHERE fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
+                AND LOWER(estado) = 'completado'
+                GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
+                ORDER BY periodo DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':fecha_inicio', $fechaInicio);
+            $stmt->bindParam(':fecha_fin', $fechaFin);
+            $stmt->execute();
+            
+            $periodos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            $estadisticas = $this->calcularEstadisticasPeriodo($fechaInicio, $fechaFin);
+            
+            return [
+                'periodos' => $periodos,
+                'estadisticas' => $estadisticas
+            ];
+        } catch (\PDOException $e) {
+            error_log('Error PDO al generar reporte financiero: ' . $e->getMessage() . ' - SQL: ' . $sql);
+            throw new \Exception('Error en la consulta de base de datos al generar el reporte financiero: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            error_log('Error general al generar reporte financiero: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            throw new \Exception('Error al generar el reporte financiero: ' . $e->getMessage());
+        }
+    }
+
+    private function calcularEstadisticasPeriodo($fechaInicio, $fechaFin) 
+    {
+        try {
+            $sql = "SELECT 
+                    COALESCE(SUM(monto), 0) as total_periodo,
+                    COUNT(1) as total_transacciones,
+                    COUNT(DISTINCT id_estudiante) as total_estudiantes,
+                    COALESCE(AVG(monto), 0) as promedio_transaccion,
+                    COALESCE(MIN(monto), 0) as min_transaccion,
+                    COALESCE(MAX(monto), 0) as max_transaccion,
+                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'efectivo' THEN monto ELSE 0 END), 0) as total_efectivo,
+                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'transferencia' THEN monto ELSE 0 END), 0) as total_transferencia,
+                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'tarjeta' THEN monto ELSE 0 END), 0) as total_tarjeta
+                FROM pagos
+                WHERE fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
+                AND LOWER(estado) = 'completado'";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':fecha_inicio', $fechaInicio);
+            $stmt->bindParam(':fecha_fin', $fechaFin);
+            $stmt->execute();
+            
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            error_log('Error PDO al calcular estadísticas: ' . $e->getMessage() . ' - SQL: ' . $sql);
+            throw new \Exception('Error en la consulta de base de datos al calcular estadísticas: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            error_log('Error general al calcular estadísticas: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            throw new \Exception('Error al calcular estadísticas: ' . $e->getMessage());
+        }
+    }
+
+    public function generarReporteDeudas() 
+    {
+        try {
+            $sql = "SELECT e.id_estudiante, 
+                        e.nombres, 
+                        e.apellidos, 
+                        e.dni, 
+                        s.nombre AS salon, 
+                        s.grado, 
+                        s.nivel,
+                        SUM(CASE WHEN p.estado = 'pendiente' THEN p.monto ELSE 0 END) AS total_deuda,
+                        COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) AS pagos_pendientes,
+                        MAX(p.fecha_vencimiento) AS proxima_fecha_vencimiento
+                    FROM estudiantes e
+                    LEFT JOIN pagos p ON e.id_estudiante = p.id_estudiante
+                    LEFT JOIN salones s ON e.id_salon = s.id_salon
+                    GROUP BY e.id_estudiante, e.nombres, e.apellidos, e.dni, s.nombre, s.grado, s.nivel
+                    HAVING total_deuda > 0
+                    ORDER BY total_deuda DESC";
+                    
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log('Error al generar reporte de deudas: ' . $e->getMessage());
+            throw new \Exception('Error al generar el reporte de deudas');
+        }
+    }
+
+    public function obtenerEstadisticasGenerales() 
+    {
+        try {
+            $sql = "SELECT 
+                    SUM(CASE WHEN estado = 'completado' THEN monto ELSE 0 END) as total_ingresos,
+                    COUNT(1) as total_pagos,
+                    COUNT(CASE WHEN estado = 'completado' THEN 1 END) as pagos_completados,
+                    COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pagos_pendientes,
+                    SUM(CASE WHEN estado = 'pendiente' THEN monto ELSE 0 END) as total_deuda,
+                    COALESCE(AVG(CASE WHEN estado = 'completado' THEN monto END), 0) as promedio_pago
+                FROM pagos
+                WHERE DATE(fecha_pago) BETWEEN DATE_FORMAT(NOW(), '%Y-%m-01')
+                AND LAST_DAY(NOW())";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $estadisticas = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
             // Total de estudiantes activos
-            $sqlEstudiantes = "SELECT COUNT(*) AS total FROM estudiantes WHERE estado = 'activo'";
+            $sqlEstudiantes = "SELECT COUNT(1) AS total FROM estudiantes WHERE estado = 'activo'";
             $stmtEstudiantes = $this->db->prepare($sqlEstudiantes);
             $stmtEstudiantes->execute();
-            $totalEstudiantes = $stmtEstudiantes->fetch(PDO::FETCH_ASSOC)['total'];
+            $estadisticas['total_estudiantes'] = $stmtEstudiantes->fetch(\PDO::FETCH_ASSOC)['total'];
             
             // Total de padres activos
-            $sqlPadres = "SELECT COUNT(*) AS total FROM padres WHERE estado = 'activo'";
+            $sqlPadres = "SELECT COUNT(1) AS total FROM padres WHERE estado = 'activo'";
             $stmtPadres = $this->db->prepare($sqlPadres);
             $stmtPadres->execute();
-            $totalPadres = $stmtPadres->fetch(PDO::FETCH_ASSOC)['total'];
+            $estadisticas['total_padres'] = $stmtPadres->fetch(\PDO::FETCH_ASSOC)['total'];
             
-            // Total de pagos por estado
-            $sqlPagos = "SELECT estado, COUNT(*) AS total, SUM(monto) AS monto_total 
-                         FROM pagos 
-                         GROUP BY estado";
-            $stmtPagos = $this->db->prepare($sqlPagos);
-            $stmtPagos->execute();
-            $datosPagos = $stmtPagos->fetchAll(PDO::FETCH_ASSOC);
+            if (!$estadisticas) {
+                throw new \Exception('Error al obtener las estadísticas');
+            }
             
-            return [
-                'total_estudiantes' => $totalEstudiantes,
-                'total_padres' => $totalPadres,
-                'total_ingresos' => $resultadoMensual['total_ingresos'] ?? 0,
-                'total_pendientes' => $resultadoMensual['total_pendientes'] ?? 0,
-                'total_deudas' => $resultadoMensual['total_deudas'] ?? 0,
-                'pagos' => $datosPagos
-            ];
-        } catch (Exception $e) {
-            error_log("Error en ReporteModel::obtenerEstadisticasGenerales: " . $e->getMessage());
-            return [
-                'total_estudiantes' => 0,
-                'total_padres' => 0,
-                'total_ingresos' => 0,
-                'total_pendientes' => 0,
-                'total_deudas' => 0,
-                'pagos' => []
-            ];
+            return $estadisticas;
+        } catch (\Exception $e) {
+            error_log('Error al obtener estadísticas generales: ' . $e->getMessage());
+            throw new \Exception('Error al obtener las estadísticas generales');
         }
     }
     
-    /**
-     * Exporta datos a formato CSV
-     * 
-     * @param array $datos Los datos a exportar
-     * @param string $nombreArchivo El nombre del archivo a generar
-     * @return string Ruta del archivo generado
-     */
-    public function exportarCSV($datos, $nombreArchivo) {
+    public function exportarCSV($datos, $nombreArchivo) 
+    {
         try {
             if (empty($datos)) {
-                throw new Exception("No hay datos para exportar");
+                throw new \Exception("No hay datos para exportar");
             }
             
             $rutaArchivo = __DIR__ . '/../temp/' . $nombreArchivo . '.csv';
@@ -182,7 +208,8 @@ class ReporteModel extends Modelo {
             fclose($archivo);
             
             return $rutaArchivo;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            error_log('Error al exportar a CSV: ' . $e->getMessage());
             return false;
         }
     }
