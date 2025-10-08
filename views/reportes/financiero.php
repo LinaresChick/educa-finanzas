@@ -150,7 +150,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($reporte as $periodo): ?>
+                                    <?php foreach ($reporte['periodos'] as $periodo): ?>
                                     <tr>
                                         <td><?= $periodo['periodo'] ?></td>
                                         <td><?= $periodo['total_pagos'] ?></td>

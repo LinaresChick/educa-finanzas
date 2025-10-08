@@ -36,7 +36,7 @@
 
         /* ======= NAVBAR DEGRADADO VERDE ======= */
         .navbar {
-            background: linear-gradient(135deg, #A3F527 0%, #6DAF1B 100%) !important;
+            background: linear-gradient(135deg, #A3F527 0%,  #baec74ff 20%, #6DAF1B 100%) !important;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
@@ -71,7 +71,7 @@
 
         /* ======= DROPDOWN MENU ======= */
         .navbar .dropdown-menu {
-            background: linear-gradient(135deg, #A3F527 0%, #6DAF1B 100%);
+            background: linear-gradient(135deg, #A3F527 0%, #87dd1dff 100%);
             border: none;
             border-radius: 10px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
