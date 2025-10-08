@@ -2,9 +2,9 @@
 /**
  * Vista de historial de pagos de un estudiante
  */
-require_once 'views/templates/header.php';
-require_once 'views/templates/navbar.php';
-require_once 'views/templates/sidebar.php';
+require_once __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../templates/navbar.php';
+require_once __DIR__ . '/../templates/sidebar.php';
 ?>
 
 <div class="content-wrapper">
@@ -153,7 +153,7 @@ require_once 'views/templates/sidebar.php';
                         <div class="tab-pane fade show active" id="pagos" role="tabpanel">
                             <?php if ($_SESSION['usuario']['rol'] === 'admin' || $_SESSION['usuario']['rol'] === 'tesoreria' || $_SESSION['usuario']['rol'] === 'superadmin'): ?>
                                 <div class="mb-3">
-                                    <a href="/pagos/registrar?id_estudiante=<?= $estudiante['id_estudiante'] ?>" class="btn btn-primary">
+                                    <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=registrar&id_estudiante=<?= $estudiante['id_estudiante'] ?>" class="btn btn-primary">
                                         <i class="fas fa-plus-circle"></i> Registrar Nuevo Pago
                                     </a>
                                 </div>
@@ -221,7 +221,7 @@ require_once 'views/templates/sidebar.php';
                                                     </td>
                                                     <td>
                                                         <div class="btn-group">
-                                                            <a href="/pagos/comprobante/<?= $pago['id_pago'] ?>" class="btn btn-info btn-sm" title="Ver comprobante">
+                                                            <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=comprobante&id=<?= $pago['id_pago'] ?>" class="btn btn-info btn-sm" title="Ver comprobante">
                                                                 <i class="fas fa-receipt"></i>
                                                             </a>
                                                             
@@ -285,7 +285,7 @@ require_once 'views/templates/sidebar.php';
                                                     </td>
                                                     <td>
                                                         <?php if ($_SESSION['usuario']['rol'] === 'admin' || $_SESSION['usuario']['rol'] === 'tesoreria' || $_SESSION['usuario']['rol'] === 'superadmin'): ?>
-                                                            <a href="/pagos/registrar?id_estudiante=<?= $estudiante['id_estudiante'] ?>&id_deuda=<?= $deuda['id_deuda'] ?>" class="btn btn-primary btn-sm" title="Registrar pago">
+                                                            <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=registrar&id_estudiante=<?= $estudiante['id_estudiante'] ?>&id_deuda=<?= $deuda['id_deuda'] ?>" class="btn btn-primary btn-sm" title="Registrar pago">
                                                                 <i class="fas fa-money-bill"></i> Pagar
                                                             </a>
                                                         <?php endif; ?>
@@ -314,7 +314,7 @@ require_once 'views/templates/sidebar.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formAnular" action="/pagos/anular" method="POST">
+            <form id="formAnular" action="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=anular" method="POST">
                 <div class="modal-body">
                     <p>¿Está seguro que desea anular el siguiente pago?</p>
                     <p id="infoPago" class="font-weight-bold"></p>
@@ -360,4 +360,4 @@ $(document).ready(function() {
 });
 </script>
 
-<?php require_once 'views/templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>
