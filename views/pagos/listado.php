@@ -2,9 +2,9 @@
 /**
  * Vista de listado de pagos
  */
-require_once 'views/templates/header.php';
-require_once 'views/templates/navbar.php';
-require_once 'views/templates/sidebar.php';
+require_once __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../templates/navbar.php';
+require_once __DIR__ . '/../templates/sidebar.php';
 ?>
 
 <div class="content-wrapper">
@@ -47,6 +47,14 @@ require_once 'views/templates/sidebar.php';
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
 
+            <!-- Debug info -->
+            <?php if (defined('DEBUG') && DEBUG): ?>
+            <div class="alert alert-info">
+                <h5>Debug Information:</h5>
+                <pre><?php print_r($pagos); ?></pre>
+            </div>
+            <?php endif; ?>
+
             <div class="card">
                 <div class="card-header">
                     <div class="row">
@@ -54,7 +62,7 @@ require_once 'views/templates/sidebar.php';
                             <h3 class="card-title">Listado de pagos registrados</h3>
                         </div>
                         <div class="col-md-4 text-right">
-                            <a href="/pagos/registrar" class="btn btn-primary">
+                            <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=registrar" class="btn btn-primary">
                                 <i class="fas fa-plus-circle"></i> Registrar Nuevo Pago
                             </a>
                         </div>
@@ -101,7 +109,7 @@ require_once 'views/templates/sidebar.php';
                                 </div>
 
                                 <button type="submit" class="btn btn-info mb-2">Filtrar</button>
-                                <a href="/pagos" class="btn btn-secondary mb-2 ml-2">Limpiar</a>
+                                <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago" class="btn btn-secondary mb-2 ml-2">Limpiar</a>
                             </form>
                         </div>
                     </div>
@@ -170,7 +178,7 @@ require_once 'views/templates/sidebar.php';
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="/pagos/comprobante/<?= $pago['id_pago'] ?>" class="btn btn-info btn-sm" title="Ver comprobante">
+                                                    <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=comprobante&id=<?= $pago['id_pago'] ?>" class="btn btn-info btn-sm" title="Ver comprobante">
                                                         <i class="fas fa-receipt"></i>
                                                     </a>
                                                     <?php if ($pago['estado'] !== 'anulado'): ?>
@@ -207,7 +215,7 @@ require_once 'views/templates/sidebar.php';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form id="formAnular" action="/pagos/anular" method="POST">
+            <form id="formAnular" action="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=anular" method="POST">
                 <div class="modal-body">
                     <p>¿Está seguro que desea anular el siguiente pago?</p>
                     <p id="infoPago" class="font-weight-bold"></p>
@@ -253,4 +261,4 @@ $(document).ready(function() {
 });
 </script>
 
-<?php require_once 'views/templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>
