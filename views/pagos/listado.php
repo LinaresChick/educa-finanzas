@@ -22,12 +22,11 @@ require_once __DIR__ . '/../templates/navbar.php';
                     </ol>
                 </nav>
             </div>
-            <div class="header-right">
-                <a href="index.php?controller=Pago&action=crear" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>
-                    Registrar Nuevo Pago
-                </a>
-            </div>
+             <div class="col-md-4 text-right">
+                            <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=registrar" class="btn btn-primary">
+                                <i class="fas fa-plus-circle"></i> Registrar Nuevo Pago
+                            </a>
+                        </div>
         </div>
     </div>
 
