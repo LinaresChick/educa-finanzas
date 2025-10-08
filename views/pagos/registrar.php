@@ -2,10 +2,13 @@
 /**
  * Vista de formulario para registrar un nuevo pago
  */
-require_once 'views/templates/header.php';
-require_once 'views/templates/navbar.php';
-require_once 'views/templates/sidebar.php';
+require_once __DIR__ . '/../templates/header.php';
+require_once __DIR__ . '/../templates/navbar.php';
+require_once __DIR__ . '/../templates/sidebar.php';
 ?>
+
+<!-- Script de validación de pagos -->
+<script src="/public/js/validacion_pagos.js"></script>
 
 <div class="content-wrapper">
     <div class="content-header">
@@ -17,7 +20,7 @@ require_once 'views/templates/sidebar.php';
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="/pagos">Pagos</a></li>
+                        <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>/index.php?controller=Pago">Pagos</a></li>
                         <li class="breadcrumb-item active">Registrar</li>
                     </ol>
                 </div>
@@ -53,7 +56,7 @@ require_once 'views/templates/sidebar.php';
                     <h3 class="card-title">Datos del Pago</h3>
                 </div>
 
-                <form action="/pagos/guardar" method="POST" id="formPago">
+                <form action="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=guardar" method="POST" id="formPago">
                     <div class="card-body">
                         <div class="row">
                             <!-- Selección de estudiante -->
@@ -99,6 +102,14 @@ require_once 'views/templates/sidebar.php';
                                     <input type="text" name="concepto" id="concepto" class="form-control" required>
                                 </div>
                             </div>
+                            <!-- Descuento -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="descuento">Descuento (%)</label>
+                                            <input type="number" name="descuento" id="descuento" class="form-control" placeholder="Ej: 10" min="0" max="100" step="0.01">
+                                            <small class="text-muted">Ingrese el porcentaje de descuento aplicado al pago.</small>
+                                        </div>
+                                    </div>
 
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -118,12 +129,98 @@ require_once 'views/templates/sidebar.php';
                                     <label for="metodo_pago">Método de Pago <span class="text-danger">*</span></label>
                                     <select name="metodo_pago" id="metodo_pago" class="form-control" required>
                                         <option value="">-- Seleccione un método --</option>
-                                        <?php foreach ($metodos_pago as $valor => $nombre): ?>
-                                            <option value="<?= $valor ?>"><?= $nombre ?></option>
-                                        <?php endforeach; ?>
+                                        <option value="efectivo">Efectivo</option>
+                                        <option value="transferencia">Transferencia Bancaria</option>
+                                        <option value="deposito">Depósito Bancario</option>
+                                        <option value="tarjeta">Tarjeta de Crédito/Débito</option>
+                                        <option value="yape">Yape</option>
+                                        <option value="plin">Plin</option>
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- Banco -->
+                            <!-- Banco -->
+<div class="col-md-6">
+    <div class="form-group">
+        <label for="banco">Banco <span class="text-danger">*</span></label>
+        <select name="banco" id="banco" class="form-control" required>
+            <option value="">-- Seleccione un banco --</option>
+            <option value="bcp">BCP</option>
+            <option value="bbva">BBVA</option>
+            <option value="interbank">Interbank</option>
+            <option value="scotiabank">Scotiabank</option>
+            <option value="nacion">Banco de la Nación</option>
+            <option value="otro">Otro...</option>
+        </select>
+    </div>
+
+    <!-- Campo adicional solo si se elige "Otro" -->
+    <div class="form-group mt-2" id="campo_otro_banco" style="display: none;">
+        <label for="otro_banco">Especifique el banco</label>
+        <input type="text" name="otro_banco" id="otro_banco" class="form-control" placeholder="Ingrese el nombre del banco">
+    </div>
+</div>
+
+<script>
+    // Mostrar el campo para escribir si se elige "Otro"
+    document.getElementById('banco').addEventListener('change', function() {
+        const campoOtro = document.getElementById('campo_otro_banco');
+        campoOtro.style.display = (this.value === 'otro') ? 'block' : 'none';
+    });
+</script>
+
+
+                            <!-- Descuento -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="descuento">Descuento (S/)</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">S/</span>
+                                        </div>
+                                        <input type="number" name="descuento" id="descuento" class="form-control" step="0.01" min="0" value="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aumento -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="aumento">Aumento/Mora (S/)</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">S/</span>
+                                        </div>
+                                        <input type="number" name="aumento" id="aumento" class="form-control" step="0.01" min="0" value="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Foto del Baucher -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="foto_baucher">Foto del Voucher/Baucher</label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="foto_baucher" name="foto_baucher" accept="image/*">
+                                        <label class="custom-file-label" for="foto_baucher">Elegir archivo...</label>
+                                    </div>
+                                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG. Máximo 2MB.</small>
+                                </div>
+                            </div>
+
+                            <!-- Observaciones -->
+                            <div class="col-md-6">
+
+<script>
+    // Mostrar el campo para escribir si se elige "Otro"
+    document.getElementById('banco').addEventListener('change', function() {
+        const campoOtro = document.getElementById('campo_otro_banco');
+        campoOtro.style.display = (this.value === 'otro') ? 'block' : 'none';
+    });
+</script>
+
+
 
                             <!-- Observaciones -->
                             <div class="col-md-6">
@@ -157,6 +254,17 @@ require_once 'views/templates/sidebar.php';
                                             </div>
                                         </div>
                                     </div>
+                                    
+
+                                    <!-- Foto del Baucher -->
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="foto_baucher">Foto del Baucher <span class="text-danger">*</span></label>
+                                            <input type="file" name="foto_baucher" id="foto_baucher" class="form-control" accept="image/*" required>
+                                            <small class="text-muted">Formatos permitidos: JPG, PNG, JPEG. Tamaño máximo: 2MB.</small>
+                                        </div>
+                                    </div>
+
                                     <p class="text-info">
                                         <i class="fas fa-info-circle"></i>
                                         El número de comprobante será generado automáticamente.
@@ -170,7 +278,7 @@ require_once 'views/templates/sidebar.php';
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Registrar Pago
                         </button>
-                        <a href="/pagos" class="btn btn-secondary">
+                        <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
                     </div>
@@ -197,11 +305,28 @@ $(document).ready(function() {
         }
     });
     
+    // Manejar la visibilidad del campo banco según el método de pago
+    $('#metodo_pago').change(function() {
+        var metodoPago = $(this).val();
+        var bancoCampo = $('#banco');
+        
+        // Lista de métodos que requieren banco
+        var metodosConBanco = ['transferencia', 'deposito', 'yape', 'plin'];
+        
+        if (metodosConBanco.includes(metodoPago)) {
+            bancoCampo.prop('disabled', false).prop('required', true);
+            bancoCampo.closest('.form-group').find('label').append('<span class="text-danger">*</span>');
+        } else {
+            bancoCampo.prop('disabled', true).prop('required', false).val('');
+            bancoCampo.closest('.form-group').find('label .text-danger').remove();
+        }
+    });
+
     // Cambio de estudiante: recargar página con el nuevo ID
     $('#id_estudiante').change(function() {
         var idEstudiante = $(this).val();
         if(idEstudiante) {
-            window.location.href = '/pagos/registrar?id_estudiante=' + idEstudiante;
+            window.location.href = '<?php echo BASE_URL; ?>/index.php?controller=Pago&action=registrar&id_estudiante=' + idEstudiante;
         }
     });
     
@@ -241,4 +366,4 @@ $(document).ready(function() {
 });
 </script>
 
-<?php require_once 'views/templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>
