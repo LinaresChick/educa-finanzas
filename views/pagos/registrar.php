@@ -95,22 +95,15 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                 </div>
                             </div>
 
-                            <!-- Concepto y monto -->
+                            <!-- Concepto -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="concepto">Concepto <span class="text-danger">*</span></label>
                                     <input type="text" name="concepto" id="concepto" class="form-control" required>
                                 </div>
                             </div>
-                            <!-- Descuento -->
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="descuento">Descuento (%)</label>
-                                            <input type="number" name="descuento" id="descuento" class="form-control" placeholder="Ej: 10" min="0" max="100" step="0.01">
-                                            <small class="text-muted">Ingrese el porcentaje de descuento aplicado al pago.</small>
-                                        </div>
-                                    </div>
 
+                            <!-- Monto -->
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="monto">Monto (S/) <span class="text-danger">*</span></label>
@@ -120,6 +113,14 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                         </div>
                                         <input type="number" name="monto" id="monto" class="form-control" step="0.01" min="0.01" required>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha de Pago -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fecha_pago">Fecha de Pago <span class="text-danger">*</span></label>
+                                    <input type="date" name="fecha_pago" id="fecha_pago" class="form-control" required value="<?= date('Y-m-d') ?>">
                                 </div>
                             </div>
 
@@ -200,27 +201,14 @@ require_once __DIR__ . '/../templates/sidebar.php';
                             <!-- Foto del Baucher -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="foto_baucher">Foto del Voucher/Baucher</label>
+                                    <label for="foto_baucher">Foto del Voucher/Baucher <span class="text-danger">*</span></label>
                                     <div class="custom-file">
-                                        <input type="file" class="custom-file-input" id="foto_baucher" name="foto_baucher" accept="image/*">
+                                        <input type="file" class="custom-file-input" id="foto_baucher" name="foto_baucher" accept="image/*" required>
                                         <label class="custom-file-label" for="foto_baucher">Elegir archivo...</label>
                                     </div>
                                     <small class="form-text text-muted">Formatos permitidos: JPG, PNG. Máximo 2MB.</small>
                                 </div>
                             </div>
-
-                            <!-- Observaciones -->
-                            <div class="col-md-6">
-
-<script>
-    // Mostrar el campo para escribir si se elige "Otro"
-    document.getElementById('banco').addEventListener('change', function() {
-        const campoOtro = document.getElementById('campo_otro_banco');
-        campoOtro.style.display = (this.value === 'otro') ? 'block' : 'none';
-    });
-</script>
-
-
 
                             <!-- Observaciones -->
                             <div class="col-md-6">
@@ -230,6 +218,16 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Sección de comprobante --><script>
+    // Mostrar el campo para escribir si se elige "Otro"
+    document.getElementById('banco').addEventListener('change', function() {
+        const campoOtro = document.getElementById('campo_otro_banco');
+        campoOtro.style.display = (this.value === 'otro') ? 'block' : 'none';
+    });
+</script>
+
+
 
                         <!-- Sección de comprobante -->
                         <div class="card card-info mt-3">
@@ -256,14 +254,7 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                     </div>
                                     
 
-                                    <!-- Foto del Baucher -->
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="foto_baucher">Foto del Baucher <span class="text-danger">*</span></label>
-                                            <input type="file" name="foto_baucher" id="foto_baucher" class="form-control" accept="image/*" required>
-                                            <small class="text-muted">Formatos permitidos: JPG, PNG, JPEG. Tamaño máximo: 2MB.</small>
-                                        </div>
-                                    </div>
+
 
                                     <p class="text-info">
                                         <i class="fas fa-info-circle"></i>
