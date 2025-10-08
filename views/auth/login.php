@@ -16,7 +16,7 @@
     <div class="login">
         <div class="login__content">
             <div class="login__img">
-                <img src="/educa-finanzas/public/img/img-login.svg" alt="">
+                <img src="/educa-finanzas/public/img/image.png" alt="">
             </div>
 
             <div class="login__forms">

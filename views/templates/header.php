@@ -14,6 +14,12 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos comunes -->
+    <link href="public/css/common.css" rel="stylesheet">
+    
     <!-- jQuery PRIMERO -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     
@@ -24,15 +30,6 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-    <style>
-        .navbar-brand {
-            font-weight: 600;
-        }
-        .table th {
-            background-color: #f8f9fa;
-            border-top: none;
-        }
-    </style>
 </head>
 <body>
 

@@ -155,18 +155,17 @@
                                         <td><?= $periodo['periodo'] ?></td>
                                         <td><?= $periodo['total_pagos'] ?></td>
                                         <td>S/ <?= number_format($periodo['total_ingresos'], 2) ?></td>
-                                        <td>S/ <?= number_format($periodo['monto_efectivo'], 2) ?></td>
-                                        <td>S/ <?= number_format($periodo['monto_transferencia'], 2) ?></td>
-                                        <td>S/ <?= number_format($periodo['monto_tarjeta'], 2) ?></td>
-                                        <td>S/ <?= number_format($periodo['monto_mensualidad'], 2) ?></td>
-                                        <td>S/ <?= number_format($periodo['monto_matricula'], 2) ?></td>
+                                        <td>S/ <?= number_format($periodo['monto_efectivo'] ?? 0, 2) ?></td>
+                                        <td>S/ <?= number_format($periodo['monto_transferencia'] ?? 0, 2) ?></td>
+                                        <td>S/ <?= number_format($periodo['monto_tarjeta'] ?? 0, 2) ?></td>
+                                        <td>S/ <?= number_format($periodo['monto_mensualidad'] ?? 0, 2) ?></td>
+                                        <td>S/ <?= number_format($periodo['monto_matricula'] ?? 0, 2) ?></td>
                                         <td>S/ <?= number_format(
                                             ($periodo['monto_otro'] ?? 0) + 
                                             ($periodo['monto_material'] ?? 0) + 
                                             ($periodo['monto_uniforme'] ?? 0) + 
                                             ($periodo['monto_actividad'] ?? 0), 
-                                            2) 
-                                        ?></td>
+                                            2) ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>

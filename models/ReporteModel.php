@@ -47,7 +47,18 @@ class ReporteModel extends Modelo
                     COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'efectivo' THEN monto ELSE 0 END), 0) as monto_efectivo,
                     COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'transferencia' THEN monto ELSE 0 END), 0) as monto_transferencia,
                     COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'tarjeta' THEN monto ELSE 0 END), 0) as monto_tarjeta,
-                    COUNT(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN 1 END) as pagos_matricula,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensualidad%' THEN monto ELSE 0 END), 0) as monto_mensualidad,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%material%' THEN monto ELSE 0 END), 0) as monto_material,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%uniforme%' THEN monto ELSE 0 END), 0) as monto_uniforme,
+                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%actividad%' THEN monto ELSE 0 END), 0) as monto_actividad,
+                    COALESCE(SUM(CASE 
+                        WHEN LOWER(concepto) NOT LIKE '%mensualidad%'
+                        AND LOWER(concepto) NOT LIKE '%matric%'
+                        AND LOWER(concepto) NOT LIKE '%material%'
+                        AND LOWER(concepto) NOT LIKE '%uniforme%'
+                        AND LOWER(concepto) NOT LIKE '%actividad%'
+                        THEN monto ELSE 0 END), 0) as monto_otro,
                     COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
                     COUNT(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad,
                     COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN monto ELSE 0 END), 0) as monto_mensualidad

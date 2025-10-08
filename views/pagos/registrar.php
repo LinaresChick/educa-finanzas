@@ -8,7 +8,7 @@ require_once __DIR__ . '/../templates/sidebar.php';
 ?>
 
 <!-- Script de validación de pagos -->
-<script src="/public/js/validacion_pagos.js"></script>
+<script src="<?php echo BASE_URL; ?>/public/js/validacion_pagos.js"></script>
 
 <div class="content-wrapper">
     <div class="content-header">
@@ -56,7 +56,7 @@ require_once __DIR__ . '/../templates/sidebar.php';
                     <h3 class="card-title">Datos del Pago</h3>
                 </div>
 
-                <form action="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=guardar" method="POST" id="formPago">
+                <form action="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=guardar" method="POST" id="formPago" enctype="multipart/form-data">
                     <div class="card-body">
                         <div class="row">
                             <!-- Selección de estudiante -->
@@ -269,7 +269,7 @@ require_once __DIR__ . '/../templates/sidebar.php';
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Registrar Pago
                         </button>
-                        <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago" class="btn btn-secondary">
+                        <a href="<?php echo '/educa-finanzas/public/index.php?controller=Pago&action=index'; ?>" class="btn btn-secondary" id="btnCancelar">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
                     </div>

@@ -59,9 +59,26 @@ class PagoModel extends \Core\Modelo {
         }
     }
 
+    public function obtenerPagosConEstudiantes() {
+        try {
+            $sql = "SELECT p.*, 
+                           CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo
+                    FROM {$this->tabla} p
+                    LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    ORDER BY p.fecha_pago DESC";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerPagosConEstudiantes: " . $e->getMessage());
+            return [];
+        }
+    }
+    
     public function contarPagosPendientes() {
         try {
-            $sql = "SELECT COUNT(*) FROM pagos WHERE estado = 'pendiente'";
+            $sql = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 'pendiente'";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             return (int)$stmt->fetchColumn();

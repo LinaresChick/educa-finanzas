@@ -4,28 +4,34 @@
  */
 require_once __DIR__ . '/../templates/header.php';
 require_once __DIR__ . '/../templates/navbar.php';
-require_once __DIR__ . '/../templates/sidebar.php';
+
 ?>
 
-<div class="content-wrapper">
+<div class="main-container">
     <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Gestión de Pagos</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="header-left">
+                <h1 class="section-title mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Gestión de Pagos
+                </h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0 mt-2">
+                        <li class="breadcrumb-item"><a href="/panel" class="text-success">Inicio</a></li>
                         <li class="breadcrumb-item active">Pagos</li>
                     </ol>
-                </div>
+                </nav>
+            </div>
+            <div class="header-right">
+                <a href="index.php?controller=Pago&action=crear" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    Registrar Nuevo Pago
+                </a>
             </div>
         </div>
     </div>
 
-    <section class="content">
-        <div class="container-fluid">
+    <div class="content-card">
             <!-- Mensajes de alerta -->
             <?php if (isset($_SESSION['exito'])): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -55,21 +61,47 @@ require_once __DIR__ . '/../templates/sidebar.php';
             </div>
             <?php endif; ?>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h3 class="card-title">Listado de pagos registrados</h3>
-                        </div>
-                        <div class="col-md-4 text-right">
-                            <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=registrar" class="btn btn-primary">
-                                <i class="fas fa-plus-circle"></i> Registrar Nuevo Pago
-                            </a>
+            <!-- Sección de filtros -->
+            <div class="filter-section mb-4">
+                <form action="/pagos" method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" name="busqueda" 
+                                   placeholder="Buscar por estudiante o concepto" 
+                                   value="<?= $busqueda ?? '' ?>">
                         </div>
                     </div>
-                </div>
 
-                <div class="card-body">
+                    <div class="col-md-2">
+                        <select name="estado" id="estado" class="form-select">
+                            <option value="todos" <?= ($estado ?? '') == 'todos' ? 'selected' : '' ?>>Todos los estados</option>
+                            <option value="completado" <?= ($estado ?? '') == 'completado' ? 'selected' : '' ?>>Completados</option>
+                            <option value="anulado" <?= ($estado ?? '') == 'anulado' ? 'selected' : '' ?>>Anulados</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" name="fecha_inicio" 
+                               id="fecha_inicio" placeholder="Fecha inicio" 
+                               value="<?= $fecha_inicio ?? '' ?>">
+                    </div>
+
+                    <div class="col-md-2">
+                        <input type="date" class="form-control" name="fecha_fin" 
+                               id="fecha_fin" placeholder="Fecha fin" 
+                               value="<?= $fecha_fin ?? '' ?>">
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="content-card">
                     <!-- Filtros de búsqueda -->
                     <div class="row mb-3">
                         <div class="col-md-12">
@@ -115,18 +147,34 @@ require_once __DIR__ . '/../templates/sidebar.php';
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped dataTable">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>#</th>
-                                    <th>Estudiante</th>
-                                    <th>Concepto</th>
-                                    <th>Monto</th>
-                                    <th>Método de Pago</th>
-                                    <th>Fecha y Hora</th>
-                                    <th>Comprobante</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th class="text-center">#</th>
+                                    <th>
+                                        <i class="fas fa-user-graduate me-2"></i>Estudiante
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-file-invoice me-2"></i>Concepto
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-coins me-2"></i>Monto
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-credit-card me-2"></i>Método
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-calendar me-2"></i>Fecha
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-receipt me-2"></i>Comprobante
+                                    </th>
+                                    <th>
+                                        <i class="fas fa-check-circle me-2"></i>Estado
+                                    </th>
+                                    <th class="text-center">
+                                        <i class="fas fa-cogs me-2"></i>Acciones
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -138,7 +186,7 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                     <?php foreach ($pagos as $pago): ?>
                                         <tr>
                                             <td><?= $pago['id_pago'] ?></td>
-                                            <td><?= htmlspecialchars($pago['estudiante_nombre_completo'] ?? 'No especificado') ?></td>
+                                            <td><?= htmlspecialchars($pago['estudiante_nombre_completo']) ?></td>
                                             <td><?= htmlspecialchars($pago['concepto']) ?></td>
                                             <td>S/ <?= number_format($pago['monto'], 2) ?></td>
                                             <td>
@@ -182,14 +230,12 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                                         <i class="fas fa-receipt"></i>
                                                     </a>
                                                     <?php if ($pago['estado'] !== 'anulado'): ?>
-                                                        <button type="button" 
-                                                                class="btn btn-danger btn-sm" 
+                                                        <button type="button" class="btn btn-danger btn-sm" 
                                                                 data-toggle="modal" 
                                                                 data-target="#modalAnular" 
                                                                 data-id="<?= $pago['id_pago'] ?>"
-                                                                data-info="Pago #<?= $pago['id_pago'] ?> - <?= htmlspecialchars($pago['estudiante_nombre_completo'] ?? 'No especificado') ?> - S/ <?= number_format($pago['monto'], 2) ?>"
-                                                                title="Anular pago"
-                                                        >
+                                                                data-info="Pago #<?= $pago['id_pago'] ?> - <?= htmlspecialchars($pago['estudiante_nombre_completo']) ?> - S/ <?= number_format($pago['monto'], 2) ?>"
+                                                                title="Anular pago">
                                                             <i class="fas fa-times-circle"></i>
                                                         </button>
                                                     <?php endif; ?>

@@ -5,9 +5,9 @@
 :root{
   /*===== Colores =====*/
   --first-color: #A3F527;
-  --first-color-dark: #82c31f;
-  --first-color-light: #c4ff5c;
-  --first-color-lighten: #F2F2F2;
+  --first-color-dark: #5A8B0F;
+  --first-color-light: #C4F575;
+  --first-color-lighten: #F4FFEA;
 
   /*===== Font and typography =====*/
   --body-font: 'Open Sans', sans-serif;
@@ -85,7 +85,8 @@ img{
   padding: 2rem 1rem;
   border-radius: 1rem;
   text-align: center;
-  box-shadow: 0 8px 20px rgba(35,0,77,.2);
+  box-shadow: 0 8px 20px rgba(90,139,15,0.15);
+  backdrop-filter: blur(8px);
   animation-duration: .4s;
   animation-name: animate-login;
 }
@@ -115,6 +116,13 @@ img{
   background-color: #FFF;
   margin-top: 1rem;
   border-radius: .5rem;
+  border: 1px solid var(--first-color-light);
+  transition: all 0.3s ease;
+}
+
+.login__box:focus-within {
+  border-color: var(--first-color);
+  box-shadow: 0 0 0 3px rgba(163,245,39,0.2);
 }
 
 .login__icon{
@@ -151,15 +159,19 @@ img{
   padding: 1rem;
   margin: 2rem 0;
   background-color: var(--first-color);
-  color: #FFF;
+  color: #1A2601;
   font-weight: 600;
   text-align: center;
   border-radius: .5rem;
   transition: .3s;
+  border: 2px solid transparent;
 }
 
 .login__button:hover{
   background-color: var(--first-color-dark);
+  color: #FFF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(163,245,39,0.3);
 }
 
 .login__account, .login__signin, .login__signup{

@@ -33,7 +33,7 @@ class PagoController extends BaseController {
             exit();
         }
         
-        $pagos = $this->pagoModel->obtenerTodos();
+        $pagos = $this->pagoModel->obtenerPagosConEstudiantes();
         
         $datos = [
             'titulo' => 'Listado de Pagos',
