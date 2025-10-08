@@ -37,10 +37,21 @@ class ReporteController extends BaseController {
             exit();
         }
         
+        // Obtener fechas para el reporte
+        $fechaFin = date('Y-m-d');
+        $fechaInicio = date('Y-m-d', strtotime('-12 months'));
+        
+        // Obtener reporte financiero y estadísticas
+        $reporteFinanciero = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin);
+        
         // Datos para mostrar en la vista
         $datos = [
             'titulo' => 'Reportes del Sistema',
-            'estadisticas' => $this->reporteModel->obtenerEstadisticasGenerales()
+            'estadisticas' => $this->reporteModel->obtenerEstadisticasGenerales(),
+            'reporte' => $reporteFinanciero['periodos'] ?? [],
+            'resumen' => $reporteFinanciero['estadisticas'] ?? [],
+            'fecha_inicio' => $fechaInicio,
+            'fecha_fin' => $fechaFin
         ];
         
         $this->render("reportes/financiero", $datos);
