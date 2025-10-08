@@ -3,9 +3,9 @@
  * Vista de comprobante de pago
  */
 if (!isset($modo_impresion)) {
-    require_once 'views/templates/header.php';
-    require_once 'views/templates/navbar.php';
-    require_once 'views/templates/sidebar.php';
+    require_once __DIR__ . '/../templates/header.php';
+    require_once __DIR__ . '/../templates/navbar.php';
+    require_once __DIR__ . '/../templates/sidebar.php';
 }
 ?>
 
@@ -20,7 +20,7 @@ if (!isset($modo_impresion)) {
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="/pagos">Pagos</a></li>
+                        <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>/index.php?controller=Pago">Pagos</a></li>
                         <li class="breadcrumb-item active">Comprobante</li>
                     </ol>
                 </div>
@@ -32,10 +32,10 @@ if (!isset($modo_impresion)) {
         <div class="container-fluid">
             <div class="row mb-3">
                 <div class="col-12">
-                    <a href="/pagos/comprobante/<?= $pago['id_pago'] ?>?imprimir=1" class="btn btn-info" target="_blank">
+                    <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=comprobante&id=<?= $pago['id_pago'] ?>&imprimir=1" class="btn btn-info" target="_blank">
                         <i class="fas fa-print"></i> Imprimir Comprobante
                     </a>
-                    <a href="/pagos" class="btn btn-secondary">
+                    <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>
                 </div>
@@ -196,6 +196,18 @@ if (!isset($modo_impresion)) {
                             <td class="text-right">S/ <?= number_format($pago['igv'], 2) ?></td>
                         </tr>
                     <?php endif; ?>
+                    <?php if ($pago['descuento'] > 0): ?>
+                        <tr>
+                            <td colspan="2" class="text-right"><strong>Descuento</strong></td>
+                            <td class="text-right text-success">- S/ <?= number_format($pago['descuento'], 2) ?></td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if ($pago['aumento'] > 0): ?>
+                        <tr>
+                            <td colspan="2" class="text-right"><strong>Aumento/Mora</strong></td>
+                            <td class="text-right text-danger">+ S/ <?= number_format($pago['aumento'], 2) ?></td>
+                        </tr>
+                    <?php endif; ?>
                     <tr>
                         <td colspan="2" class="text-right"><strong>TOTAL</strong></td>
                         <td class="text-right"><strong>S/ <?= number_format($pago['monto'], 2) ?></strong></td>
@@ -208,6 +220,20 @@ if (!isset($modo_impresion)) {
                     <div class="col-md-12">
                         <h5>Observaciones</h5>
                         <p><?= nl2br(htmlspecialchars($pago['observaciones'])) ?></p>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($pago['foto_baucher']): ?>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h5>Voucher/Baucher</h5>
+                        <div class="text-center">
+                            <img src="<?= BASE_URL ?>/public/<?= htmlspecialchars($pago['foto_baucher']) ?>" 
+                                 alt="Voucher de pago" 
+                                 class="img-fluid" 
+                                 style="max-height: 300px;">
+                        </div>
                     </div>
                 </div>
             <?php endif; ?>
@@ -224,7 +250,7 @@ if (!isset($modo_impresion)) {
         </div>
     </section>
 </div>
-<?php require_once 'views/templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>
 <?php else: ?>
 </body>
 </html>
