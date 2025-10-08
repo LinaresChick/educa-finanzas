@@ -138,7 +138,7 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                     <?php foreach ($pagos as $pago): ?>
                                         <tr>
                                             <td><?= $pago['id_pago'] ?></td>
-                                            <td><?= htmlspecialchars($pago['estudiante_nombre_completo']) ?></td>
+                                            <td><?= htmlspecialchars($pago['estudiante_nombre_completo'] ?? 'No especificado') ?></td>
                                             <td><?= htmlspecialchars($pago['concepto']) ?></td>
                                             <td>S/ <?= number_format($pago['monto'], 2) ?></td>
                                             <td>
@@ -182,12 +182,14 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                                         <i class="fas fa-receipt"></i>
                                                     </a>
                                                     <?php if ($pago['estado'] !== 'anulado'): ?>
-                                                        <button type="button" class="btn btn-danger btn-sm" 
+                                                        <button type="button" 
+                                                                class="btn btn-danger btn-sm" 
                                                                 data-toggle="modal" 
                                                                 data-target="#modalAnular" 
                                                                 data-id="<?= $pago['id_pago'] ?>"
-                                                                data-info="Pago #<?= $pago['id_pago'] ?> - <?= htmlspecialchars($pago['estudiante_nombre_completo']) ?> - S/ <?= number_format($pago['monto'], 2) ?>"
-                                                                title="Anular pago">
+                                                                data-info="Pago #<?= $pago['id_pago'] ?> - <?= htmlspecialchars($pago['estudiante_nombre_completo'] ?? 'No especificado') ?> - S/ <?= number_format($pago['monto'], 2) ?>"
+                                                                title="Anular pago"
+                                                        >
                                                             <i class="fas fa-times-circle"></i>
                                                         </button>
                                                     <?php endif; ?>

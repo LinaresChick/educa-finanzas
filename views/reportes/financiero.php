@@ -160,7 +160,13 @@
                                         <td>S/ <?= number_format($periodo['monto_tarjeta'], 2) ?></td>
                                         <td>S/ <?= number_format($periodo['monto_mensualidad'], 2) ?></td>
                                         <td>S/ <?= number_format($periodo['monto_matricula'], 2) ?></td>
-                                        <td>S/ <?= number_format($periodo['monto_otro'] + $periodo['monto_material'] + $periodo['monto_uniforme'] + $periodo['monto_actividad'], 2) ?></td>
+                                        <td>S/ <?= number_format(
+                                            ($periodo['monto_otro'] ?? 0) + 
+                                            ($periodo['monto_material'] ?? 0) + 
+                                            ($periodo['monto_uniforme'] ?? 0) + 
+                                            ($periodo['monto_actividad'] ?? 0), 
+                                            2) 
+                                        ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
