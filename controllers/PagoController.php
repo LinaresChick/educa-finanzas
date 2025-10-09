@@ -181,10 +181,14 @@ class PagoController extends BaseController
         // Asegurarnos de que el estado esté definido
         $pago['estado'] = $pago['estado'] ?? 'completado';
 
+        // Verificar si es modo impresión
+        $modo_impresion = isset($_GET['imprimir']) && $_GET['imprimir'] == '1';
+
         $datos = [
             'titulo' => 'Comprobante de Pago',
             'pago' => $pago,
-            'estudiante' => $estudiante
+            'estudiante' => $estudiante,
+            'modo_impresion' => $modo_impresion
         ];
 
         $this->render("pagos/comprobante", $datos);

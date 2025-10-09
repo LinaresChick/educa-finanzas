@@ -2,14 +2,14 @@
 /**
  * Vista de comprobante de pago
  */
-if (!isset($modo_impresion)) {
+if (!$modo_impresion) {
     require_once __DIR__ . '/../templates/header.php';
     require_once __DIR__ . '/../templates/navbar.php';
     require_once __DIR__ . '/../templates/sidebar.php';
 }
 ?>
 
-<?php if (!isset($modo_impresion)): ?>
+<?php if (!$modo_impresion): ?>
 <div class="content-wrapper">
     <div class="content-header">
         <div class="container-fluid">
@@ -49,6 +49,10 @@ if (!isset($modo_impresion)) {
     <title>Comprobante de Pago #<?= $pago['id_pago'] ?></title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -97,6 +101,16 @@ if (!isset($modo_impresion)) {
             z-index: 1000;
         }
         @media print {
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .comprobante-container {
+                border: none;
+                max-width: none;
+                width: 100%;
+                padding: 20px;
+            }
             .no-print {
                 display: none;
             }
