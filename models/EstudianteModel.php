@@ -2,9 +2,7 @@
 /**
  * Modelo para la gestión de estudiantes
  */
-namespace Models;
-
-require_once __DIR__ . '/../core/Modelo.php';
+namespace Models;require_once __DIR__ . '/../core/Modelo.php';
 require_once __DIR__ . '/../models/PadreModel.php';
 
 use Core\Modelo;

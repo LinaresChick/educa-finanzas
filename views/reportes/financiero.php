@@ -67,7 +67,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Ingresos Totales</h5>
                                 <p class="card-text display-6">
-                                    S/ <?= number_format(array_sum(array_column($reporte, 'total_ingresos')), 2) ?>
+                                    S/ <?= number_format(!empty($reporte) ? array_sum(array_column($reporte, 'total_ingresos')) : 0, 2) ?>
                                 </p>
                             </div>
                         </div>
@@ -77,7 +77,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Total Pagos</h5>
                                 <p class="card-text display-6">
-                                    <?= array_sum(array_column($reporte, 'total_pagos')) ?>
+                                    <?= !empty($reporte) ? array_sum(array_column($reporte, 'total_pagos')) : 0 ?>
                                 </p>
                             </div>
                         </div>
@@ -150,7 +150,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($reporte['periodos'] as $periodo): ?>
+                                    <?php if (!empty($reporte)) foreach ($reporte as $periodo): ?>
                                     <tr>
                                         <td><?= $periodo['periodo'] ?></td>
                                         <td><?= $periodo['total_pagos'] ?></td>

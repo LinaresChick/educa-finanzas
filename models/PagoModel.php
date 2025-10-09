@@ -62,9 +62,12 @@ class PagoModel extends \Core\Modelo {
 
     public function obtenerPagosConEstudiantes() {
         try {
-            $sql = "SELECT p.*, 
+            $sql = "SELECT p.*,
                            CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo,
-                           u.nombre as registrado_por
+                           u.nombre as registrado_por,
+                           e.monto as monto_estudiante,
+                           e.fecha_vencimiento,
+                           e.estado_pago
                     FROM {$this->tabla} p
                     LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
                     LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
@@ -164,6 +167,21 @@ class PagoModel extends \Core\Modelo {
         } catch (\Exception $e) {
             error_log("Error en obtenerUltimosPagos: " . $e->getMessage());
             return [];
+        }
+    }
+
+    public function contarPagosPendientes() {
+        try {
+            $sql = "SELECT COUNT(*) 
+                    FROM estudiantes e
+                    WHERE e.estado_pago = 'pendiente'";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en contarPagosPendientes: " . $e->getMessage());
+            return 0;
         }
     }
 

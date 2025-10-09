@@ -166,7 +166,20 @@ class PagoController extends BaseController
             exit();
         }
 
-        $estudiante = $this->estudianteModel->buscarPorId($pago['id_estudiante']);
+        // Obtener estudiante con su información completa
+        $estudiante = $this->estudianteModel->obtenerEstudianteDetalle($pago['id_estudiante']);
+        
+        if ($estudiante) {
+            // Adaptar los campos para la vista
+            $estudiante['grado'] = $estudiante['grado_nombre'] ?? 'No asignado';
+            $estudiante['seccion'] = $estudiante['seccion_nombre'] ?? '';
+        }
+
+        // Formatear la fecha de pago
+        $pago['fecha_pago_formateada'] = date('d/m/Y', strtotime($pago['fecha_pago']));
+        
+        // Asegurarnos de que el estado esté definido
+        $pago['estado'] = $pago['estado'] ?? 'completado';
 
         $datos = [
             'titulo' => 'Comprobante de Pago',

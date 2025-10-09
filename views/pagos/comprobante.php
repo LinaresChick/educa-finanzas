@@ -129,16 +129,18 @@ if (!isset($modo_impresion)) {
         <div class="comprobante-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Fecha:</strong> <?= isset($pago['fecha_emision_formateada']) ? $pago['fecha_emision_formateada'] : $pago['fecha_pago_formateada'] ?></p>
+                    <p><strong>Fecha:</strong> <?= date('d/m/Y', strtotime($pago['fecha_pago'])) ?></p>
                 </div>
                 <div class="col-md-6 text-right">
                     <p><strong>Estado:</strong> 
-                        <?php if ($pago['estado'] === 'completado'): ?>
+                        <?php 
+                        $estado = $pago['estado'] ?? 'completado';
+                        if ($estado === 'completado'): ?>
                             <span class="badge badge-success">PAGADO</span>
-                        <?php elseif ($pago['estado'] === 'anulado'): ?>
+                        <?php elseif ($estado === 'anulado'): ?>
                             <span class="badge badge-danger">ANULADO</span>
                         <?php else: ?>
-                            <span class="badge badge-info"><?= strtoupper($pago['estado']) ?></span>
+                            <span class="badge badge-info"><?= strtoupper($estado) ?></span>
                         <?php endif; ?>
                     </p>
                 </div>
@@ -151,7 +153,7 @@ if (!isset($modo_impresion)) {
                     <h5>Datos del Estudiante</h5>
                     <p><strong>Estudiante:</strong> <?= htmlspecialchars($estudiante['nombres'] . ' ' . $estudiante['apellidos']) ?></p>
                     <p><strong>DNI:</strong> <?= htmlspecialchars($estudiante['dni']) ?></p>
-                    <p><strong>Grado:</strong> <?= htmlspecialchars($estudiante['grado'] . ' ' . $estudiante['seccion']) ?></p>
+                    <p><strong>Grado:</strong> <?= htmlspecialchars($estudiante['grado'] ?? 'No asignado') ?> <?= htmlspecialchars($estudiante['seccion'] ?? '') ?></p>
                 </div>
             </div>
             
