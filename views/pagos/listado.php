@@ -73,10 +73,22 @@ require_once __DIR__ . '/../templates/navbar.php';
                     </div>
 
                     <div class="col-md-2">
-                        <select name="estado" id="estado" class="form-select">
-                            <option value="todos" <?= ($estado ?? '') == 'todos' ? 'selected' : '' ?>>Todos los estados</option>
-                            <option value="completado" <?= ($estado ?? '') == 'completado' ? 'selected' : '' ?>>Completados</option>
-                            <option value="anulado" <?= ($estado ?? '') == 'anulado' ? 'selected' : '' ?>>Anulados</option>
+                        <select name="metodo_pago" id="metodo_pago" class="form-select">
+                            <option value="">Todos los métodos</option>
+                            <option value="efectivo" <?= ($metodo_pago ?? '') == 'efectivo' ? 'selected' : '' ?>>Efectivo</option>
+                            <option value="transferencia" <?= ($metodo_pago ?? '') == 'transferencia' ? 'selected' : '' ?>>Transferencia</option>
+                            <option value="tarjeta" <?= ($metodo_pago ?? '') == 'tarjeta' ? 'selected' : '' ?>>Tarjeta</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <select name="banco" id="banco" class="form-select">
+                            <option value="">Todos los bancos</option>
+                            <option value="BCP" <?= ($banco ?? '') == 'BCP' ? 'selected' : '' ?>>BCP</option>
+                            <option value="BBVA" <?= ($banco ?? '') == 'BBVA' ? 'selected' : '' ?>>BBVA</option>
+                            <option value="Interbank" <?= ($banco ?? '') == 'Interbank' ? 'selected' : '' ?>>Interbank</option>
+                            <option value="Scotiabank" <?= ($banco ?? '') == 'Scotiabank' ? 'selected' : '' ?>>Scotiabank</option>
+                            <option value="Otro" <?= ($banco ?? '') == 'Otro' ? 'selected' : '' ?>>Otro</option>
                         </select>
                     </div>
 

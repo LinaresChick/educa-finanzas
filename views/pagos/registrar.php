@@ -131,23 +131,41 @@ require_once __DIR__ . '/../templates/sidebar.php';
                                     <select name="metodo_pago" id="metodo_pago" class="form-control" required>
                                         <option value="">-- Seleccione un método --</option>
                                         <option value="efectivo">Efectivo</option>
-                                        <option value="transferencia">Transferencia Bancaria</option>
-                                        <option value="deposito">Depósito Bancario</option>
-                                        <option value="tarjeta">Tarjeta de Crédito/Débito</option>
-                                        <option value="yape">Yape</option>
-                                        <option value="plin">Plin</option>
+                                        <option value="transferencia">Transferencia</option>
+                                        <option value="tarjeta">Tarjeta</option>
                                     </select>
                                 </div>
                             </div>
 
                             <!-- Banco -->
-                            <!-- Banco -->
-<div class="col-md-6">
-    <div class="form-group">
-        <label for="banco">Banco <span class="text-danger">*</span></label>
-        <select name="banco" id="banco" class="form-control" required>
-            <option value="">-- Seleccione un banco --</option>
-            <option value="bcp">BCP</option>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="banco">Banco <span class="text-danger">*</span></label>
+                                    <select name="banco" id="banco" class="form-control" required>
+                                        <option value="">-- Seleccione un banco --</option>
+                                        <option value="BCP">BCP</option>
+                                        <option value="BBVA">BBVA</option>
+                                        <option value="Interbank">Interbank</option>
+                                        <option value="Scotiabank">Scotiabank</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Descuento y Aumento -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="descuento">Fecha de Descuento</label>
+                                    <input type="date" name="descuento" id="descuento" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="aumento">Fecha de Aumento</label>
+                                    <input type="date" name="aumento" id="aumento" class="form-control">
+                                </div>
+                            </div>
             <option value="bbva">BBVA</option>
             <option value="interbank">Interbank</option>
             <option value="scotiabank">Scotiabank</option>

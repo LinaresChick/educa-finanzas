@@ -8,7 +8,6 @@ class PagoModel extends \Core\Modelo {
         parent::__construct('pagos', 'id_pago');
         $this->allowedFields = [
             'id_estudiante',
-            'id_deuda',
             'concepto',
             'banco',
             'monto',
@@ -16,9 +15,8 @@ class PagoModel extends \Core\Modelo {
             'fecha_pago',
             'descuento',
             'aumento',
-            'foto_baucher',
-            'estado',
             'observaciones',
+            'foto_baucher',
             'usuario_registro'
         ];
     }
@@ -37,9 +35,12 @@ class PagoModel extends \Core\Modelo {
                     } elseif ($campo === 'fecha_fin') {
                         $where[] = "fecha_pago <= :fecha_fin";
                         $params[':fecha_fin'] = $valor;
-                    } elseif ($campo === 'estado') {
-                        $where[] = "estado = :estado";
-                        $params[':estado'] = $valor;
+                    } elseif ($campo === 'banco') {
+                        $where[] = "banco = :banco";
+                        $params[':banco'] = $valor;
+                    } elseif ($campo === 'metodo_pago') {
+                        $where[] = "metodo_pago = :metodo_pago";
+                        $params[':metodo_pago'] = $valor;
                     }
                 }
                 if (!empty($where)) {
@@ -62,9 +63,11 @@ class PagoModel extends \Core\Modelo {
     public function obtenerPagosConEstudiantes() {
         try {
             $sql = "SELECT p.*, 
-                           CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo
+                           CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo,
+                           u.nombre as registrado_por
                     FROM {$this->tabla} p
                     LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
                     ORDER BY p.fecha_pago DESC";
             
             $stmt = $this->db->prepare($sql);
@@ -75,26 +78,17 @@ class PagoModel extends \Core\Modelo {
             return [];
         }
     }
-    
-    public function contarPagosPendientes() {
-        try {
-            $sql = "SELECT COUNT(*) FROM {$this->tabla} WHERE estado = 'pendiente'";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            return (int)$stmt->fetchColumn();
-        } catch (\Exception $e) {
-            error_log("Error en contarPagosPendientes: " . $e->getMessage());
-            return 0;
-        }
-    }
 
     public function calcularIngresoMensual() {
         try {
-            $sql = "SELECT COALESCE(SUM(monto), 0) as total 
+            $sql = "SELECT 
+                    COALESCE(SUM(monto), 0) as total,
+                    COUNT(*) as total_pagos,
+                    COUNT(DISTINCT metodo_pago) as metodos_pago_usados,
+                    COUNT(DISTINCT banco) as bancos_usados
                     FROM pagos 
                     WHERE YEAR(fecha_pago) = YEAR(CURRENT_DATE()) 
-                    AND MONTH(fecha_pago) = MONTH(CURRENT_DATE()) 
-                    AND estado = 'completado'";
+                    AND MONTH(fecha_pago) = MONTH(CURRENT_DATE())";
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute();

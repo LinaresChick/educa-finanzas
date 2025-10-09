@@ -44,9 +44,10 @@ class ReporteModel extends Modelo
                     COUNT(1) as total_pagos,
                     COALESCE(SUM(monto), 0) as total_ingresos,
                     COUNT(DISTINCT id_estudiante) as estudiantes_pagaron,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'efectivo' THEN monto ELSE 0 END), 0) as monto_efectivo,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'transferencia' THEN monto ELSE 0 END), 0) as monto_transferencia,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'tarjeta' THEN monto ELSE 0 END), 0) as monto_tarjeta,
+                    COALESCE(SUM(CASE WHEN metodo_pago = 'efectivo' THEN monto ELSE 0 END), 0) as monto_efectivo,
+                    COALESCE(SUM(CASE WHEN metodo_pago = 'transferencia' THEN monto ELSE 0 END), 0) as monto_transferencia,
+                    COALESCE(SUM(CASE WHEN metodo_pago = 'tarjeta' THEN monto ELSE 0 END), 0) as monto_tarjeta,
+                    COUNT(DISTINCT banco) as total_bancos,
                     COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensualidad%' THEN monto ELSE 0 END), 0) as monto_mensualidad,
                     COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
                     COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%material%' THEN monto ELSE 0 END), 0) as monto_material,
@@ -59,12 +60,9 @@ class ReporteModel extends Modelo
                         AND LOWER(concepto) NOT LIKE '%uniforme%'
                         AND LOWER(concepto) NOT LIKE '%actividad%'
                         THEN monto ELSE 0 END), 0) as monto_otro,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
-                    COUNT(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN monto ELSE 0 END), 0) as monto_mensualidad
+                    COUNT(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad
                 FROM pagos
                 WHERE fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
-                AND LOWER(estado) = 'completado'
                 GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
                 ORDER BY periodo DESC";
 
@@ -96,6 +94,8 @@ class ReporteModel extends Modelo
                     COALESCE(SUM(monto), 0) as total_periodo,
                     COUNT(1) as total_transacciones,
                     COUNT(DISTINCT id_estudiante) as total_estudiantes,
+                    COUNT(DISTINCT banco) as total_bancos_usados,
+                    COUNT(DISTINCT usuario_registro) as total_usuarios_registro,
                     COALESCE(AVG(monto), 0) as promedio_transaccion,
                     COALESCE(MIN(monto), 0) as min_transaccion,
                     COALESCE(MAX(monto), 0) as max_transaccion,

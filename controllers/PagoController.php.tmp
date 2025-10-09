@@ -9,8 +9,7 @@ use Core\BaseController;
 use Models\PagoModel;
 use Models\EstudianteModel;
 
-class PagoController extends BaseController 
-{
+class PagoController extends BaseController {
     private $pagoModel;
     private $estudianteModel;
     
@@ -123,7 +122,6 @@ class PagoController extends BaseController
                     'aumento' => !empty($_POST['aumento']) ? $_POST['aumento'] : null,
                     'observaciones' => !empty($_POST['observaciones']) ? $_POST['observaciones'] : null,
                     'foto_baucher' => $foto_baucher,
-                    'estado' => 'completado',
                     'usuario_registro' => $_SESSION['usuario']['id_usuario']
                 ];
 
@@ -133,8 +131,6 @@ class PagoController extends BaseController
                     $_SESSION['exito'] = "Pago registrado correctamente";
                     header("Location: index.php?controller=Pago");
                     exit();
-                } else {
-                    throw new \Exception("Error al registrar el pago");
                 }
 
             } catch (\Exception $e) {
@@ -159,14 +155,14 @@ class PagoController extends BaseController
         }
 
         $id_pago = (int)$_GET['id'];
-        $pago = $this->pagoModel->buscarPorId($id_pago);
+        $pago = $this->pagoModel->obtenerPorId($id_pago);
 
         if (!$pago) {
             header("Location: index.php?controller=Pago");
             exit();
         }
 
-        $estudiante = $this->estudianteModel->buscarPorId($pago['id_estudiante']);
+        $estudiante = $this->estudianteModel->obtenerPorId($pago['id_estudiante']);
 
         $datos = [
             'titulo' => 'Comprobante de Pago',
@@ -182,13 +178,13 @@ class PagoController extends BaseController
             session_start();
         }
 
-        if (!isset($_GET['id_estudiante']) || empty($_GET['id_estudiante'])) {
+        if (!isset($_GET['estudiante_id']) || empty($_GET['estudiante_id'])) {
             header("Location: index.php?controller=Panel");
             exit();
         }
 
-        $estudiante_id = (int)$_GET['id_estudiante'];
-        $estudiante = $this->estudianteModel->buscarPorId($estudiante_id);
+        $estudiante_id = (int)$_GET['estudiante_id'];
+        $estudiante = $this->estudianteModel->obtenerPorId($estudiante_id);
         $pagos = $this->pagoModel->obtenerPorEstudiante($estudiante_id);
 
         $datos = [
