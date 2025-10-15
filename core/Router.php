@@ -5,26 +5,35 @@ class Router {
     public function run() {
         $controller = $_GET['controller'] ?? 'Auth';
         $action = $_GET['action'] ?? 'login';
-        $params = $_GET['id'] ?? null;
+        
+        // Crear un array de parámetros con todos los valores GET excepto controller y action
+        $params = [];
+        foreach ($_GET as $key => $value) {
+            if ($key !== 'controller' && $key !== 'action') {
+                $params[$key] = $value;
+            }
+        }
 
         $controllerName = "\\Controllers\\" . ucfirst($controller) . "Controller";
-        $controllerFile = "../controllers/" . ucfirst($controller) . "Controller.php";
+        $controllerFile = __DIR__ . "/../controllers/" . ucfirst($controller) . "Controller.php";
 
         if (file_exists($controllerFile)) {
             require_once $controllerFile;
             $objController = new $controllerName();
 
             if (method_exists($objController, $action)) {
-                if ($params !== null) {
-                    $objController->$action($params);
+                if (!empty($params)) {
+                    $objController->$action(['id' => $params['id'] ?? null]);
                 } else {
                     $objController->$action();
                 }
             } else {
-                echo "Acción no encontrada: $action";
+                header("HTTP/1.0 404 Not Found");
+                require_once __DIR__ . "/../views/errors/404.php";
             }
         } else {
-            echo "Controlador no encontrado: $controller";
+            header("HTTP/1.0 404 Not Found");
+            require_once __DIR__ . "/../views/errors/404.php";
         }
     }
 }

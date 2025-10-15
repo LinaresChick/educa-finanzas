@@ -138,14 +138,21 @@ class Modelo extends BaseDeDatos {
         $sql = "INSERT INTO {$this->tabla} (" . implode(', ', $campos) . ") 
                 VALUES (" . implode(', ', $placeholders) . ")";
         
-        $stmt = $this->db->prepare($sql);
-        
-        foreach ($datos as $campo => $valor) {
-            $stmt->bindValue(":{$campo}", $valor);
+        try {
+            $stmt = $this->db->prepare($sql);
+            
+            foreach ($datos as $campo => $valor) {
+                $stmt->bindValue(":{$campo}", $valor);
+            }
+            
+            $stmt->execute();
+            return $this->db->lastInsertId();
+        } catch (\PDOException $e) {
+            error_log("Error de base de datos: " . $e->getMessage());
+            error_log("SQL: " . $sql);
+            error_log("Datos: " . print_r($datos, true));
+            throw new \Exception("Error de base de datos: " . $e->getMessage());
         }
-        
-        $stmt->execute();
-        return $this->db->lastInsertId();
     }
     
     /**

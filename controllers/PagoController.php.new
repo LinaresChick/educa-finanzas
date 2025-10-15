@@ -5,64 +5,46 @@ require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../core/Vista.php';
 
-class PagoController extends \Core\BaseController
-{
+class PagoController extends \Core\BaseController {
     protected $modelo;
     protected $vista;
 
-    public function __construct()
-    {
+    public function __construct() {
         parent::__construct();
         $this->modelo = new \Models\PagoModel();
         $this->vista = new \Core\Vista();
     }
 
-    public function index()
-    {
+    public function index() {
         try {
-            $filtros = [
-                'fecha_inicio' => $_GET['fecha_inicio'] ?? null,
-                'fecha_fin' => $_GET['fecha_fin'] ?? null,
-                'estudiante' => $_GET['estudiante'] ?? null,
-                'concepto' => $_GET['concepto'] ?? null,
-                'metodo_pago' => $_GET['metodo_pago'] ?? null
-            ];
-
-            if (array_filter($filtros)) {
-                $pagos = $this->modelo->obtenerPagosFiltrados($filtros);
-            } else {
-                $pagos = $this->modelo->obtenerPagosConEstudiantes();
-            }
-
-            $this->vista->mostrar('pagos/listado', [
-                'pagos' => $pagos,
-                'filtros' => $filtros
-            ]);
+            $pagos = $this->modelo->obtenerPagosConEstudiantes();
+            $this->vista->mostrar('pagos/listado', ['pagos' => $pagos]);
         } catch (\Exception $e) {
-            error_log('Error en PagoController->index: ' . $e->getMessage());
+            error_log("Error en PagoController->index: " . $e->getMessage());
             $this->vista->mostrar('pagos/listado', [
                 'error' => 'Hubo un error al cargar los pagos',
-                'pagos' => [],
-                'filtros' => []
+                'pagos' => []
             ]);
         }
     }
 
-    public function registrar()
-    {
+    public function registrar() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $datos = $_POST;
+                
                 if (isset($_FILES['voucher']) && $_FILES['voucher']['error'] === UPLOAD_ERR_OK) {
                     $archivo = $_FILES['voucher'];
                     $nombreArchivo = uniqid() . '_' . basename($archivo['name']);
                     $rutaDestino = __DIR__ . '/../public/uploads/vouchers/' . $nombreArchivo;
+                    
                     if (move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
                         $datos['foto_baucher'] = $nombreArchivo;
                     } else {
                         throw new \Exception("Error al subir el archivo");
                     }
                 }
+
                 $idPago = $this->modelo->crear($datos);
                 if ($idPago) {
                     header('Location: /pagos?mensaje=Pago registrado exitosamente');
@@ -77,11 +59,11 @@ class PagoController extends \Core\BaseController
                 return;
             }
         }
+        
         $this->vista->mostrar('pagos/registrar');
     }
 
-    public function eliminar()
-    {
+    public function eliminar() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pago'])) {
             try {
                 $idPago = (int)$_POST['id_pago'];
@@ -101,8 +83,7 @@ class PagoController extends \Core\BaseController
         }
     }
 
-    public function historial()
-    {
+    public function historial() {
         try {
             $pagos = $this->modelo->obtenerPagosConEstudiantes();
             $this->vista->mostrar('pagos/historial', ['pagos' => $pagos]);
@@ -115,40 +96,13 @@ class PagoController extends \Core\BaseController
         }
     }
 
-    public function comprobante($params = [])
-    {
+    public function comprobante($params = []) {
         if (isset($params['id'])) {
             try {
                 $idPago = (int)$params['id'];
                 $pago = $this->modelo->buscarPorId($idPago);
                 if ($pago) {
-                    // Verificar si es modo impresión
-                    $modo_impresion = isset($params['print']) && $params['print'] === '1';
-                    
-                    // Formatear la fecha
-                    $fecha = new \DateTime($pago['fecha_pago']);
-                    $fecha_formateada = $fecha->format('d/m/Y');
-                    
-                    // Obtener información del estudiante
-                    $estudiante = $this->modelo->obtenerEstudiantePorPago($pago['id_pago']);
-                    
-                    // Calcular el monto total
-                    $monto_total = $pago['monto'];
-                    if (!empty($pago['descuento'])) {
-                        $monto_total -= $pago['descuento'];
-                    }
-                    if (!empty($pago['aumento'])) {
-                        $monto_total += $pago['aumento'];
-                    }
-                    $monto_total = number_format($monto_total, 2);
-                    
-                    $this->vista->mostrar('pagos/comprobante', [
-                        'pago' => $pago,
-                        'modo_impresion' => $modo_impresion,
-                        'fecha_formateada' => $fecha_formateada,
-                        'estudiante' => $estudiante,
-                        'monto_total' => $monto_total
-                    ]);
+                    $this->vista->mostrar('pagos/comprobante', ['pago' => $pago]);
                 } else {
                     header('Location: /pagos?error=Pago no encontrado');
                 }
