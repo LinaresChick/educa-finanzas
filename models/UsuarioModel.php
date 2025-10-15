@@ -287,20 +287,23 @@ class UsuarioModel extends Modelo {
         $stmt->bindValue(':id_usuario', $idUsuario);
         return $stmt->execute();
     }
-    
     /**
-     * Obtiene los datos de un estudiante por su ID
-     * 
-     * @param int $idEstudiante El ID del estudiante
-     * @return array|false Datos del estudiante o false si no existe
-     */
-    public function obtenerDatosEstudiante($idEstudiante) {
-        $sql = "SELECT * FROM estudiantes WHERE id_estudiante = :id_estudiante";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue(':id_estudiante', $idEstudiante);
-        $stmt->execute();
-        return $stmt->fetch();
-    }
+ * Obtiene los datos de un estudiante por su ID
+ * 
+ * @param int $idEstudiante El ID del estudiante
+ * @return array|false Datos del estudiante o false si no existe
+ */
+public function obtenerDatosEstudiante($idEstudiante) {
+    $sql = "SELECT e.id_estudiante, e.nombres, e.apellidos, e.dni, 
+                   s.grado, s.seccion, e.id_usuario
+            FROM estudiantes e
+            LEFT JOIN salones s ON e.id_salon = s.id_salon
+            WHERE e.id_estudiante = ?";
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([$idEstudiante]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
     
     /**
      * Obtiene los datos de un padre por su ID
@@ -430,46 +433,57 @@ class UsuarioModel extends Modelo {
             return false;
         }
     }
-    
     /**
-     * Crea un usuario para un estudiante
-     * 
-     * @param int $idEstudiante El ID del estudiante
-     * @param string $correo El correo del usuario
-     * @param string $password La contraseña del usuario
-     * @return int|false ID del usuario creado o false si falla
-     */
-    public function crearUsuarioEstudiante($idEstudiante, $correo, $password) {
+ * Crea un usuario para un estudiante
+ * 
+ * @param int $idEstudiante El ID del estudiante
+ * @param string $correo El correo del usuario
+ * @param string $password La contraseña del usuario
+ * @return int|false ID del usuario creado o false si falla
+ */
+public function crearUsuarioEstudiante($idEstudiante, $correo, $password) {
+    try {
+        $this->db->beginTransaction();
+
         // Verificar si ya existe un usuario para este estudiante
         $sql = "SELECT COUNT(*) as count FROM usuarios WHERE id_estudiante = :id_estudiante";
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':id_estudiante', $idEstudiante);
         $stmt->execute();
-        $resultado = $stmt->fetch();
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($resultado['count'] > 0) {
-            return false;
+            throw new Exception('Ya existe un usuario para este estudiante');
         }
-        
+
         // Obtener datos del estudiante
         $estudiante = $this->obtenerDatosEstudiante($idEstudiante);
         if (!$estudiante) {
-            return false;
+            throw new Exception('Estudiante no encontrado');
         }
-        
+
         // Crear usuario
         $datos = [
             'nombre' => $estudiante['nombres'] . ' ' . $estudiante['apellidos'],
             'correo' => $correo,
-            'password' => $password,
-            'rol' => 'estudiante',
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'rol' => 'Estudiante',
             'estado' => 'activo',
             'id_estudiante' => $idEstudiante,
             'id_padre' => null
         ];
+
+        $idUsuario = $this->crearUsuario($datos);
         
-        return $this->crearUsuario($datos);
+        $this->db->commit();
+        return $idUsuario;
+
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        error_log("Error crearUsuarioEstudiante: " . $e->getMessage());
+        return false;
     }
+}
     
     /**
      * Crea un usuario para un padre
@@ -501,7 +515,7 @@ class UsuarioModel extends Modelo {
         $datos = [
             'nombre' => $padre['nombres'] . ' ' . $padre['apellidos'],
             'correo' => $correo,
-            'password' => $password,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
             'rol' => 'padre',
             'estado' => 'activo',
             'id_estudiante' => null,

@@ -1,68 +1,46 @@
 <?php
-/**
- * Controlador para la gestión de estudiantes
- */
 namespace Controllers;
-
 require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../core/Sesion.php';
 require_once __DIR__ . '/../core/Vista.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
-
 use Core\BaseController;
 use Core\Sesion;
 use Core\Vista;
 use Models\EstudianteModel;
 use Models\UsuarioModel;
-
 class EstudianteController extends BaseController {
     private $estudianteModel;
     private $usuarioModel;
-    
-    /**
-     * Constructor de la clase
-     */
+    // En controllers/EstudianteController.php - MODIFICAR el constructor
     public function __construct() {
-        parent::__construct();
-        $this->estudianteModel = new EstudianteModel();
-        
-        // Verificar si el usuario tiene acceso a este controlador
-        $rolesPermitidos = ['Superadmin', 'Administrador', 'Colaborador'];
-        if (!$this->sesion->tieneRol($rolesPermitidos)) {
-            $this->redireccionar('auth/acceso_denegado');
-        }
-    }
+    parent::__construct();
+    $this->estudianteModel = new EstudianteModel();
     
-    /**
-     * Método por defecto, muestra el listado de estudiantes
-     */
+    // Verificación normal de roles
+    $rolesPermitidos = ['Superadmin', 'Administrador', 'Colaborador'];
+    if (!$this->sesion->tieneRol($rolesPermitidos)) {
+        $this->redireccionar('auth/acceso_denegado');
+    }
+}
+
     public function index() {
         $data['titulo'] = 'Listado de Estudiantes';
         $data['estudiantes'] = $this->estudianteModel->obtenerEstudiantesConInfo();
         $this->vista->mostrar('estudiantes/listado', $data);
     }
-    
-    /**
-     * Muestra el formulario para crear un nuevo estudiante
-     */
     public function crear() {
-        $data['titulo'] = 'Registrar Nuevo Estudiante';
-        $data['salones'] = $this->estudianteModel->obtenerSalonesDisponibles();
-        $this->vista->mostrar('estudiantes/crear', $data);
-    }
-    
-    /**
-     * Procesa el formulario de creación de estudiante
-     */
+
+    $data['titulo'] = 'Registrar Nuevo Estudiante';
+    $data['salones'] = $this->estudianteModel->obtenerSalonesDisponibles();
+    $this->vista->mostrar('estudiantes/crear', $data);
+}
     public function guardar() {
-        // Verificar si es una solicitud POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redireccionar('estudiantes');
             return;
         }
-        
-        // Recoger datos del formulario
         $datosEstudiante = [
             'nombres' => $_POST['nombres'],
             'apellidos' => $_POST['apellidos'],
@@ -73,20 +51,15 @@ class EstudianteController extends BaseController {
             'telefono' => $_POST['telefono'] ?? null,
             'estado' => 'activo'
         ];
-        
         if (!empty($_POST['id_salon'])) {
             $datosEstudiante['id_salon'] = $_POST['id_salon'];
         }
-        
-            // Si se indica crear cuenta de usuario
         $datosUsuario = null;
         if (isset($_POST['crear_cuenta']) && $_POST['crear_cuenta'] == '1') {
-            // Inicializar el modelo de usuarios si aún no está disponible
             if (!isset($this->usuarioModel)) {
                 $this->usuarioModel = new UsuarioModel();
             }            $correo = $_POST['correo'];
             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-            
             $datosUsuario = [
                 'nombre' => $datosEstudiante['nombres'] . ' ' . $datosEstudiante['apellidos'],
                 'correo' => $correo,
@@ -95,10 +68,7 @@ class EstudianteController extends BaseController {
                 'estado' => 'activo'
             ];
         }
-        
-        // Guardar el estudiante
         $resultado = $this->estudianteModel->crearEstudianteConUsuario($datosEstudiante, $datosUsuario);
-        
         if ($resultado) {
             $this->sesion->setFlash('exito', 'Estudiante registrado correctamente.');
             $this->redireccionar('estudiantes/detalle/' . $resultado);

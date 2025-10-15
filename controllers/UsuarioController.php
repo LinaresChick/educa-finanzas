@@ -191,8 +191,13 @@ class UsuarioController extends BaseController
     /**
      * Crea un usuario para un estudiante
      */
-    public function crearUsuarioEstudiante($idEstudiante): void
+    public function crearUsuarioEstudiante($idEstudiante = null): void
     {
+        if (!$idEstudiante) {
+            $this->redireccionarConError('estudiantes', 'ID de estudiante no válido');
+            return;
+        }
+        
         $idEstudiante = $this->validarIdEstudiante($idEstudiante);
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -200,15 +205,26 @@ class UsuarioController extends BaseController
             return;
         }
         
+        // Obtener datos del estudiante
         $estudiante = $this->usuarioModel->obtenerDatosEstudiante($idEstudiante);
         
         if (!$estudiante) {
             $this->redireccionarConError('estudiantes', 'Estudiante no encontrado');
+            return;
         }
         
-        $this->vista->mostrar('usuarios/crear_estudiante', ['estudiante' => $estudiante]);
+        // Verificar si ya tiene usuario
+        if (!empty($estudiante['id_usuario'])) {
+            $this->redireccionarConError('estudiantes/detalle/' . $idEstudiante, 'Este estudiante ya tiene una cuenta de acceso creada.');
+            return;
+        }
+        
+        $this->vista->mostrar('usuarios/crear_estudiante', [
+            'estudiante' => $estudiante,
+            'titulo' => 'Crear Acceso para Estudiante'
+        ]);
     }
-    
+
     /**
      * Crea un usuario para un padre
      */
@@ -440,26 +456,46 @@ class UsuarioController extends BaseController
     {
         $correo = filter_input(INPUT_POST, 'correo', FILTER_SANITIZE_EMAIL);
         $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
+        $password_confirm = filter_input(INPUT_POST, 'password_confirm', FILTER_SANITIZE_STRING);
+        $confirmar = filter_input(INPUT_POST, 'confirmar', FILTER_SANITIZE_STRING);
         
-        if (!$correo || !$password) {
-            $this->redireccionarConError("usuarios/crear_estudiante/{$idEstudiante}", 'Todos los campos son obligatorios');
+        if (!$correo || !$password || !$password_confirm) {
+            $this->redireccionarConError("usuarios/crear_usuario_estudiante/{$idEstudiante}", 'Todos los campos son obligatorios');
+            return;
         }
         
         if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $this->redireccionarConError("usuarios/crear_estudiante/{$idEstudiante}", 'El formato del correo electrónico no es válido');
+            $this->redireccionarConError("usuarios/crear_usuario_estudiante/{$idEstudiante}", 'El formato del correo electrónico no es válido');
+            return;
+        }
+        
+        if ($password !== $password_confirm) {
+            $this->redireccionarConError("usuarios/crear_usuario_estudiante/{$idEstudiante}", 'Las contraseñas no coinciden');
+            return;
+        }
+        
+        if (strlen($password) < 8) {
+            $this->redireccionarConError("usuarios/crear_usuario_estudiante/{$idEstudiante}", 'La contraseña debe tener al menos 8 caracteres');
+            return;
+        }
+        
+        if (!$confirmar) {
+            $this->redireccionarConError("usuarios/crear_usuario_estudiante/{$idEstudiante}", 'Debe confirmar que la información es correcta');
+            return;
         }
         
         if ($this->usuarioModel->correoExiste($correo)) {
-            $this->redireccionarConError("usuarios/crear_estudiante/{$idEstudiante}", 'El correo electrónico ya está registrado');
+            $this->redireccionarConError("usuarios/crear_usuario_estudiante/{$idEstudiante}", 'El correo electrónico ya está registrado');
+            return;
         }
         
         $resultado = $this->usuarioModel->crearUsuarioEstudiante($idEstudiante, $correo, $password);
         
         if ($resultado) {
-            $this->redireccionarConExito("estudiantes/detalle/{$idEstudiante}", 'Usuario creado correctamente para el estudiante');
+            $this->redireccionarConExito("estudiantes/detalle/{$idEstudiante}", 'Cuenta de acceso creada correctamente para el estudiante');
         } else {
             $this->redireccionarConError(
-                "usuarios/crear_estudiante/{$idEstudiante}", 
+                "usuarios/crear_usuario_estudiante/{$idEstudiante}", 
                 'Error al crear el usuario. Es posible que ya exista un usuario para este estudiante.'
             );
         }
@@ -535,73 +571,69 @@ class UsuarioController extends BaseController
         header("Location: /{$ruta}");
         exit;
     }
+    
     public function toggleEstado(): void
-{
-    header('Content-Type: application/json; charset=utf-8');
+    {
+        header('Content-Type: application/json; charset=utf-8');
 
-    // Solo POST
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+        // Solo POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+            exit;
+        }
+
+        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_STRING);
+
+        if (!$id || !in_array($estado, ['activo', 'inactivo'])) {
+            echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
+            exit;
+        }
+
+        $usuarioSesion = $this->sesion->get('usuario') ?? null;
+        if (!$usuarioSesion) {
+            echo json_encode(['success' => false, 'message' => 'Sesión inválida. Inicie sesión.']);
+            exit;
+        }
+
+        // No permitir cambiar su propio estado
+        if ($usuarioSesion['id_usuario'] == $id) {
+            echo json_encode(['success' => false, 'message' => 'No puede cambiar el estado de su propio usuario']);
+            exit;
+        }
+
+        // Obtener usuario objetivo
+        $usuarioObj = $this->usuarioModel->buscarPorId($id);
+        if (!$usuarioObj) {
+            echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
+            exit;
+        }
+
+        // VERIFICACIÓN DE PERMISOS - ACTUALIZAR ESTA PARTE
+        $rolUsuarioSesion = strtolower($usuarioSesion['rol']);
+        $rolUsuarioObj = strtolower($usuarioObj['rol']);
+
+        // Solo superadmin puede modificar a otros superadmins
+        if ($rolUsuarioObj === 'superadmin' && $rolUsuarioSesion !== 'superadmin') {
+            echo json_encode(['success' => false, 'message' => 'No tiene permiso para modificar usuarios Super Administrador']);
+            exit;
+        }
+
+        // Administradores pueden modificar todos excepto superadmins
+        if ($rolUsuarioSesion === 'administrador' && $rolUsuarioObj === 'superadmin') {
+            echo json_encode(['success' => false, 'message' => 'No tiene permiso para modificar usuarios Super Administrador']);
+            exit;
+        }
+
+        // Si pasa todas las validaciones, proceder con el cambio
+        $resultado = $this->usuarioModel->cambiarEstado($id, $estado);
+
+        if ($resultado) {
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
+        }
         exit;
     }
-
-    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-    $estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_STRING);
-
-    if (!$id || !in_array($estado, ['activo', 'inactivo'])) {
-        echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
-        exit;
-    }
-
-    $usuarioSesion = $this->sesion->get('usuario') ?? null;
-    if (!$usuarioSesion) {
-        echo json_encode(['success' => false, 'message' => 'Sesión inválida. Inicie sesión.']);
-        exit;
-    }
-
-    // No permitir cambiar su propio estado
-    if ($usuarioSesion['id_usuario'] == $id) {
-        echo json_encode(['success' => false, 'message' => 'No puede cambiar el estado de su propio usuario']);
-        exit;
-    }
-
-    // Obtener usuario objetivo
-    $usuarioObj = $this->usuarioModel->buscarPorId($id);
-    if (!$usuarioObj) {
-        echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
-        exit;
-    }
-
-    // VERIFICACIÓN DE PERMISOS - ACTUALIZAR ESTA PARTE
-    $rolUsuarioSesion = strtolower($usuarioSesion['rol']);
-    $rolUsuarioObj = strtolower($usuarioObj['rol']);
-
-    // Solo superadmin puede modificar a otros superadmins
-    if ($rolUsuarioObj === 'superadmin' && $rolUsuarioSesion !== 'superadmin') {
-        echo json_encode(['success' => false, 'message' => 'No tiene permiso para modificar usuarios Super Administrador']);
-        exit;
-    }
-
-    // Administradores pueden modificar todos excepto superadmins
-    if ($rolUsuarioSesion === 'administrador' && $rolUsuarioObj === 'superadmin') {
-        echo json_encode(['success' => false, 'message' => 'No tiene permiso para modificar usuarios Super Administrador']);
-        exit;
-    }
-
-    // Si pasa todas las validaciones, proceder con el cambio
-    $resultado = $this->usuarioModel->cambiarEstado($id, $estado);
-
-    if ($resultado) {
-        echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
-    }
-    exit;
-}
-
-
-
-
-
 }

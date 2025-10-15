@@ -20,6 +20,11 @@ class AuthController extends BaseController {
     }
 
     public function login() {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        echo "<div style='background: green; color: white; padding: 10px;'>";
+        echo "🔐 LOGIN - POST recibido";
+        echo "</div>";
+    }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $correo = $_POST['correo'] ?? '';
             $clave = $_POST['clave'] ?? '';

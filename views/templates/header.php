@@ -18,7 +18,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Estilos comunes -->
-    <link href="public/css/common.css" rel="stylesheet">
+    <!-- En views/templates/header.php - CORREGIR la ruta del CSS -->
+<link href="<?php echo BASE_URL; ?>/css/common.css" rel="stylesheet">
     
     <!-- jQuery PRIMERO -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

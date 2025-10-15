@@ -3,7 +3,7 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?php echo $titulo; ?></h1>
-        <a href="<?php echo BASE_URL; ?>estudiantes/crear" class="btn btn-primary">
+        <a href="<?php echo BASE_URL; ?>/estudiantes/crear" class="btn btn-primary">
             <i class="fas fa-user-plus"></i> Nuevo Estudiante
         </a>
     </div>

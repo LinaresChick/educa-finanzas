@@ -5,6 +5,9 @@
 require_once 'views/templates/header.php';
 require_once 'views/templates/navbar.php';
 require_once 'views/templates/sidebar.php';
+
+// Definir la URL base para todas las rutas
+$base_url = '/educa-finanzas/public';
 ?>
 
 <div class="content-wrapper">
@@ -16,9 +19,9 @@ require_once 'views/templates/sidebar.php';
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/panel">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="/estudiantes">Estudiantes</a></li>
-                        <li class="breadcrumb-item"><a href="/estudiantes/detalle/<?= $estudiante['id_estudiante'] ?>">Detalle</a></li>
+                        <li class="breadcrumb-item"><a href="<?= $base_url ?>/panel">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="<?= $base_url ?>/estudiantes">Estudiantes</a></li>
+                        <li class="breadcrumb-item"><a href="<?= $base_url ?>/estudiantes/detalle/<?= $estudiante['id_estudiante'] ?>">Detalle</a></li>
                         <li class="breadcrumb-item active">Crear Acceso</li>
                     </ol>
                 </div>
@@ -74,7 +77,7 @@ require_once 'views/templates/sidebar.php';
                     <h3 class="card-title">Datos de Acceso</h3>
                 </div>
 
-                <form action="/usuarios/crear_estudiante/<?= $estudiante['id_estudiante'] ?>" method="POST" id="formUsuario">
+                <form action="<?= $base_url ?>/usuarios/crear_usuario_estudiante/<?= $estudiante['id_estudiante'] ?>" method="POST" id="formUsuario">
                     <div class="card-body">
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle"></i>
@@ -85,7 +88,8 @@ require_once 'views/templates/sidebar.php';
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label for="correo">Correo Electrónico <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="correo" name="correo" required>
+                                    <input type="email" class="form-control" id="correo" name="correo" required 
+                                           value="<?= isset($_POST['correo']) ? htmlspecialchars($_POST['correo']) : '' ?>">
                                     <small class="form-text text-muted">Este será el nombre de usuario para acceder al sistema.</small>
                                 </div>
                             </div>
@@ -109,7 +113,8 @@ require_once 'views/templates/sidebar.php';
 
                         <div class="form-group mt-3">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="confirmar" name="confirmar" required>
+                                <input type="checkbox" class="form-check-input" id="confirmar" name="confirmar" required
+                                    <?= isset($_POST['confirmar']) ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="confirmar">He verificado que la información es correcta</label>
                             </div>
                         </div>
@@ -119,7 +124,7 @@ require_once 'views/templates/sidebar.php';
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-user-plus"></i> Crear Cuenta
                         </button>
-                        <a href="/estudiantes/detalle/<?= $estudiante['id_estudiante'] ?>" class="btn btn-secondary">
+                        <a href="<?= $base_url ?>/estudiantes/detalle/<?= $estudiante['id_estudiante'] ?>" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
                     </div>

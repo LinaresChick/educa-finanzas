@@ -4,6 +4,16 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?php echo $titulo; ?></h1>
         <div>
+            <?php if (empty($estudiante['id_usuario'])): ?>
+                <a href="<?php echo BASE_URL; ?>usuarios/crear_usuario_estudiante/<?php echo $estudiante['id_estudiante']; ?>" class="btn btn-success">
+                    <i class="fas fa-user-plus"></i> Crear Cuenta de Acceso
+                </a>
+            <?php else: ?>
+                <span class="badge badge-success p-2">
+                    <i class="fas fa-check-circle"></i> Ya tiene cuenta de acceso
+                </span>
+            <?php endif; ?>
+            
             <a href="<?php echo BASE_URL; ?>estudiantes/editar/<?php echo $estudiante['id_estudiante']; ?>" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Editar
             </a>

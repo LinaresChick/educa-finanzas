@@ -4,10 +4,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?php echo $titulo; ?></h1>
         <div>
-            <a href="<?php echo BASE_URL; ?>estudiantes/detalle/<?php echo $estudiante['id_estudiante']; ?>" class="btn btn-info">
+            <a href="<?php echo BASE_URL; ?>/estudiantes/detalle/<?php echo $estudiante['id_estudiante']; ?>" class="btn btn-info">
                 <i class="fas fa-eye"></i> Ver Detalles
             </a>
-            <a href="<?php echo BASE_URL; ?>estudiantes" class="btn btn-secondary">
+            <a href="<?php echo BASE_URL; ?>/estudiantes" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Volver al listado
             </a>
         </div>
@@ -26,7 +26,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Formulario de Edición</h6>
         </div>
         <div class="card-body">
-            <form action="<?php echo BASE_URL; ?>estudiantes/actualizar/<?php echo $estudiante['id_estudiante']; ?>" method="post">
+            <form action="<?php echo BASE_URL; ?>/estudiantes/actualizar/<?php echo $estudiante['id_estudiante']; ?>" method="post">
                 <!-- Datos Personales -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -126,7 +126,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Guardar Cambios
                         </button>
-                        <a href="<?php echo BASE_URL; ?>estudiantes/detalle/<?php echo $estudiante['id_estudiante']; ?>" class="btn btn-secondary">Cancelar</a>
+                        <a href="<?php echo BASE_URL; ?>/estudiantes/detalle/<?php echo $estudiante['id_estudiante']; ?>" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </div>
             </form>

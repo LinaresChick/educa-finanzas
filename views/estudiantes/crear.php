@@ -21,7 +21,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Formulario de Registro</h6>
         </div>
         <div class="card-body">
-            <form action="<?php echo BASE_URL; ?>estudiantes/guardar" method="post">
+            <form action="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=guardar" method="post">
                 <!-- Datos Personales -->
                 <div class="row mb-4">
                     <div class="col-12">

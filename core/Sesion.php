@@ -43,18 +43,32 @@ class Sesion {
         }
         return null;
     }
-    
-    public function tieneRol($roles) {
-        if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['rol'])) {
-            return false;
-        }
-        
-        if (is_array($roles)) {
-            return in_array($_SESSION['usuario']['rol'], $roles);
-        }
-        
-        return $_SESSION['usuario']['rol'] === $roles;
+    // En core/Sesion.php - REEMPLAZAR el método tieneRol()
+public function tieneRol($roles) {
+    if (!isset($_SESSION['usuario'])) {
+        return false;
     }
+    
+    // Verificar si es array o objeto
+    $rolUsuario = is_array($_SESSION['usuario']) 
+        ? ($_SESSION['usuario']['rol'] ?? null)
+        : ($_SESSION['usuario']->rol ?? null);
+    
+    if (!$rolUsuario) {
+        return false;
+    }
+    
+    if (is_array($roles)) {
+        return in_array($rolUsuario, $roles);
+    }
+    
+    return $rolUsuario === $roles;
+}
+
+// AGREGAR este método nuevo
+public function usuarioAutenticado() {
+    return isset($_SESSION['usuario']);
+}
     
     public function estaLogueado() {
         return isset($_SESSION['usuario']);
