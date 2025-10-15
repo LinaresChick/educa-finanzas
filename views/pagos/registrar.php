@@ -33,7 +33,7 @@ require_once __DIR__ . '/../templates/navbar.php';
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
-        <form action="index.php?controller=Pago&action=guardar" method="POST" enctype="multipart/form-data" id="formPago" class="needs-validation" novalidate>
+        <form action="index.php?controller=Pago&action=registrar" method="POST" enctype="multipart/form-data" id="formPago" class="needs-validation" novalidate>
             <div class="row">
                 <!-- Información del Estudiante -->
                 <div class="col-md-6">

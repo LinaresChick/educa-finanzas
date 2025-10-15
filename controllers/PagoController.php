@@ -3,17 +3,20 @@ namespace Controllers;
 
 require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/PagoModel.php';
+require_once __DIR__ . '/../models/EstudianteModel.php';
 require_once __DIR__ . '/../core/Vista.php';
 
 class PagoController extends \Core\BaseController
 {
     protected $modelo;
+    protected $modeloEstudiante;
     protected $vista;
 
     public function __construct()
     {
         parent::__construct();
         $this->modelo = new \Models\PagoModel();
+        $this->modeloEstudiante = new \Models\EstudianteModel();
         $this->vista = new \Core\Vista();
     }
 
@@ -50,8 +53,11 @@ class PagoController extends \Core\BaseController
 
     public function registrar()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
+        try {
+            // Obtener la lista de estudiantes activos para el formulario
+            $estudiantes = $this->modeloEstudiante->obtenerEstudiantesActivos();
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $datos = $_POST;
                 if (isset($_FILES['voucher']) && $_FILES['voucher']['error'] === UPLOAD_ERR_OK) {
                     $archivo = $_FILES['voucher'];
@@ -63,21 +69,36 @@ class PagoController extends \Core\BaseController
                         throw new \Exception("Error al subir el archivo");
                     }
                 }
+                
+                // Validar que el estudiante exista
+                if (empty($datos['id_estudiante'])) {
+                    throw new \Exception("Debe seleccionar un estudiante");
+                }
+                
                 $idPago = $this->modelo->crear($datos);
                 if ($idPago) {
-                    header('Location: /pagos?mensaje=Pago registrado exitosamente');
+                    $_SESSION['exito'] = 'Pago registrado exitosamente';
+                    header('Location: /index.php?controller=Pago&action=index');
                     exit;
                 }
-            } catch (\Exception $e) {
-                error_log("Error en PagoController->registrar: " . $e->getMessage());
-                $this->vista->mostrar('pagos/registrar', [
-                    'error' => 'Error al registrar el pago: ' . $e->getMessage(),
-                    'datos' => $_POST
-                ]);
-                return;
             }
+            
+            // Mostrar el formulario
+            $this->vista->mostrar('pagos/registrar', [
+                'estudiantes' => $estudiantes,
+                'error' => $_SESSION['error'] ?? null
+            ]);
+            
+            // Limpiar mensajes de error de la sesión
+            if (isset($_SESSION['error'])) {
+                unset($_SESSION['error']);
+            }
+        } catch (\Exception $e) {
+            error_log("Error en PagoController->registrar: " . $e->getMessage());
+            $_SESSION['error'] = 'Error al registrar el pago: ' . $e->getMessage();
+            header('Location: /index.php?controller=Pago&action=registrar');
+            exit;
         }
-        $this->vista->mostrar('pagos/registrar');
     }
 
     public function eliminar()
@@ -98,20 +119,6 @@ class PagoController extends \Core\BaseController
         } else {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Solicitud inválida']);
-        }
-    }
-
-    public function historial()
-    {
-        try {
-            $pagos = $this->modelo->obtenerPagosConEstudiantes();
-            $this->vista->mostrar('pagos/historial', ['pagos' => $pagos]);
-        } catch (\Exception $e) {
-            error_log("Error en PagoController->historial: " . $e->getMessage());
-            $this->vista->mostrar('pagos/historial', [
-                'error' => 'Hubo un error al cargar el historial de pagos',
-                'pagos' => []
-            ]);
         }
     }
 
@@ -150,14 +157,32 @@ class PagoController extends \Core\BaseController
                         'monto_total' => $monto_total
                     ]);
                 } else {
-                    header('Location: /pagos?error=Pago no encontrado');
+                    throw new \Exception("Pago no encontrado");
                 }
             } catch (\Exception $e) {
                 error_log("Error en PagoController->comprobante: " . $e->getMessage());
-                header('Location: /pagos?error=Error al generar el comprobante');
+                $_SESSION['error'] = 'Error al generar el comprobante: ' . $e->getMessage();
+                header('Location: /index.php?controller=Pago&action=index');
+                exit;
             }
         } else {
-            header('Location: /pagos?error=ID de pago no especificado');
+            header('Location: /index.php?controller=Pago&action=index');
+            exit;
         }
     }
+
+    public function historial()
+    {
+        try {
+            $pagos = $this->modelo->obtenerPagosConEstudiantes();
+            $this->vista->mostrar('pagos/historial', ['pagos' => $pagos]);
+        } catch (\Exception $e) {
+            error_log("Error en PagoController->historial: " . $e->getMessage());
+            $this->vista->mostrar('pagos/historial', [
+                'error' => 'Hubo un error al cargar el historial de pagos',
+                'pagos' => []
+            ]);
+        }
+    }
+
 }

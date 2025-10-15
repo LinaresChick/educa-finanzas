@@ -44,6 +44,32 @@ class EstudianteModel extends Modelo {
     }
 
     /**
+     * Obtiene todos los estudiantes activos
+     *
+     * @return array Lista de estudiantes
+     */
+    public function obtenerEstudiantesActivos() {
+        try {
+            $sql = "SELECT 
+                    e.*,
+                    s.nombre as salon_nombre,
+                    (SELECT COALESCE(SUM(monto), 0) FROM pagos WHERE id_estudiante = e.id_estudiante) as total_pagado
+                   FROM estudiantes e
+                   LEFT JOIN secciones s ON e.id_salon = s.id_seccion
+                   WHERE e.estado = 'activo'
+                   ORDER BY e.apellidos, e.nombres";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en EstudianteModel->obtenerTodos: " . $e->getMessage());
+            throw new Exception("Error al obtener los estudiantes");
+        }
+    }
+
+    /**
      * Obtiene los últimos estudiantes registrados
      *
      * @param int $limite Número de estudiantes a obtener
