@@ -17,47 +17,7 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Base de datos: `sistema_educativo_finanzas`
---
 
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `costos`
---
-
-CREATE TABLE `costos` (
-  `id_costo` int(11) NOT NULL,
-  `descripcion` varchar(200) NOT NULL,
-  `monto` decimal(10,2) NOT NULL,
-  `periodo` varchar(50) NOT NULL,
-  `tipo` enum('matricula','mensualidad','extraordinario') NOT NULL,
-  `grado` varchar(50) DEFAULT NULL,
-  `estado` enum('activo','inactivo') DEFAULT 'activo',
-  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `deudas`
---
-
-CREATE TABLE `deudas` (
-  `id_deuda` int(11) NOT NULL,
-  `id_estudiante` int(11) NOT NULL,
-  `id_costo` int(11) NOT NULL,
-  `concepto` varchar(200) NOT NULL,
-  `monto` decimal(10,2) NOT NULL,
-  `fecha_vencimiento` date DEFAULT NULL,
-  `estado` enum('pendiente','pagado','vencido') DEFAULT 'pendiente',
-  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Estructura de tabla para la tabla `docentes`
 --
 
@@ -100,6 +60,9 @@ CREATE TABLE `estudiantes` (
   `direccion` text DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
   `estado` enum('activo','inactivo','graduado') DEFAULT 'activo',
+  `monto` decimal(10,2) NOT NULL,
+  `fecha_vencimiento` date DEFAULT NULL,
+  `estado_pago` enum('pendiente','pagado','vencido') DEFAULT 'pendiente',
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -212,13 +175,15 @@ CREATE TABLE `padres` (
 CREATE TABLE `pagos` (
   `id_pago` int(11) NOT NULL,
   `id_estudiante` int(11) NOT NULL,
-  `id_deuda` int(11) DEFAULT NULL,
   `concepto` varchar(200) NOT NULL,
+  `banco` varchar(50) NOT NULL,
   `monto` decimal(10,2) NOT NULL,
   `metodo_pago` enum('efectivo','transferencia','tarjeta') DEFAULT 'efectivo',
   `fecha_pago` date NOT NULL,
-  `estado` enum('completado','anulado') DEFAULT 'completado',
+  `descuento` date NOT NULL,
+  `aumento` date NOT NULL,
   `observaciones` text DEFAULT NULL,
+  `foto_baucher` varchar(255) NOT NULL,
   `usuario_registro` int(11) NOT NULL,
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -579,7 +544,6 @@ ALTER TABLE `padres`
 --
 ALTER TABLE `pagos`
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id_estudiante`) ON DELETE CASCADE,
-  ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`id_deuda`) REFERENCES `deudas` (`id_deuda`) ON DELETE SET NULL,
   ADD CONSTRAINT `pagos_ibfk_3` FOREIGN KEY (`usuario_registro`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE;
 
 --

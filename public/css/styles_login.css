@@ -31,6 +31,7 @@
 body{
   margin: 0;
   padding: 0;
+  height: 1000vh;
   font-family: var(--body-font);
   font-size: var(--normal-font-size);
   color: var(--first-color-dark);
@@ -51,12 +52,18 @@ img{
 }
 
 /*===== LOGIN =====*/
-.login{
+.login {
   display: grid;
   grid-template-columns: 100%;
   height: 100vh;
   margin-left: 1.5rem;
   margin-right: 1.5rem;
+
+  /* 🔥 Fondo con imagen */
+  background-image: url("https://scontent.ftcq3-1.fna.fbcdn.net/v/t39.30808-6/476427370_636797425531693_7739084231330873550_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TgY2_Cp6uNEQ7kNvwEy9VBk&_nc_oc=AdksXTiFLjTDiPVge97TYD1d3h8jx_7e5NYOkotTGeTgh4UrcvsV3IXmwd-4q3cBPPs&_nc_zt=23&_nc_ht=scontent.ftcq3-1.fna&_nc_gid=JGzCHf_34wNs2KP9CbxG0A&oh=00_AfekeidIXLSapPWitGVLnYEHbCPxLrQ099kgqTANa7teDw&oe=68EC8DAB");
+  background-size: cover;       /* Cubre toda el área */
+  background-position: center;  /* Centra la imagen */
+  background-repeat: no-repeat; /* Evita repetición */
 }
 
 .login__content{

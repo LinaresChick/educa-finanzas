@@ -40,33 +40,64 @@ class ReporteModel extends Modelo
             }
 
             $sql = "SELECT 
-                    COALESCE(DATE_FORMAT(fecha_pago, '%Y-%m'), 'Sin Fecha') AS periodo,
+                    COALESCE(DATE_FORMAT(p.fecha_pago, '%Y-%m'), 'Sin Fecha') AS periodo,
                     COUNT(1) as total_pagos,
-                    COALESCE(SUM(monto), 0) as total_ingresos,
-                    COUNT(DISTINCT id_estudiante) as estudiantes_pagaron,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'efectivo' THEN monto ELSE 0 END), 0) as monto_efectivo,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'transferencia' THEN monto ELSE 0 END), 0) as monto_transferencia,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'tarjeta' THEN monto ELSE 0 END), 0) as monto_tarjeta,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensualidad%' THEN monto ELSE 0 END), 0) as monto_mensualidad,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%material%' THEN monto ELSE 0 END), 0) as monto_material,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%uniforme%' THEN monto ELSE 0 END), 0) as monto_uniforme,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%actividad%' THEN monto ELSE 0 END), 0) as monto_actividad,
+                    COALESCE(SUM(p.monto), 0) as total_ingresos,
+                    COUNT(DISTINCT p.id_estudiante) as estudiantes_pagaron,
+                    COALESCE(SUM(CASE WHEN p.metodo_pago = 'efectivo' THEN p.monto ELSE 0 END), 0) as monto_efectivo,
+                    COALESCE(SUM(CASE WHEN p.metodo_pago = 'transferencia' THEN p.monto ELSE 0 END), 0) as monto_transferencia,
+                    COALESCE(SUM(CASE WHEN p.metodo_pago = 'tarjeta' THEN p.monto ELSE 0 END), 0) as monto_tarjeta,
+                    COUNT(DISTINCT p.banco) as total_bancos,
+                    COALESCE(SUM(CASE WHEN LOWER(p.concepto) LIKE '%mensualidad%' THEN p.monto ELSE 0 END), 0) as monto_mensualidad,
+                    COALESCE(SUM(CASE WHEN LOWER(p.concepto) LIKE '%matric%' THEN p.monto ELSE 0 END), 0) as monto_matricula,
+                    COALESCE(SUM(CASE WHEN LOWER(p.concepto) LIKE '%material%' THEN p.monto ELSE 0 END), 0) as monto_material,
+                    COALESCE(SUM(CASE WHEN LOWER(p.concepto) LIKE '%uniforme%' THEN p.monto ELSE 0 END), 0) as monto_uniforme,
+                    COALESCE(SUM(CASE WHEN LOWER(p.concepto) LIKE '%actividad%' THEN p.monto ELSE 0 END), 0) as monto_actividad,
                     COALESCE(SUM(CASE 
-                        WHEN LOWER(concepto) NOT LIKE '%mensualidad%'
-                        AND LOWER(concepto) NOT LIKE '%matric%'
-                        AND LOWER(concepto) NOT LIKE '%material%'
-                        AND LOWER(concepto) NOT LIKE '%uniforme%'
-                        AND LOWER(concepto) NOT LIKE '%actividad%'
-                        THEN monto ELSE 0 END), 0) as monto_otro,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%matric%' THEN monto ELSE 0 END), 0) as monto_matricula,
-                    COUNT(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad,
-                    COALESCE(SUM(CASE WHEN LOWER(concepto) LIKE '%mensual%' THEN monto ELSE 0 END), 0) as monto_mensualidad
-                FROM pagos
-                WHERE fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
-                AND LOWER(estado) = 'completado'
-                GROUP BY DATE_FORMAT(fecha_pago, '%Y-%m')
+                        WHEN LOWER(p.concepto) NOT LIKE '%mensualidad%'
+                        AND LOWER(p.concepto) NOT LIKE '%matric%'
+                        AND LOWER(p.concepto) NOT LIKE '%material%'
+                        AND LOWER(p.concepto) NOT LIKE '%uniforme%'
+                        AND LOWER(p.concepto) NOT LIKE '%actividad%'
+                        THEN p.monto ELSE 0 END), 0) as monto_otro,
+                    COUNT(CASE WHEN LOWER(p.concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad
+                FROM pagos p
+                WHERE p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
+                GROUP BY DATE_FORMAT(p.fecha_pago, '%Y-%m')
+                HAVING periodo IS NOT NULL
                 ORDER BY periodo DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':fecha_inicio', $fechaInicio);
+            $stmt->bindParam(':fecha_fin', $fechaFin);
+            $stmt->execute();
+            
+            $periodos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            // Si no hay periodos, crear un array vacío para evitar el error null
+            if (empty($periodos)) {
+                $periodos = [
+                    [
+                        'periodo' => date('Y-m', strtotime($fechaInicio)),
+                        'total_pagos' => 0,
+                        'total_ingresos' => 0,
+                        'estudiantes_pagaron' => 0,
+                        'monto_efectivo' => 0,
+                        'monto_transferencia' => 0,
+                        'monto_tarjeta' => 0,
+                        'total_bancos' => 0,
+                        'monto_mensualidad' => 0,
+                        'monto_matricula' => 0,
+                        'monto_material' => 0,
+                        'monto_uniforme' => 0,
+                        'monto_actividad' => 0,
+                        'monto_otro' => 0,
+                        'pagos_mensualidad' => 0
+                    ]
+                ];
+            }
+            
+            $estadisticas = $this->calcularEstadisticasPeriodo($fechaInicio, $fechaFin);
 
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':fecha_inicio', $fechaInicio);
@@ -93,18 +124,21 @@ class ReporteModel extends Modelo
     {
         try {
             $sql = "SELECT 
-                    COALESCE(SUM(monto), 0) as total_periodo,
+                    COALESCE(SUM(p.monto), 0) as total_periodo,
                     COUNT(1) as total_transacciones,
-                    COUNT(DISTINCT id_estudiante) as total_estudiantes,
-                    COALESCE(AVG(monto), 0) as promedio_transaccion,
-                    COALESCE(MIN(monto), 0) as min_transaccion,
-                    COALESCE(MAX(monto), 0) as max_transaccion,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'efectivo' THEN monto ELSE 0 END), 0) as total_efectivo,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'transferencia' THEN monto ELSE 0 END), 0) as total_transferencia,
-                    COALESCE(SUM(CASE WHEN LOWER(metodo_pago) = 'tarjeta' THEN monto ELSE 0 END), 0) as total_tarjeta
-                FROM pagos
-                WHERE fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
-                AND LOWER(estado) = 'completado'";
+                    COUNT(DISTINCT p.id_estudiante) as total_estudiantes,
+                    COUNT(DISTINCT p.banco) as total_bancos_usados,
+                    COUNT(DISTINCT p.usuario_registro) as total_usuarios_registro,
+                    COALESCE(AVG(p.monto), 0) as promedio_transaccion,
+                    COALESCE(MIN(p.monto), 0) as min_transaccion,
+                    COALESCE(MAX(p.monto), 0) as max_transaccion,
+                    COALESCE(SUM(CASE WHEN LOWER(p.metodo_pago) = 'efectivo' THEN p.monto ELSE 0 END), 0) as total_efectivo,
+                    COALESCE(SUM(CASE WHEN LOWER(p.metodo_pago) = 'transferencia' THEN p.monto ELSE 0 END), 0) as total_transferencia,
+                    COALESCE(SUM(CASE WHEN LOWER(p.metodo_pago) = 'tarjeta' THEN p.monto ELSE 0 END), 0) as total_tarjeta
+                FROM pagos p
+                JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                WHERE p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
+                AND e.estado_pago = 'pagado'";
             
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':fecha_inicio', $fechaInicio);
@@ -131,14 +165,14 @@ class ReporteModel extends Modelo
                         s.nombre AS salon, 
                         s.grado, 
                         s.nivel,
-                        SUM(CASE WHEN p.estado = 'pendiente' THEN p.monto ELSE 0 END) AS total_deuda,
-                        COUNT(CASE WHEN p.estado = 'pendiente' THEN 1 END) AS pagos_pendientes,
-                        MAX(p.fecha_vencimiento) AS proxima_fecha_vencimiento
+                        e.monto AS total_deuda,
+                        CASE WHEN e.estado_pago = 'pendiente' THEN 1 ELSE 0 END AS pagos_pendientes,
+                        e.fecha_vencimiento AS proxima_fecha_vencimiento
                     FROM estudiantes e
-                    LEFT JOIN pagos p ON e.id_estudiante = p.id_estudiante
                     LEFT JOIN salones s ON e.id_salon = s.id_salon
-                    GROUP BY e.id_estudiante, e.nombres, e.apellidos, e.dni, s.nombre, s.grado, s.nivel
-                    HAVING total_deuda > 0
+                    WHERE e.estado_pago = 'pendiente'
+                    GROUP BY e.id_estudiante, e.nombres, e.apellidos, e.dni, s.nombre, s.grado, s.nivel, e.monto, e.estado_pago, e.fecha_vencimiento
+                    HAVING e.monto > 0
                     ORDER BY total_deuda DESC";
                     
             $stmt = $this->db->prepare($sql);
@@ -155,14 +189,15 @@ class ReporteModel extends Modelo
     {
         try {
             $sql = "SELECT 
-                    SUM(CASE WHEN estado = 'completado' THEN monto ELSE 0 END) as total_ingresos,
-                    COUNT(1) as total_pagos,
-                    COUNT(CASE WHEN estado = 'completado' THEN 1 END) as pagos_completados,
-                    COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pagos_pendientes,
-                    SUM(CASE WHEN estado = 'pendiente' THEN monto ELSE 0 END) as total_deuda,
-                    COALESCE(AVG(CASE WHEN estado = 'completado' THEN monto END), 0) as promedio_pago
-                FROM pagos
-                WHERE DATE(fecha_pago) BETWEEN DATE_FORMAT(NOW(), '%Y-%m-01')
+                    SUM(CASE WHEN e.estado_pago = 'pagado' THEN p.monto ELSE 0 END) as total_ingresos,
+                    COUNT(p.id_pago) as total_pagos,
+                    COUNT(CASE WHEN e.estado_pago = 'pagado' THEN 1 END) as pagos_completados,
+                    COUNT(CASE WHEN e.estado_pago = 'pendiente' THEN 1 END) as pagos_pendientes,
+                    SUM(CASE WHEN e.estado_pago = 'pendiente' THEN e.monto ELSE 0 END) as total_deuda,
+                    COALESCE(AVG(CASE WHEN e.estado_pago = 'pagado' THEN p.monto END), 0) as promedio_pago
+                FROM pagos p
+                JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                WHERE DATE(p.fecha_pago) BETWEEN DATE_FORMAT(NOW(), '%Y-%m-01')
                 AND LAST_DAY(NOW())";
             
             $stmt = $this->db->prepare($sql);

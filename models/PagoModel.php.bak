@@ -1,23 +1,10 @@
 <?php
 namespace Models;
+
 require_once __DIR__ . '/../core/Modelo.php';
 
 class PagoModel extends \Core\Modelo {
     protected $allowedFields;
-
-    public function obtenerEstudiantePorPago($idPago) {
-        try {
-            $sql = "SELECT e.* FROM estudiantes e 
-                   INNER JOIN pagos p ON e.id_estudiante = p.id_estudiante 
-                   WHERE p.id_pago = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$idPago]);
-            return $stmt->fetch();
-        } catch (\PDOException $e) {
-            error_log("Error en obtenerEstudiantePorPago: " . $e->getMessage());
-            return null;
-        }
-    }
 
     public function __construct() {
         parent::__construct('pagos', 'id_pago');
@@ -34,80 +21,6 @@ class PagoModel extends \Core\Modelo {
             'foto_baucher',
             'usuario_registro'
         ];
-    }
-
-    public function obtenerPagosConEstudiantes() {
-        try {
-            $sql = "SELECT 
-                    p.*,
-                    e.nombres,
-                    e.apellidos,
-                    CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo,
-                    (p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0)) as monto_estudiante,
-                    DATE_FORMAT(p.fecha_pago, '%Y-%m-%d') as fecha_vencimiento,
-                    CASE 
-                        WHEN p.id_pago IS NOT NULL THEN 'Pagado'
-                        ELSE 'Pendiente'
-                    END as estado_pago,
-                    FORMAT(p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0), 2) as monto_formateado
-                   FROM pagos p 
-                   LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante 
-                   ORDER BY p.fecha_pago DESC";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\Exception $e) {
-            error_log("Error en obtenerPagosConEstudiantes: " . $e->getMessage());
-            throw new \Exception("Error al obtener los pagos");
-        }
-    }
-
-    public function obtenerPagosFiltrados($filtros) {
-        try {
-            $sql = "SELECT p.*, 
-                          e.nombres AS estudiante_nombres, 
-                          e.apellidos AS estudiante_apellidos 
-                   FROM pagos p 
-                   LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante 
-                   WHERE 1=1";
-            $params = [];
-
-            if (!empty($filtros['fecha_inicio'])) {
-                $sql .= " AND DATE(p.fecha_pago) >= ?";
-                $params[] = $filtros['fecha_inicio'];
-            }
-
-            if (!empty($filtros['fecha_fin'])) {
-                $sql .= " AND DATE(p.fecha_pago) <= ?";
-                $params[] = $filtros['fecha_fin'];
-            }
-
-            if (!empty($filtros['estudiante'])) {
-                $sql .= " AND (e.nombres LIKE ? OR e.apellidos LIKE ?)";
-                $busqueda = '%' . $filtros['estudiante'] . '%';
-                $params[] = $busqueda;
-                $params[] = $busqueda;
-            }
-
-            if (!empty($filtros['concepto'])) {
-                $sql .= " AND p.concepto LIKE ?";
-                $params[] = '%' . $filtros['concepto'] . '%';
-            }
-
-            if (!empty($filtros['metodo_pago'])) {
-                $sql .= " AND p.metodo_pago = ?";
-                $params[] = $filtros['metodo_pago'];
-            }
-
-            $sql .= " ORDER BY p.fecha_pago DESC";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
-            return $stmt->fetchAll();
-        } catch (\PDOException $e) {
-            error_log("Error en obtenerPagosFiltrados: " . $e->getMessage());
-            throw new \Exception("Error al filtrar los pagos");
-        }
     }
 
     public function crear($datos) {
@@ -146,7 +59,29 @@ class PagoModel extends \Core\Modelo {
         }
     }
 
-
+    public function obtenerPagosConEstudiantes() {
+        try {
+            $sql = "SELECT 
+                    p.*,
+                    e.nombres,
+                    e.apellidos,
+                    CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo,
+                    (p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0)) as monto_estudiante,
+                    DATE_FORMAT(p.fecha_pago, '%Y-%m-%d') as fecha_vencimiento,
+                    CASE 
+                        WHEN p.id_pago IS NOT NULL THEN 'Pagado'
+                        ELSE 'Pendiente'
+                    END as estado_pago,
+                    FORMAT(p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0), 2) as monto_formateado
+                   FROM pagos p 
+                   INNER JOIN estudiantes e ON p.id_estudiante = e.id_estudiante 
+                   ORDER BY p.fecha_pago DESC";
+            return $this->db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error al obtener pagos con estudiantes: " . $e->getMessage());
+            throw $e;
+        }
+    }
 
     public function contarPagos() {
         try {
@@ -175,6 +110,7 @@ class PagoModel extends \Core\Modelo {
 
     public function contarPagosPendientes() {
         try {
+            // Esta consulta cuenta los estudiantes que no han realizado pagos en el mes actual
             $sql = "SELECT COUNT(DISTINCT e.id_estudiante) as total
                    FROM estudiantes e
                    LEFT JOIN pagos p ON e.id_estudiante = p.id_estudiante 

@@ -14,12 +14,25 @@ class BaseController {
     }
     
     protected function render($view, $data = []) {
-        extract($data);
-        require_once __DIR__ . "/../views/templates/header.php";
+    extract($data);
+
+    // Si la vista pertenece a la carpeta "auth", no mostrar header ni footer
+    if (strpos($view, 'auth/') === 0) {
         require_once __DIR__ . "/../views/$view.php";
-        require_once __DIR__ . "/../views/templates/footer.php";
+        return;
     }
+<<<<<<< HEAD
     // En core/BaseController.php - REEMPLAZAR el método redireccionar()
+=======
+
+    // Para el resto de vistas, incluir la plantilla completa
+    require_once __DIR__ . "/../views/templates/header.php";
+    require_once __DIR__ . "/../views/$view.php";
+    require_once __DIR__ . "/../views/templates/footer.php";
+}
+
+
+>>>>>>> 92399a9f6f6c0ca0f64dee9871bdcaa8018e983e
     protected function redireccionar($ruta) {
     // Construir URL correctamente
     if (strpos($ruta, '/') !== false) {

@@ -4,227 +4,185 @@ namespace Controllers;
 require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
+require_once __DIR__ . '/../core/Vista.php';
 
-use Core\BaseController;
-use Models\PagoModel;
-use Models\EstudianteModel;
-use \Exception;
+class PagoController extends \Core\BaseController
+{
+    protected $modelo;
+    protected $modeloEstudiante;
+    protected $vista;
 
-class PagoController extends BaseController {
-    private $pagoModel;
-    private $estudianteModel;
-    
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
-        $this->pagoModel = new PagoModel();
-        $this->estudianteModel = new EstudianteModel();
+        $this->modelo = new \Models\PagoModel();
+        $this->modeloEstudiante = new \Models\EstudianteModel();
+        $this->vista = new \Core\Vista();
     }
-    
-    /**
-     * Muestra el listado de pagos
-     */
-    public function index() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        if (!isset($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Colaborador'])) {
-            header("Location: index.php?controller=Auth&action=acceso_denegado");
-            exit();
-        }
-        
-        $pagos = $this->pagoModel->obtenerPagosConEstudiantes();
-        
-        $datos = [
-            'titulo' => 'Listado de Pagos',
-            'pagos' => $pagos
-        ];
-        
-        $this->render("pagos/listado", $datos);
-    }
-    
-    /**
-     * Muestra el formulario para registrar un nuevo pago
-     */
-    public function registrar() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        if (!isset($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Colaborador'])) {
-            header("Location: index.php?controller=Auth&action=acceso_denegado");
-            exit();
-        }
-        
-        $estudiantes = $this->estudianteModel->obtenerTodos();
-        
-        $datos = [
-            'titulo' => 'Registrar Pago',
-            'estudiantes' => $estudiantes
-        ];
-        
-        $this->render("pagos/registrar", $datos);
-    }
-    
-    /**
-     * Procesa el registro de un nuevo pago
-     */
-    public function guardar() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        if (!isset($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Colaborador'])) {
-            header("Location: index.php?controller=Auth&action=acceso_denegado");
-            exit();
-        }
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                error_log("Iniciando registro de pago");
-                error_log("POST data: " . print_r($_POST, true));
-                error_log("FILES data: " . print_r($_FILES, true));
-                
-                // Procesar la imagen del voucher si se subió
-                $foto_baucher = null;
-                if (isset($_FILES['foto_baucher']) && $_FILES['foto_baucher']['error'] === UPLOAD_ERR_OK) {
-                    $file = $_FILES['foto_baucher'];
-                    $allowedTypes = ['image/jpeg', 'image/png'];
-                    $maxSize = 2 * 1024 * 1024; // 2MB
 
-                    if (!in_array($file['type'], $allowedTypes)) {
-                        throw new Exception('El archivo debe ser una imagen JPG o PNG');
-                    }
+    public function index()
+    {
+        try {
+            $filtros = [
+                'fecha_inicio' => $_GET['fecha_inicio'] ?? null,
+                'fecha_fin' => $_GET['fecha_fin'] ?? null,
+                'estudiante' => $_GET['estudiante'] ?? null,
+                'concepto' => $_GET['concepto'] ?? null,
+                'metodo_pago' => $_GET['metodo_pago'] ?? null
+            ];
 
-                    if ($file['size'] > $maxSize) {
-                        throw new Exception('El archivo no debe superar los 2MB');
-                    }
-
-                    // Crear directorio si no existe
-                    $uploadDir = __DIR__ . '/../public/uploads/vouchers/';
-                    if (!file_exists($uploadDir)) {
-                        mkdir($uploadDir, 0777, true);
-                    }
-
-                    // Generar nombre único para el archivo
-                    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-                    $fileName = uniqid('voucher_') . '.' . $extension;
-                    $targetPath = $uploadDir . $fileName;
-
-                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                        $foto_baucher = 'uploads/vouchers/' . $fileName;
-                    } else {
-                        throw new Exception('Error al subir el archivo');
-                    }
-                }
-
-                $datosPago = [
-                    'id_estudiante' => $_POST['id_estudiante'] ?? null,
-                    'id_deuda' => $_POST['id_deuda'] ?? null,
-                    'concepto' => $_POST['concepto'] ?? '',
-                    'banco' => isset($_POST['banco']) && !empty($_POST['banco']) ? $_POST['banco'] : null,
-                    'monto' => $_POST['monto'] ?? 0,
-                    'metodo_pago' => $_POST['metodo_pago'] ?? '',
-                    'fecha_pago' => $_POST['fecha_pago'] ?? date('Y-m-d'),
-                    'descuento' => $_POST['descuento'] ?? 0,
-                    'aumento' => $_POST['aumento'] ?? 0,
-                    'foto_baucher' => $foto_baucher,
-                    'estado' => 'completado',
-                    'observaciones' => $_POST['observaciones'] ?? '',
-                    'usuario_registro' => $_SESSION['usuario']['id_usuario'] ?? null
-                ];
-                
-                error_log("Datos del pago a registrar: " . print_r($datosPago, true));
-                
-                $idPago = $this->pagoModel->crear($datosPago);
-                error_log("Resultado de crear pago: " . ($idPago ? "ID: $idPago" : "false"));
-                
-                if ($idPago) {
-                    $_SESSION['mensaje'] = "Pago registrado correctamente";
-                    header("Location: index.php?controller=Pago&action=comprobante&id=" . $idPago);
-                    exit();
-                } else {
-                    throw new Exception("Error al registrar el pago");
-                }
-                
-            } catch (Exception $e) {
-                error_log("Error en guardar pago: " . $e->getMessage());
-                error_log("Stack trace: " . $e->getTraceAsString());
-                $_SESSION['error'] = $e->getMessage();
-                header("Location: index.php?controller=Pago&action=registrar");
-                exit();
+            if (array_filter($filtros)) {
+                $pagos = $this->modelo->obtenerPagosFiltrados($filtros);
+            } else {
+                $pagos = $this->modelo->obtenerPagosConEstudiantes();
             }
+
+            $this->vista->mostrar('pagos/listado', [
+                'pagos' => $pagos,
+                'filtros' => $filtros
+            ]);
+        } catch (\Exception $e) {
+            error_log('Error en PagoController->index: ' . $e->getMessage());
+            $this->vista->mostrar('pagos/listado', [
+                'error' => 'Hubo un error al cargar los pagos',
+                'pagos' => [],
+                'filtros' => []
+            ]);
         }
     }
-    
-    /**
-     * Muestra el comprobante de un pago específico
-     */
-    public function comprobante() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+
+    public function registrar()
+    {
+        try {
+            // Obtener la lista de estudiantes activos para el formulario
+            $estudiantes = $this->modeloEstudiante->obtenerEstudiantesActivos();
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $datos = $_POST;
+                if (isset($_FILES['voucher']) && $_FILES['voucher']['error'] === UPLOAD_ERR_OK) {
+                    $archivo = $_FILES['voucher'];
+                    $nombreArchivo = uniqid() . '_' . basename($archivo['name']);
+                    $rutaDestino = __DIR__ . '/../public/uploads/vouchers/' . $nombreArchivo;
+                    if (move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
+                        $datos['foto_baucher'] = $nombreArchivo;
+                    } else {
+                        throw new \Exception("Error al subir el archivo");
+                    }
+                }
+                
+                // Validar que el estudiante exista
+                if (empty($datos['id_estudiante'])) {
+                    throw new \Exception("Debe seleccionar un estudiante");
+                }
+                
+                $idPago = $this->modelo->crear($datos);
+                if ($idPago) {
+                    $_SESSION['exito'] = 'Pago registrado exitosamente';
+                    header('Location: /index.php?controller=Pago&action=index');
+                    exit;
+                }
+            }
+            
+            // Mostrar el formulario
+            $this->vista->mostrar('pagos/registrar', [
+                'estudiantes' => $estudiantes,
+                'error' => $_SESSION['error'] ?? null
+            ]);
+            
+            // Limpiar mensajes de error de la sesión
+            if (isset($_SESSION['error'])) {
+                unset($_SESSION['error']);
+            }
+        } catch (\Exception $e) {
+            error_log("Error en PagoController->registrar: " . $e->getMessage());
+            $_SESSION['error'] = 'Error al registrar el pago: ' . $e->getMessage();
+            header('Location: /index.php?controller=Pago&action=registrar');
+            exit;
         }
-        
-        if (!isset($_SESSION['usuario'])) {
-            header("Location: index.php?controller=Auth&action=acceso_denegado");
-            exit();
-        }
-        
-        $idPago = $_GET['id'] ?? null;
-        
-        if (!$idPago) {
-            header("Location: index.php?controller=Pago");
-            exit();
-        }
-        
-        $pago = $this->pagoModel->obtenerPorId($idPago);
-        
-        if (!$pago) {
-            $_SESSION['error'] = "Pago no encontrado";
-            header("Location: index.php?controller=Pago");
-            exit();
-        }
-        
-        $estudiante = $this->estudianteModel->obtenerPorId($pago['id_estudiante']);
-        
-        $datos = [
-            'titulo' => 'Comprobante de Pago',
-            'pago' => $pago,
-            'estudiante' => $estudiante
-        ];
-        
-        $this->render("pagos/comprobante", $datos);
     }
-    
-    /**
-     * Muestra el historial de pagos de un estudiante
-     */
-    public function historial() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+
+    public function eliminar()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pago'])) {
+            try {
+                $idPago = (int)$_POST['id_pago'];
+                if ($this->modelo->eliminar($idPago)) {
+                    echo json_encode(['success' => true, 'message' => 'Pago eliminado correctamente']);
+                } else {
+                    throw new \Exception("No se pudo eliminar el pago");
+                }
+            } catch (\Exception $e) {
+                error_log("Error en PagoController->eliminar: " . $e->getMessage());
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar el pago']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Solicitud inválida']);
         }
-        
-        if (!isset($_SESSION['usuario'])) {
-            header("Location: index.php?controller=Auth&action=acceso_denegado");
-            exit();
-        }
-        
-        $idEstudiante = $_GET['id_estudiante'] ?? null;
-        
-        if (!$idEstudiante) {
-            header("Location: index.php?controller=Pago");
-            exit();
-        }
-        
-        $estudiante = $this->estudianteModel->obtenerPorId($idEstudiante);
-        $pagos = $this->pagoModel->obtenerPorEstudiante($idEstudiante);
-        
-        $datos = [
-            'titulo' => 'Historial de Pagos',
-            'estudiante' => $estudiante,
-            'pagos' => $pagos
-        ];
-        
-        $this->render("pagos/historial", $datos);
     }
+
+    public function comprobante($params = [])
+    {
+        if (isset($params['id'])) {
+            try {
+                $idPago = (int)$params['id'];
+                $pago = $this->modelo->buscarPorId($idPago);
+                if ($pago) {
+                    // Verificar si es modo impresión
+                    $modo_impresion = isset($params['print']) && $params['print'] === '1';
+                    
+                    // Formatear la fecha
+                    $fecha = new \DateTime($pago['fecha_pago']);
+                    $fecha_formateada = $fecha->format('d/m/Y');
+                    
+                    // Obtener información del estudiante
+                    $estudiante = $this->modelo->obtenerEstudiantePorPago($pago['id_pago']);
+                    
+                    // Calcular el monto total
+                    $monto_total = $pago['monto'];
+                    if (!empty($pago['descuento'])) {
+                        $monto_total -= $pago['descuento'];
+                    }
+                    if (!empty($pago['aumento'])) {
+                        $monto_total += $pago['aumento'];
+                    }
+                    $monto_total = number_format($monto_total, 2);
+                    
+                    $this->vista->mostrar('pagos/comprobante', [
+                        'pago' => $pago,
+                        'modo_impresion' => $modo_impresion,
+                        'fecha_formateada' => $fecha_formateada,
+                        'estudiante' => $estudiante,
+                        'monto_total' => $monto_total
+                    ]);
+                } else {
+                    throw new \Exception("Pago no encontrado");
+                }
+            } catch (\Exception $e) {
+                error_log("Error en PagoController->comprobante: " . $e->getMessage());
+                $_SESSION['error'] = 'Error al generar el comprobante: ' . $e->getMessage();
+                header('Location: /index.php?controller=Pago&action=index');
+                exit;
+            }
+        } else {
+            header('Location: /index.php?controller=Pago&action=index');
+            exit;
+        }
+    }
+
+    public function historial()
+    {
+        try {
+            $pagos = $this->modelo->obtenerPagosConEstudiantes();
+            $this->vista->mostrar('pagos/historial', ['pagos' => $pagos]);
+        } catch (\Exception $e) {
+            error_log("Error en PagoController->historial: " . $e->getMessage());
+            $this->vista->mostrar('pagos/historial', [
+                'error' => 'Hubo un error al cargar el historial de pagos',
+                'pagos' => []
+            ]);
+        }
+    }
+
 }

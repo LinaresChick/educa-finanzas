@@ -1,11 +1,20 @@
 body {
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    /* 🌄 Imagen de fondo */
+    background-image: 
+        linear-gradient(135deg, rgba(232, 245, 233, 0.85) 0%, rgba(200, 230, 201, 0.85) 100%),
+        url("https://scontent.ftcq3-1.fna.fbcdn.net/v/t39.30808-6/476427370_636797425531693_7739084231330873550_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TgY2_Cp6uNEQ7kNvwEy9VBk&_nc_oc=AdksXTiFLjTDiPVge97TYD1d3h8jx_7e5NYOkotTGeTgh4UrcvsV3IXmwd-4q3cBPPs&_nc_zt=23&_nc_ht=scontent.ftcq3-1.fna&_nc_gid=JGzCHf_34wNs2KP9CbxG0A&oh=00_AfekeidIXLSapPWitGVLnYEHbCPxLrQ099kgqTANa7teDw&oe=68EC8DAB");
+    background-size: cover;       /* La imagen cubre toda la pantalla */
+    background-position: center;  /* Centrada */
+    background-repeat: no-repeat; /* No se repite */
+    background-attachment: fixed; /* Fija al hacer scroll */
     min-height: 100vh;
 }
+
 
 .navbar {
     background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%) !important;
     padding: 1rem 0;
+    
 }
 
 .navbar-brand {
