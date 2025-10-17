@@ -1,41 +1,51 @@
 /*===== GOOGLE FONTS =====*/
-@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
 
 /*===== VARIABLES CSS =====*/
-:root{
-  /*===== Colores =====*/
-  --first-color: #A3F527;
-  --first-color-dark: #5A8B0F;
-  --first-color-light: #C4F575;
-  --first-color-lighten: #F4FFEA;
+:root {
+  --first-color: #a3f527;
+  --first-color-dark: #5a8b0f;
+  --first-color-light: #92d817;
+  --first-color-lighten: #f4ffea;
 
-  /*===== Font and typography =====*/
-  --body-font: 'Open Sans', sans-serif;
-  --h1-font-size: 1.5rem;
-  --normal-font-size: .938rem;
-  --small-font-size: .813rem;
+  --body-font: "Poppins", sans-serif;
+  --h1-font-size: 1.7rem;
+  --normal-font-size: 1rem;
+  --small-font-size: 0.85rem;
+  --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  --radius: 1rem;
 }
 
-@media screen and (min-width: 768px){
-  :root{
+@media screen and (min-width: 768px) {
+  :root {
     --normal-font-size: 1rem;
-    --small-font-size: .875rem;
+    --small-font-size: 0.9rem;
   }
 }
 
-/*===== BASE =====*/
-*,::before,::after{
+/*===== RESET =====*/
+*,
+::before,
+::after {
   box-sizing: border-box;
-}
-
-body{
   margin: 0;
   padding: 0;
-  height: 1000vh;
-  font-family: var(--body-font);
-  font-size: var(--normal-font-size);
-  color: var(--first-color-dark);
 }
+
+body {
+  height: 100vh;
+  font-family: var(--body-font);
+  color: var(--first-color-dark);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("/educa-finanzas/public/img/cole.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
 
 h1{
   margin: 0;
@@ -52,36 +62,62 @@ img{
 }
 
 /*===== LOGIN =====*/
+/* ===== LOGIN PAGE LAYOUT ===== */
 .login {
-  display: grid;
-  grid-template-columns: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 100vh;
-  margin-left: 1.5rem;
-  margin-right: 1.5rem;
-
-  /* 🔥 Fondo con imagen */
-  background-image: url("https://scontent.ftcq3-1.fna.fbcdn.net/v/t39.30808-6/476427370_636797425531693_7739084231330873550_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TgY2_Cp6uNEQ7kNvwEy9VBk&_nc_oc=AdksXTiFLjTDiPVge97TYD1d3h8jx_7e5NYOkotTGeTgh4UrcvsV3IXmwd-4q3cBPPs&_nc_zt=23&_nc_ht=scontent.ftcq3-1.fna&_nc_gid=JGzCHf_34wNs2KP9CbxG0A&oh=00_AfekeidIXLSapPWitGVLnYEHbCPxLrQ099kgqTANa7teDw&oe=68EC8DAB");
-  background-size: cover;       /* Cubre toda el área */
-  background-position: center;  /* Centra la imagen */
-  background-repeat: no-repeat; /* Evita repetición */
+  background-image: url("/educa-finanzas/public/img/cole.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  padding: 2rem;
 }
 
-.login__content{
-  display: grid;
+
+/* Contenedor principal */
+.login__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  max-width: 900px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 1.5rem;
+  padding: 3rem 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px);
 }
 
-.login__img{
-  justify-self: center;
+.login__img {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.login__img img{
-  width: 310px;
-  margin-top: 1.5rem;
+.login__img img {
+  width: 260px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 1rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
-
 .login__forms{
   position: relative;
   height: 368px;
+}
+.login__title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #3a3a3a;
+  margin-bottom: 2rem;
 }
 
 .login__registre, .login__create{
@@ -110,10 +146,7 @@ img{
   }
 }
 
-.login__title{
-  font-size: var(--h1-font-size);
-  margin-bottom: 2rem;
-}
+
 
 .login__box{
   display: grid;
@@ -128,22 +161,22 @@ img{
 }
 
 .login__box:focus-within {
-  border-color: var(--first-color);
-  box-shadow: 0 0 0 3px rgba(163,245,39,0.2);
+  border-color: #243807;
+  box-shadow: 0 0 10px rgba(163, 245, 39, 0.3);
 }
-
-.login__icon{
-  font-size: 1.5rem;
-  color: var(--first-color);
+.login__icon {
+  color: #222d16;
+  font-size: 1.4rem;
 }
-
-.login__input{
+.login__input {
   border: none;
   outline: none;
-  font-size: var(--normal-font-size);
-  font-weight: 700;
-  color: var(--first-color-dark);
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
 }
+
 
 .login__input::placeholder{
   font-size: var(--normal-font-size);
@@ -161,17 +194,18 @@ img{
   color: var(--first-color-light);
 }
 
-.login__button{
-  display: block;
-  padding: 1rem;
-  margin: 2rem 0;
-  background-color: var(--first-color);
-  color: #1A2601;
-  font-weight: 600;
-  text-align: center;
-  border-radius: .5rem;
-  transition: .3s;
-  border: 2px solid transparent;
+.login__button {
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: linear-gradient(90deg, #a3f527, #5a8b0f);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 1rem;
 }
 
 .login__button:hover{
@@ -186,8 +220,10 @@ img{
   font-size: var(--small-font-size);
 }
 
-.login__account{
-  color: var(--first-color-dark);
+.login__account {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #555;
 }
 
 .login__signin, .login__signup{
@@ -261,4 +297,5 @@ img{
   .login__create{
     bottom: -5.5rem;
   }
+  
 }
