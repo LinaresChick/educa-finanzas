@@ -1,0 +1,150 @@
+/* 🎨 Fondo general */
+body {
+    background-image: 
+        linear-gradient(135deg, rgba(173, 232, 244, 0.85) 0%, rgba(255, 249, 196, 0.85) 100%),
+        url("https://scontent.ftcq3-1.fna.fbcdn.net/v/t39.30808-6/476427370_636797425531693_7739084231330873550_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TgY2_Cp6uNEQ7kNvwEy9VBk&_nc_oc=AdksXTiFLjTDiPVge97TYD1d3h8jx_7e5NYOkotTGeTgh4UrcvsV3IXmwd-4q3cBPPs&_nc_zt=23&_nc_ht=scontent.ftcq3-1.fna&_nc_gid=JGzCHf_34wNs2KP9CbxG0A&oh=00_AfekeidIXLSapPWitGVLnYEHbCPxLrQ099kgqTANa7teDw&oe=68EC8DAB");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    font-family: "Poppins", sans-serif;
+}
+
+/* 🌤️ Navbar moderna */
+.navbar {
+    background: linear-gradient(90deg, #4dd0e1, #81c784, #ffb74d);
+    padding: 1rem 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white !important;
+    letter-spacing: 0.5px;
+}
+
+/* 💬 Info del usuario */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 1rem;
+    background-color: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    color: white;
+}
+
+.logout-btn {
+    color: white;
+    border: 1px solid rgba(255,255,255,0.6);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255,255,255,0.2);
+    border-color: transparent;
+}
+
+/* 🏡 Contenedor principal */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* 🏷️ Título */
+.dashboard-title {
+    color: #2e7d32;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 3px solid rgba(76, 175, 80, 0.3);
+    text-align: center;
+}
+
+/* 🪄 Tarjetas */
+.card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    overflow: hidden;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* 🎯 Contenido de tarjeta */
+.card-body {
+    padding: 2rem 1.5rem;
+}
+
+.card-title {
+    color: #2e7d32;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.card-text {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* ✨ Ícono del módulo */
+.module-icon {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #4dd0e1, #81c784, #ffb74d, #ff8a65);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* 🔘 Botones */
+.btn-module {
+    background: linear-gradient(90deg, #4dd0e1, #81c784);
+    border: none;
+    padding: 0.6rem 2rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    width: 100%;
+    color: white;
+    font-weight: 500;
+}
+
+.btn-module:hover {
+    background: linear-gradient(90deg, #81c784, #ffb74d);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    color: white;
+}
+
+/* 📊 Contenedor de estadísticas */
+.stats-container {
+    background-color: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    backdrop-filter: blur(8px);
+}
+
+/* 📱 Adaptación móvil */
+@media (max-width: 768px) {
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    .module-icon {
+        font-size: 2.2rem;
+    }
+    .card-body {
+        padding: 1.5rem 1rem;
+    }
+}

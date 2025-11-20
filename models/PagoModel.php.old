@@ -1,0 +1,415 @@
+<?php
+namespace Models;
+
+require_once __DIR__ . '/../core/Modelo.php';
+
+class PagoModel extends \Core\Modelo {
+    public function __construct() {
+        parent::__construct('pagos', 'id_pago');
+        $this->allowedFields = [
+            'id_estudiante',
+            'concepto',
+            'banco',
+            'monto',
+            'metodo_pago',
+            'fecha_pago',
+            'descuento',
+            'aumento',
+            'observaciones',
+            'foto_baucher',
+            'usuario_registro',
+            'estado'
+        ];
+    }
+
+    public function crear($datos) {
+        try {
+            // Asegurémonos de que los campos requeridos estén presentes
+            $camposRequeridos = ['id_estudiante', 'concepto', 'banco', 'monto', 'metodo_pago', 'fecha_pago'];
+            foreach ($camposRequeridos as $campo) {
+                if (!isset($datos[$campo]) || empty($datos[$campo])) {
+                    throw new \Exception("El campo {$campo} es requerido");
+                }
+            }
+
+            // Asegurarse de que el estado esté presente
+            if (!isset($datos['estado'])) {
+                $datos['estado'] = 'completado';
+            }
+
+            // Intentar insertar el registro
+            $id = parent::insertar($datos);
+            
+            if (!$id) {
+                error_log("Error al insertar pago: No se obtuvo ID");
+                throw new \Exception("No se pudo obtener el ID del pago insertado");
+            }
+
+            return $id;
+        } catch (\Exception $e) {
+            error_log("Error al crear pago: " . $e->getMessage());
+            error_log("Datos del pago: " . print_r($datos, true));
+            throw $e;
+        }
+    }
+
+    public function contarPagos($criterios = []) {
+        try {
+            $sql = "SELECT COUNT(*) FROM pagos";
+            $params = [];
+
+            if (!empty($criterios)) {
+                $where = [];
+                foreach ($criterios as $campo => $valor) {
+                    if ($campo === 'fecha_inicio') {
+                        $where[] = "fecha_pago >= :fecha_inicio";
+                        $params[':fecha_inicio'] = $valor;
+                    } elseif ($campo === 'fecha_fin') {
+                        $where[] = "fecha_pago <= :fecha_fin";
+                        $params[':fecha_fin'] = $valor;
+                    } elseif ($campo === 'banco') {
+                        $where[] = "banco = :banco";
+                        $params[':banco'] = $valor;
+                    } elseif ($campo === 'metodo_pago') {
+                        $where[] = "metodo_pago = :metodo_pago";
+                        $params[':metodo_pago'] = $valor;
+                    }
+                }
+                if (!empty($where)) {
+                    $sql .= " WHERE " . implode(" AND ", $where);
+                }
+            }
+
+            $stmt = $this->db->prepare($sql);
+            foreach ($params as $param => $valor) {
+                $stmt->bindValue($param, $valor);
+            }
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en contarPagos: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function obtenerPagosConEstudiantes() {
+        try {
+            $sql = "SELECT p.*,
+                           CONCAT(e.nombres, ' ', e.apellidos) as estudiante_nombre_completo,
+                           u.nombre as registrado_por,
+                           e.monto as monto_estudiante,
+                           e.fecha_vencimiento,
+                           e.estado_pago
+                    FROM {$this->tabla} p
+                    LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
+                    ORDER BY p.fecha_pago DESC";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerPagosConEstudiantes: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function calcularIngresoMensual() {
+        try {
+            $sql = "SELECT 
+                    COALESCE(SUM(monto), 0) as total,
+                    COUNT(*) as total_pagos,
+                    COUNT(DISTINCT metodo_pago) as metodos_pago_usados,
+                    COUNT(DISTINCT banco) as bancos_usados
+                    FROM pagos 
+                    WHERE YEAR(fecha_pago) = YEAR(CURRENT_DATE()) 
+                    AND MONTH(fecha_pago) = MONTH(CURRENT_DATE())";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return (float)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en calcularIngresoMensual: " . $e->getMessage());
+            return 0.0;
+        }
+    }
+
+    public function calcularIngresoTotal() {
+        try {
+            $sql = "SELECT COALESCE(SUM(monto), 0) as total 
+                    FROM pagos 
+                    WHERE estado = 'completado'";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return (float)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en calcularIngresoTotal: " . $e->getMessage());
+            return 0.0;
+        }
+    }
+
+    public function contarPagosProcesados() {
+        try {
+            $sql = "SELECT COUNT(*) FROM pagos WHERE estado = 'completado'";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en contarPagosProcesados: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function contarPagosProcesadosHoy() {
+        try {
+            $sql = "SELECT COUNT(*) FROM pagos 
+                    WHERE estado = 'completado' 
+                    AND DATE(fecha_pago) = CURRENT_DATE()";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en contarPagosProcesadosHoy: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function obtenerUltimosPagos($limite = 5) {
+        try {
+            $sql = "SELECT p.*, 
+                    e.nombres as nombre_estudiante, 
+                    e.apellidos as apellido_estudiante,
+                    e.id_estudiante as codigo_estudiante,
+                    s.nombre as nombre_seccion,
+                    CONCAT(u.nombre, ' ', u.apellido) as registrado_por
+                    FROM pagos p
+                    LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN salones sa ON e.id_salon = sa.id_salon
+                    LEFT JOIN secciones s ON sa.id_seccion = s.id_seccion
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
+                    WHERE p.estado = 'completado'
+                    ORDER BY p.fecha_pago DESC
+                    LIMIT :limite";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':limite', $limite, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerUltimosPagos: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function contarPagosPendientes() {
+        try {
+            $sql = "SELECT COUNT(*) 
+                    FROM estudiantes e
+                    WHERE e.estado_pago = 'pendiente'";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return (int)$stmt->fetchColumn();
+        } catch (\Exception $e) {
+            error_log("Error en contarPagosPendientes: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function obtenerPagosPendientesPorPadreId($idPadre, $limite = null) {
+        try {
+            $sql = "SELECT p.*, 
+                    e.nombres as nombre_estudiante, 
+                    e.apellidos as apellido_estudiante,
+                    s.nombre as nombre_seccion
+                    FROM pagos p
+                    JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN salones sa ON e.id_salon = sa.id_salon
+                    LEFT JOIN secciones s ON sa.id_seccion = s.id_seccion
+                    JOIN padre_estudiante pe ON e.id_estudiante = pe.id_estudiante
+                    WHERE pe.id_padre = :id_padre
+                    AND p.estado = 'pendiente'
+                    ORDER BY p.fecha_pago ASC";
+
+            if ($limite !== null) {
+                $sql .= " LIMIT :limite";
+            }
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_padre', $idPadre, \PDO::PARAM_INT);
+            if ($limite !== null) {
+                $stmt->bindValue(':limite', $limite, \PDO::PARAM_INT);
+            }
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerPagosPendientesPorPadreId: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerUltimosPagosPorPadreId($idPadre, $limite = 5) {
+        try {
+            $sql = "SELECT p.*, 
+                    e.nombres as nombre_estudiante, 
+                    e.apellidos as apellido_estudiante,
+                    s.nombre as nombre_seccion
+                    FROM pagos p
+                    JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN salones sa ON e.id_salon = sa.id_salon
+                    LEFT JOIN secciones s ON sa.id_seccion = s.id_seccion
+                    JOIN padre_estudiante pe ON e.id_estudiante = pe.id_estudiante
+                    WHERE pe.id_padre = :id_padre
+                    AND p.estado = 'completado'
+                    ORDER BY p.fecha_pago DESC
+                    LIMIT :limite";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_padre', $idPadre, \PDO::PARAM_INT);
+            $stmt->bindValue(':limite', $limite, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerUltimosPagosPorPadreId: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerPagosPorEstudianteId($idEstudiante) {
+        try {
+            $sql = "SELECT p.*,
+                    CONCAT(u.nombre, ' ', u.apellido) as registrado_por
+                    FROM pagos p
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
+                    WHERE p.id_estudiante = :id_estudiante
+                    ORDER BY p.fecha_pago DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_estudiante', $idEstudiante, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerPagosPorEstudianteId: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerDeudasPorEstudianteId($idEstudiante) {
+        try {
+            $sql = "SELECT d.*, c.nombre as concepto_nombre
+                    FROM deudas d
+                    LEFT JOIN conceptos_pago c ON d.id_concepto = c.id_concepto
+                    WHERE d.id_estudiante = :id_estudiante
+                    AND d.estado = 'pendiente'
+                    ORDER BY d.fecha_vencimiento ASC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_estudiante', $idEstudiante, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error en obtenerDeudasPorEstudianteId: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function crear($datos) {
+        try {
+            // Asegurémonos de que los campos requeridos estén presentes
+            $camposRequeridos = ['id_estudiante', 'concepto', 'banco', 'monto', 'metodo_pago', 'fecha_pago'];
+            foreach ($camposRequeridos as $campo) {
+                if (!isset($datos[$campo]) || empty($datos[$campo])) {
+                    throw new \Exception("El campo {$campo} es requerido");
+                }
+            }
+
+            // Asegurarse de que el estado esté presente
+            if (!isset($datos['estado'])) {
+                $datos['estado'] = 'completado';
+            }
+
+            // Intentar insertar el registro
+            error_log("Intentando insertar pago con datos: " . print_r($datos, true));
+            
+            $id = $this->insertar($datos);
+            
+            if (!$id) {
+                error_log("Error al insertar pago: No se obtuvo ID");
+                throw new \Exception("No se pudo obtener el ID del pago insertado");
+            }
+
+            return $id;
+        } catch (\Exception $e) {
+            error_log("Error al crear pago: " . $e->getMessage());
+            error_log("Datos del pago: " . print_r($datos, true));
+            throw $e;
+        }
+    }
+
+    public function obtenerPorId($id) {
+        try {
+            $sql = "SELECT p.*, 
+                    e.nombres as nombre_estudiante, 
+                    e.apellidos as apellido_estudiante,
+                    CONCAT(u.nombre, ' ', u.apellido) as registrado_por
+                    FROM pagos p
+                    LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
+                    WHERE p.id_pago = :id";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error al obtener pago por ID: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function obtenerPorEstudiante($idEstudiante) {
+        try {
+            $sql = "SELECT p.*, 
+                    CONCAT(u.nombre, ' ', u.apellido) as registrado_por
+                    FROM pagos p
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
+                    WHERE p.id_estudiante = :id_estudiante
+                    ORDER BY p.fecha_pago DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_estudiante', $idEstudiante, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error al obtener pagos por estudiante: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function generarReportePagos($fechaInicio, $fechaFin) {
+        try {
+            $sql = "SELECT p.*, 
+                    e.nombres as nombre_estudiante, 
+                    e.apellidos as apellido_estudiante,
+                    s.nombre as nombre_seccion,
+                    CONCAT(u.nombre, ' ', u.apellido) as registrado_por
+                    FROM pagos p
+                    LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                    LEFT JOIN salones sa ON e.id_salon = sa.id_salon
+                    LEFT JOIN secciones s ON sa.id_seccion = s.id_seccion
+                    LEFT JOIN usuarios u ON p.usuario_registro = u.id_usuario
+                    WHERE p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
+                    ORDER BY p.fecha_pago DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':fecha_inicio', $fechaInicio);
+            $stmt->bindValue(':fecha_fin', $fechaFin);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error al generar reporte de pagos: " . $e->getMessage());
+            return [];
+        }
+    }
+}

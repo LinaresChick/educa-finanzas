@@ -1,0 +1,117 @@
+<?php
+namespace Controllers;
+
+require_once __DIR__ . '/../core/BaseController.php';
+require_once __DIR__ . '/../models/PagoModel.php';
+require_once __DIR__ . '/../core/Vista.php';
+
+class PagoController extends \Core\BaseController {
+    protected $modelo;
+    protected $vista;
+
+    public function __construct() {
+        parent::__construct();
+        $this->modelo = new \Models\PagoModel();
+        $this->vista = new \Core\Vista();
+    }
+
+    public function index() {
+        try {
+            $pagos = $this->modelo->obtenerPagosConEstudiantes();
+            $this->vista->mostrar('pagos/listado', ['pagos' => $pagos]);
+        } catch (\Exception $e) {
+            error_log("Error en PagoController->index: " . $e->getMessage());
+            $this->vista->mostrar('pagos/listado', [
+                'error' => 'Hubo un error al cargar los pagos',
+                'pagos' => []
+            ]);
+        }
+    }
+
+    public function registrar() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $datos = $_POST;
+                
+                if (isset($_FILES['voucher']) && $_FILES['voucher']['error'] === UPLOAD_ERR_OK) {
+                    $archivo = $_FILES['voucher'];
+                    $nombreArchivo = uniqid() . '_' . basename($archivo['name']);
+                    $rutaDestino = __DIR__ . '/../public/uploads/vouchers/' . $nombreArchivo;
+                    
+                    if (move_uploaded_file($archivo['tmp_name'], $rutaDestino)) {
+                        $datos['foto_baucher'] = $nombreArchivo;
+                    } else {
+                        throw new \Exception("Error al subir el archivo");
+                    }
+                }
+
+                $idPago = $this->modelo->crear($datos);
+                if ($idPago) {
+                    header('Location: /pagos?mensaje=Pago registrado exitosamente');
+                    exit;
+                }
+            } catch (\Exception $e) {
+                error_log("Error en PagoController->registrar: " . $e->getMessage());
+                $this->vista->mostrar('pagos/registrar', [
+                    'error' => 'Error al registrar el pago: ' . $e->getMessage(),
+                    'datos' => $_POST
+                ]);
+                return;
+            }
+        }
+        
+        $this->vista->mostrar('pagos/registrar');
+    }
+
+    public function eliminar() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_pago'])) {
+            try {
+                $idPago = (int)$_POST['id_pago'];
+                if ($this->modelo->eliminar($idPago)) {
+                    echo json_encode(['success' => true, 'message' => 'Pago eliminado correctamente']);
+                } else {
+                    throw new \Exception("No se pudo eliminar el pago");
+                }
+            } catch (\Exception $e) {
+                error_log("Error en PagoController->eliminar: " . $e->getMessage());
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar el pago']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Solicitud inválida']);
+        }
+    }
+
+    public function historial() {
+        try {
+            $pagos = $this->modelo->obtenerPagosConEstudiantes();
+            $this->vista->mostrar('pagos/historial', ['pagos' => $pagos]);
+        } catch (\Exception $e) {
+            error_log("Error en PagoController->historial: " . $e->getMessage());
+            $this->vista->mostrar('pagos/historial', [
+                'error' => 'Hubo un error al cargar el historial de pagos',
+                'pagos' => []
+            ]);
+        }
+    }
+
+    public function comprobante($params = []) {
+        if (isset($params['id'])) {
+            try {
+                $idPago = (int)$params['id'];
+                $pago = $this->modelo->buscarPorId($idPago);
+                if ($pago) {
+                    $this->vista->mostrar('pagos/comprobante', ['pago' => $pago]);
+                } else {
+                    header('Location: /pagos?error=Pago no encontrado');
+                }
+            } catch (\Exception $e) {
+                error_log("Error en PagoController->comprobante: " . $e->getMessage());
+                header('Location: /pagos?error=Error al generar el comprobante');
+            }
+        } else {
+            header('Location: /pagos?error=ID de pago no especificado');
+        }
+    }
+}
