@@ -207,11 +207,11 @@
                     </a>
 
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i> Mi Perfil</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-key me-2"></i> Cambiar Contraseña</a></li>
+                        <li><a class="dropdown-item" href="index.php?controller=Usuario&action=perfil"><i class="fas fa-cog me-2"></i> Mi Perfil</a></li>
+                        <li><a class="dropdown-item" href="index.php?controller=Usuario&action=perfil"><i class="fas fa-key me-2"></i> Cambiar Contraseña</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-danger" href="/educa-finanzas/public/index.php?controller=Auth&action=logout">
+                            <a class="dropdown-item text-danger" href="index.php?controller=Auth&action=logout">
                                 <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
                             </a>
                         </li>

@@ -31,10 +31,116 @@ class UsuarioController extends BaseController
             exit;
         }
         
-        // Verificar permisos para gestionar usuarios
-        $this->verificarPermisosAdministrativos();
-        
         $this->usuarioModel = new UsuarioModel();
+    }
+    
+    /**
+     * Muestra el perfil del usuario actual
+     */
+    public function perfil(): void
+    {
+        try {
+            $usuario = $this->sesion->get('usuario');
+            if (!$usuario) {
+                $this->redireccionar('auth/login');
+                exit;
+            }
+
+            // Obtener datos completos del usuario
+            $datosUsuario = $this->usuarioModel->buscarPorId($usuario['id_usuario']);
+            
+            if (!$datosUsuario) {
+                $this->redireccionarConError('panel', 'No se pudo cargar la información del perfil');
+                return;
+            }
+
+            // Si es POST, procesar actualización
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $this->actualizarPerfil($usuario['id_usuario']);
+                return;
+            }
+
+            $this->vista->mostrar('usuarios/perfil', [
+                'usuario' => $datosUsuario,
+                'titulo' => 'Mi Perfil'
+            ]);
+        } catch (\Exception $e) {
+            $this->sesion->set('error', 'Error al cargar el perfil: ' . $e->getMessage());
+            $this->redireccionar('panel');
+        }
+    }
+
+    /**
+     * Actualiza el perfil del usuario actual
+     */
+    private function actualizarPerfil(int $idUsuario): void
+    {
+        $nombre = filter_input(INPUT_POST, 'nombre', FILTER_SANITIZE_STRING);
+        $correo = filter_input(INPUT_POST, 'correo', FILTER_SANITIZE_EMAIL);
+        $passwordActual = filter_input(INPUT_POST, 'password_actual', FILTER_SANITIZE_STRING);
+        $passwordNueva = filter_input(INPUT_POST, 'password_nueva', FILTER_SANITIZE_STRING);
+        $passwordConfirm = filter_input(INPUT_POST, 'password_confirm', FILTER_SANITIZE_STRING);
+
+        if (!$nombre || !$correo) {
+            $this->redireccionarConError('usuarios/perfil', 'El nombre y correo son obligatorios');
+            return;
+        }
+
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            $this->redireccionarConError('usuarios/perfil', 'El formato del correo no es válido');
+            return;
+        }
+
+        // Verificar si el correo ya existe (para otro usuario)
+        $usuarioExistente = $this->usuarioModel->buscarPorCorreo($correo);
+        if ($usuarioExistente && $usuarioExistente['id_usuario'] != $idUsuario) {
+            $this->redireccionarConError('usuarios/perfil', 'El correo ya está en uso por otro usuario');
+            return;
+        }
+
+        $datos = [
+            'nombre' => $nombre,
+            'correo' => $correo
+        ];
+
+        // Si desea cambiar la contraseña
+        if (!empty($passwordNueva)) {
+            if (empty($passwordActual)) {
+                $this->redireccionarConError('usuarios/perfil', 'Debe ingresar su contraseña actual para cambiarla');
+                return;
+            }
+
+            if ($passwordNueva !== $passwordConfirm) {
+                $this->redireccionarConError('usuarios/perfil', 'Las contraseñas nuevas no coinciden');
+                return;
+            }
+
+            if (strlen($passwordNueva) < 6) {
+                $this->redireccionarConError('usuarios/perfil', 'La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+
+            // Verificar contraseña actual
+            $usuarioActual = $this->usuarioModel->buscarPorId($idUsuario);
+            if (!password_verify($passwordActual, $usuarioActual['password'])) {
+                $this->redireccionarConError('usuarios/perfil', 'La contraseña actual es incorrecta');
+                return;
+            }
+
+            $datos['password'] = password_hash($passwordNueva, PASSWORD_DEFAULT);
+        }
+
+        $resultado = $this->usuarioModel->actualizar($idUsuario, $datos);
+
+        if ($resultado) {
+            // Actualizar sesión con nuevos datos
+            $usuarioActualizado = $this->usuarioModel->buscarPorId($idUsuario);
+            $this->sesion->set('usuario', $usuarioActualizado);
+            
+            $this->redireccionarConExito('usuarios/perfil', 'Perfil actualizado correctamente');
+        } else {
+            $this->redireccionarConError('usuarios/perfil', 'Error al actualizar el perfil');
+        }
     }
     
     /**
@@ -56,6 +162,9 @@ class UsuarioController extends BaseController
      */
     public function index(): void
     {
+        // Verificar permisos administrativos solo para index
+        $this->verificarPermisosAdministrativos();
+        
         try {
             $usuarios = $this->usuarioModel->obtenerTodos();
             $this->vista->mostrar('usuarios/listado', [
@@ -73,6 +182,7 @@ class UsuarioController extends BaseController
      */
     public function crear(): void
     {
+        $this->verificarPermisosAdministrativos();
         $roles = $this->filtrarRolesPorPermisos(
             $this->usuarioModel->obtenerRoles()
         );
@@ -144,7 +254,7 @@ class UsuarioController extends BaseController
         $this->verificarPermisosEdicion($usuarioActual);
         
         if (!empty($datos['password'])) {
-            $datos['password'] = $datos['password'];
+            $datos['password'] = password_hash($datos['password'], PASSWORD_DEFAULT);
         }
         
         $resultado = $this->usuarioModel->actualizarUsuario($idUsuario, $datos);

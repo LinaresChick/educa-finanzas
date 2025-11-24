@@ -32,17 +32,57 @@ class ReporteModel extends Modelo
         return $inicio <= $fin;
     }
 
-    public function generarReporteFinanciero($fechaInicio, $fechaFin) 
+    public function generarReporteFinanciero($fechaInicio, $fechaFin, $periodo = 'mensual', $filtros = []) 
     {
         try {
             if (!$this->validarFechas($fechaInicio, $fechaFin)) {
                 return ['error' => 'Las fechas proporcionadas no son válidas'];
             }
 
+            // Determinar el formato de agrupación según el periodo
+            $formatoPeriodo = match($periodo) {
+                'semanal' => '%Y-%u',  // Año-Semana
+                'mensual' => '%Y-%m',   // Año-Mes
+                'anual' => '%Y',        // Año
+                default => '%Y-%m'
+            };
+
+            $etiquetaPeriodo = match($periodo) {
+                'semanal' => "CONCAT('Semana ', WEEK(p.fecha_pago), ' - ', YEAR(p.fecha_pago))",
+                'mensual' => "DATE_FORMAT(p.fecha_pago, '%M %Y')",
+                'anual' => "YEAR(p.fecha_pago)",
+                default => "DATE_FORMAT(p.fecha_pago, '%M %Y')"
+            };
+
+            // Construir WHERE con filtros
+            $whereConditions = ["p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin"];
+            $params = [
+                ':fecha_inicio' => $fechaInicio,
+                ':fecha_fin' => $fechaFin
+            ];
+
+            if (!empty($filtros['id_seccion'])) {
+                $whereConditions[] = "s.id_seccion = :id_seccion";
+                $params[':id_seccion'] = $filtros['id_seccion'];
+            }
+
+            if (!empty($filtros['grado'])) {
+                $whereConditions[] = "s.grado = :grado";
+                $params[':grado'] = $filtros['grado'];
+            }
+
+            if (!empty($filtros['nivel'])) {
+                $whereConditions[] = "s.nivel = :nivel";
+                $params[':nivel'] = $filtros['nivel'];
+            }
+
+            $whereClause = implode(' AND ', $whereConditions);
+
             $sql = "SELECT 
-                    COALESCE(DATE_FORMAT(p.fecha_pago, '%Y-%m'), 'Sin Fecha') AS periodo,
+                    DATE_FORMAT(p.fecha_pago, '$formatoPeriodo') AS periodo_key,
+                    $etiquetaPeriodo AS periodo,
                     COUNT(1) as total_pagos,
-                    COALESCE(SUM(p.monto), 0) as total_ingresos,
+                    COALESCE(SUM(p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0)), 0) as total_ingresos,
                     COUNT(DISTINCT p.id_estudiante) as estudiantes_pagaron,
                     COALESCE(SUM(CASE WHEN p.metodo_pago = 'efectivo' THEN p.monto ELSE 0 END), 0) as monto_efectivo,
                     COALESCE(SUM(CASE WHEN p.metodo_pago = 'transferencia' THEN p.monto ELSE 0 END), 0) as monto_transferencia,
@@ -60,59 +100,36 @@ class ReporteModel extends Modelo
                         AND LOWER(p.concepto) NOT LIKE '%uniforme%'
                         AND LOWER(p.concepto) NOT LIKE '%actividad%'
                         THEN p.monto ELSE 0 END), 0) as monto_otro,
-                    COUNT(CASE WHEN LOWER(p.concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad
+                    COUNT(CASE WHEN LOWER(p.concepto) LIKE '%mensual%' THEN 1 END) as pagos_mensualidad,
+                    COUNT(CASE WHEN LOWER(p.concepto) LIKE '%matric%' THEN 1 END) as pagos_matricula
                 FROM pagos p
-                WHERE p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
-                GROUP BY DATE_FORMAT(p.fecha_pago, '%Y-%m')
-                HAVING periodo IS NOT NULL
-                ORDER BY periodo DESC";
+                LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                LEFT JOIN secciones s ON e.id_salon = s.id_seccion
+                WHERE $whereClause
+                GROUP BY DATE_FORMAT(p.fecha_pago, '$formatoPeriodo')
+                ORDER BY periodo_key DESC";
 
             $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':fecha_inicio', $fechaInicio);
-            $stmt->bindParam(':fecha_fin', $fechaFin);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             
             $periodos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
-            // Si no hay periodos, crear un array vacío para evitar el error null
+            // Si no hay periodos, crear un array vacío
             if (empty($periodos)) {
-                $periodos = [
-                    [
-                        'periodo' => date('Y-m', strtotime($fechaInicio)),
-                        'total_pagos' => 0,
-                        'total_ingresos' => 0,
-                        'estudiantes_pagaron' => 0,
-                        'monto_efectivo' => 0,
-                        'monto_transferencia' => 0,
-                        'monto_tarjeta' => 0,
-                        'total_bancos' => 0,
-                        'monto_mensualidad' => 0,
-                        'monto_matricula' => 0,
-                        'monto_material' => 0,
-                        'monto_uniforme' => 0,
-                        'monto_actividad' => 0,
-                        'monto_otro' => 0,
-                        'pagos_mensualidad' => 0
-                    ]
-                ];
+                $periodos = [];
             }
             
-            $estadisticas = $this->calcularEstadisticasPeriodo($fechaInicio, $fechaFin);
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':fecha_inicio', $fechaInicio);
-            $stmt->bindParam(':fecha_fin', $fechaFin);
-            $stmt->execute();
-            
-            $periodos = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            $estadisticas = $this->calcularEstadisticasPeriodo($fechaInicio, $fechaFin);
+            $estadisticas = $this->calcularEstadisticasPeriodo($fechaInicio, $fechaFin, $filtros);
             
             return [
                 'periodos' => $periodos,
                 'estadisticas' => $estadisticas
             ];
         } catch (\PDOException $e) {
-            error_log('Error PDO al generar reporte financiero: ' . $e->getMessage() . ' - SQL: ' . $sql);
+            error_log('Error PDO al generar reporte financiero: ' . $e->getMessage());
             throw new \Exception('Error en la consulta de base de datos al generar el reporte financiero: ' . $e->getMessage());
         } catch (\Exception $e) {
             error_log('Error general al generar reporte financiero: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -120,11 +137,34 @@ class ReporteModel extends Modelo
         }
     }
 
-    private function calcularEstadisticasPeriodo($fechaInicio, $fechaFin) 
+    private function calcularEstadisticasPeriodo($fechaInicio, $fechaFin, $filtros = []) 
     {
         try {
+            $whereConditions = ["p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin"];
+            $params = [
+                ':fecha_inicio' => $fechaInicio,
+                ':fecha_fin' => $fechaFin
+            ];
+
+            if (!empty($filtros['id_seccion'])) {
+                $whereConditions[] = "s.id_seccion = :id_seccion";
+                $params[':id_seccion'] = $filtros['id_seccion'];
+            }
+
+            if (!empty($filtros['grado'])) {
+                $whereConditions[] = "s.grado = :grado";
+                $params[':grado'] = $filtros['grado'];
+            }
+
+            if (!empty($filtros['nivel'])) {
+                $whereConditions[] = "s.nivel = :nivel";
+                $params[':nivel'] = $filtros['nivel'];
+            }
+
+            $whereClause = implode(' AND ', $whereConditions);
+
             $sql = "SELECT 
-                    COALESCE(SUM(p.monto), 0) as total_periodo,
+                    COALESCE(SUM(p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0)), 0) as total_periodo,
                     COUNT(1) as total_transacciones,
                     COUNT(DISTINCT p.id_estudiante) as total_estudiantes,
                     COUNT(DISTINCT p.banco) as total_bancos_usados,
@@ -136,18 +176,19 @@ class ReporteModel extends Modelo
                     COALESCE(SUM(CASE WHEN LOWER(p.metodo_pago) = 'transferencia' THEN p.monto ELSE 0 END), 0) as total_transferencia,
                     COALESCE(SUM(CASE WHEN LOWER(p.metodo_pago) = 'tarjeta' THEN p.monto ELSE 0 END), 0) as total_tarjeta
                 FROM pagos p
-                JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
-                WHERE p.fecha_pago BETWEEN :fecha_inicio AND :fecha_fin
-                AND e.estado_pago = 'pagado'";
+                LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante
+                LEFT JOIN secciones s ON e.id_salon = s.id_seccion
+                WHERE $whereClause";
             
             $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':fecha_inicio', $fechaInicio);
-            $stmt->bindParam(':fecha_fin', $fechaFin);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
             $stmt->execute();
             
             return $stmt->fetch(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
-            error_log('Error PDO al calcular estadísticas: ' . $e->getMessage() . ' - SQL: ' . $sql);
+            error_log('Error PDO al calcular estadísticas: ' . $e->getMessage());
             throw new \Exception('Error en la consulta de base de datos al calcular estadísticas: ' . $e->getMessage());
         } catch (\Exception $e) {
             error_log('Error general al calcular estadísticas: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -243,6 +284,9 @@ class ReporteModel extends Modelo
             
             $archivo = fopen($rutaArchivo, 'w');
             
+            // UTF-8 BOM para Excel
+            fprintf($archivo, chr(0xEF).chr(0xBB).chr(0xBF));
+            
             // Escribir encabezados
             fputcsv($archivo, array_keys($datos[0]));
             
@@ -257,6 +301,47 @@ class ReporteModel extends Modelo
         } catch (\Exception $e) {
             error_log('Error al exportar a CSV: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    public function obtenerSecciones()
+    {
+        try {
+            $sql = "SELECT DISTINCT id_seccion, nombre, grado, nivel 
+                    FROM secciones 
+                    ORDER BY nivel, grado, nombre";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            error_log('Error al obtener secciones: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerGrados()
+    {
+        try {
+            $sql = "SELECT DISTINCT grado FROM secciones WHERE grado IS NOT NULL ORDER BY grado";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            error_log('Error al obtener grados: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function obtenerNiveles()
+    {
+        try {
+            $sql = "SELECT DISTINCT nivel FROM secciones WHERE nivel IS NOT NULL ORDER BY nivel";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            error_log('Error al obtener niveles: ' . $e->getMessage());
+            return [];
         }
     }
 }

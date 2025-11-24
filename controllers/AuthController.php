@@ -14,7 +14,11 @@ class AuthController extends BaseController {
         $this->usuarioModel = new UsuarioModel();
     }
 
+    
     public function login() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $correo = $_POST['correo'] ?? '';
             $clave = $_POST['clave'] ?? '';
@@ -29,6 +33,10 @@ class AuthController extends BaseController {
 
                 if (password_verify($clave, $usuario['password'])) {
                     $_SESSION['usuario'] = $usuario;
+                    // Compatibilidad: agregar 'id' esperado por otros controladores
+                    if (isset($usuario['id_usuario'])) {
+                        $_SESSION['usuario']['id'] = $usuario['id_usuario'];
+                    }
 
                     // Debug temporal para confirmar login
                     // Quitar después de probar
@@ -49,6 +57,9 @@ class AuthController extends BaseController {
     }
 
     public function logout() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         session_destroy();
         header("Location: index.php?controller=Auth&action=login");
         exit;

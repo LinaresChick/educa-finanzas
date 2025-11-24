@@ -38,7 +38,7 @@ class PagoModel extends \Core\Modelo {
     ];
 }
     public function obtenerPagosConEstudiantes() {
-    try {
+        try {
         $sql = "SELECT 
                 p.*,
                 e.nombres,
@@ -50,9 +50,14 @@ class PagoModel extends \Core\Modelo {
                     WHEN p.id_pago IS NOT NULL THEN 'Pagado'
                     ELSE 'Pendiente'
                 END as estado_pago,
-                FORMAT(p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0), 2) as monto_formateado
+                FORMAT(p.monto + COALESCE(p.aumento, 0) - COALESCE(p.descuento, 0), 2) as monto_formateado,
+                pd.nombres AS padre_nombres,
+                pd.apellidos AS padre_apellidos,
+                CONCAT(pd.nombres, ' ', pd.apellidos) AS pagador_nombre_db,
+                pd.dni AS pagador_dni_db
                FROM pagos p 
                LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante 
+               LEFT JOIN padres pd ON p.id_padre = pd.id_padre
                ORDER BY p.fecha_pago DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
@@ -295,4 +300,43 @@ public function buscarPorId($id) {
 public function getAllowedFields() {
     return $this->allowedFields;
 }
+
+    /**
+     * Intentar corregir la estructura de la tabla `pagos` cuando exista
+     * una discrepancia entre el modelo y la base de datos.
+     * Esto aplica ALTER TABLE mínimos y seguros. Retorna true si se aplicó.
+     */
+    public function ensureSchema() {
+        try {
+            $sqls = [
+                // Asegurar id_pago AUTO_INCREMENT
+                "ALTER TABLE `pagos` MODIFY COLUMN `id_pago` INT(11) NOT NULL AUTO_INCREMENT",
+                // Corregir tipos de descuento/aumento si están mal
+                "ALTER TABLE `pagos` CHANGE `descuento` `descuento` DECIMAL(10,2) NOT NULL DEFAULT 0",
+                "ALTER TABLE `pagos` CHANGE `aumento` `aumento` DECIMAL(10,2) NOT NULL DEFAULT 0",
+                // Permitir foto_baucher vacío
+                "ALTER TABLE `pagos` MODIFY `foto_baucher` VARCHAR(255) DEFAULT ''",
+                // Añadir columnas de pagador si no existen
+                "ALTER TABLE `pagos` ADD COLUMN `id_padre` INT(11) NULL AFTER `id_estudiante`",
+                "ALTER TABLE `pagos` ADD COLUMN `pagador_nombre` VARCHAR(150) NULL AFTER `id_padre`",
+                "ALTER TABLE `pagos` ADD COLUMN `pagador_dni` VARCHAR(20) NULL AFTER `pagador_nombre`",
+                // Añadir índice (si ya existe, el catch lo ignorará)
+                "ALTER TABLE `pagos` ADD KEY (`id_padre`)"
+            ];
+
+            foreach ($sqls as $sql) {
+                try {
+                    $this->db->exec($sql);
+                } catch (\PDOException $e) {
+                    // Ignorar errores individuales (por ejemplo si la columna ya existe)
+                    error_log("PagoModel::ensureSchema SQL failed: " . $e->getMessage() . " | SQL: " . $sql);
+                }
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            error_log("PagoModel::ensureSchema error: " . $e->getMessage());
+            return false;
+        }
+    }
 }

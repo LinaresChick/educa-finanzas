@@ -3,12 +3,34 @@ require_once __DIR__ . '/../templates/header.php';
 require_once __DIR__ . '/../templates/navbar.php';
 ?>
 
+<style>
+    /* COLORES PASTEL */
+    .pastel-blue   { background: #cfe9ff !important; }
+    .pastel-green  { background: #ddf7dd !important; }
+    .pastel-yellow { background: #fff7cc !important; }
+    .pastel-orange { background: #ffe4c4 !important; }
+
+    /* Tarjetas suaves */
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    .card-header {
+        border-radius: 12px 12px 0 0;
+        font-weight: 600;
+    }
+    .section-title {
+        font-weight: 700;
+    }
+</style>
+
 <div class="main-container">
+    <!-- ENCABEZADO -->
     <div class="content-header">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="section-title mb-0">
-                    <i class="fas fa-money-bill-wave me-2"></i>
+                <h1 class="section-title mb-2">
+                    <i class="fas fa-money-bill-wave me-2 text-success"></i>
                     Registrar Pago
                 </h1>
                 <nav aria-label="breadcrumb">
@@ -22,38 +44,40 @@ require_once __DIR__ . '/../templates/navbar.php';
         </div>
     </div>
 
+    <!-- ALERTA DE ERROR -->
     <div class="content-card">
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <?= $_SESSION['error'] ?>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
             </div>
             <?php unset($_SESSION['error']); ?>
         <?php endif; ?>
 
+        <!-- FORMULARIO -->
         <form action="index.php?controller=Pago&action=registrar" method="POST" enctype="multipart/form-data" id="formPago" class="needs-validation" novalidate>
-            <div class="row">
-                <!-- Información del Estudiante -->
+
+            <div class="row g-4">
+
+                <!-- SECCIÓN 1: INFORMACIÓN DEL ESTUDIANTE -->
                 <div class="col-md-6">
-                    <div class="card mb-4">
+                    <div class="card shadow-sm pastel-blue">
                         <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-user-graduate me-2"></i>
-                                Información del Estudiante
-                            </h5>
+                            <i class="fas fa-user-graduate me-2"></i> Información del Estudiante
                         </div>
+
                         <div class="card-body">
+
+                            <!-- Selector de estudiante -->
                             <div class="form-group mb-3">
                                 <label for="id_estudiante">Estudiante <span class="text-danger">*</span></label>
-                                <select class="form-select" id="id_estudiante" name="id_estudiante" required>
+                                <select class="form-select shadow-sm" id="id_estudiante" name="id_estudiante" required>
                                     <option value="">Seleccione un estudiante</option>
                                     <?php foreach ($estudiantes as $estudiante): ?>
-                                        <option value="<?= $estudiante['id_estudiante'] ?>" 
-                                                data-monto="<?= $estudiante['monto'] ?>"
-                                                data-fecha-vencimiento="<?= $estudiante['fecha_vencimiento'] ?>"
-                                                data-estado-pago="<?= $estudiante['estado_pago'] ?>">
+                                        <option value="<?= $estudiante['id_estudiante'] ?>"
+                                            data-monto="<?= $estudiante['monto'] ?>"
+                                            data-fecha-vencimiento="<?= $estudiante['fecha_vencimiento'] ?>"
+                                            data-estado-pago="<?= $estudiante['estado_pago'] ?>">
                                             <?= htmlspecialchars($estudiante['nombres'] . ' ' . $estudiante['apellidos']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -61,43 +85,76 @@ require_once __DIR__ . '/../templates/navbar.php';
                                 <div class="invalid-feedback">Por favor seleccione un estudiante.</div>
                             </div>
 
-                            <!-- Campos de información del estudiante -->
+                            <!-- Información dinámica -->
                             <div id="info-estudiante" class="d-none">
-                                <div class="alert alert-info">
-                                    <div class="mb-2">
-                                        <strong>Monto mensual:</strong> S/ <span id="monto-estudiante">0.00</span>
+                                <div class="alert alert-info shadow-sm p-3 rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Monto mensual:</strong>
+                                        <span>S/ <span id="monto-estudiante">0.00</span></span>
                                     </div>
-                                    <div class="mb-2">
-                                        <strong>Fecha vencimiento:</strong> <span id="fecha-vencimiento">--/--/----</span>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Fecha vencimiento:</strong>
+                                        <span id="fecha-vencimiento">--/--/----</span>
                                     </div>
-                                    <div>
-                                        <strong>Estado de pago:</strong> <span id="estado-pago-badge"></span>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Estado:</strong>
+                                        <span id="estado-pago-badge"></span>
                                     </div>
                                 </div>
                             </div>
+                                            <!-- SECCIÓN 3: PAGADOR -->
+                
+                        <div class="card-header">
+                            <i class="fas fa-user-check me-2"></i> Información del Pagador
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="mb-3">
+                                <input type="hidden" id="pagador_tipo" name="pagador_tipo" value="padre">
+                                <div class="btn-group" role="group" aria-label="Tipo de pagador">
+                                    <button type="button" class="btn btn-outline-primary active" id="btn_pagador_padre" data-value="padre">Padre/Tutor</button>
+                                    <button type="button" class="btn btn-outline-primary" id="btn_pagador_otro" data-value="otro">Otra persona</button>
+                                </div>
+                            </div>
+
+                            <div id="pagador-seleccion" class="mb-3">
+                                <label>Seleccione padre/tutor</label>
+                                <select class="form-select" id="select_padres" name="id_padre"></select>
+                            </div>
+
+                            <div id="pagador-otro" class="d-none">
+                                <label>Nombre</label>
+                                <input type="text" class="form-control mb-2" id="pagador_nombre" name="pagador_nombre">
+
+                                <label>DNI</label>
+                                <input type="text" class="form-control" id="pagador_dni" name="pagador_dni">
+                            </div>
+
+                        </div>
+                    
+
                         </div>
                     </div>
                 </div>
 
-                <!-- Detalles del Pago -->
+                <!-- SECCIÓN 2: DETALLES DEL PAGO -->
                 <div class="col-md-6">
-                    <div class="card mb-4">
+                    <div class="card shadow-sm pastel-green">
                         <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-file-invoice-dollar me-2"></i>
-                                Detalles del Pago
-                            </h5>
+                            <i class="fas fa-file-invoice-dollar me-2"></i> Detalles del Pago
                         </div>
+
                         <div class="card-body">
+
                             <div class="form-group mb-3">
-                                <label for="concepto">Concepto <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="concepto" name="concepto" required>
-                                <div class="invalid-feedback">Por favor ingrese el concepto del pago.</div>
+                                <label>Concepto <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control shadow-sm" name="concepto" required>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="banco">Banco <span class="text-danger">*</span></label>
-                                <select class="form-select" id="banco" name="banco" required>
+                                <label>Banco <span class="text-danger">*</span></label>
+                                <select class="form-select shadow-sm" name="banco" required>
                                     <option value="">Seleccione un banco</option>
                                     <option value="BCP">BCP</option>
                                     <option value="BBVA">BBVA</option>
@@ -105,217 +162,182 @@ require_once __DIR__ . '/../templates/navbar.php';
                                     <option value="Scotiabank">Scotiabank</option>
                                     <option value="Otro">Otro</option>
                                 </select>
-                                <div class="invalid-feedback">Por favor seleccione un banco.</div>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="monto">Monto <span class="text-danger">*</span></label>
+                                <label>Monto <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">S/</span>
-                                    <input type="number" class="form-control" id="monto" name="monto" step="0.01" min="0" required>
-                                    <div class="invalid-feedback">Por favor ingrese un monto válido.</div>
+                                    <input type="number" class="form-control shadow-sm" name="monto" step="0.01" required>
                                 </div>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="metodo_pago">Método de Pago <span class="text-danger">*</span></label>
-                                <select class="form-select" id="metodo_pago" name="metodo_pago" required>
+                                <label>Método de Pago <span class="text-danger">*</span></label>
+                                <select class="form-select shadow-sm" name="metodo_pago" required>
                                     <option value="">Seleccione un método</option>
                                     <option value="efectivo">Efectivo</option>
-                                    <option value="transferencia">Transferencia bancaria</option>
-                                    <option value="tarjeta">Tarjeta crédito/débito</option>
+                                    <option value="transferencia">Transferencia</option>
+                                    <option value="tarjeta">Tarjeta</option>
                                 </select>
-                                <div class="invalid-feedback">Por favor seleccione un método de pago.</div>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="fecha_pago">Fecha de Pago <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="fecha_pago" name="fecha_pago" required>
-                                <div class="invalid-feedback">Por favor seleccione la fecha de pago.</div>
+                                <label>Fecha de Pago <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control shadow-sm" id="fecha_pago" name="fecha_pago" required>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="descuento">Descuento</label>
+                                <label>Descuento</label>
                                 <div class="input-group">
                                     <span class="input-group-text">S/</span>
-                                    <input type="number" class="form-control" id="descuento" name="descuento" step="0.01" min="0" value="0">
+                                    <input type="number" class="form-control shadow-sm" name="descuento" step="0.01" value="0">
                                 </div>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="aumento">Aumento</label>
+                                <label>Aumento</label>
                                 <div class="input-group">
                                     <span class="input-group-text">S/</span>
-                                    <input type="number" class="form-control" id="aumento" name="aumento" step="0.01" min="0" value="0">
+                                    <input type="number" class="form-control shadow-sm" name="aumento" step="0.01" value="0">
                                 </div>
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="foto_baucher">Voucher o Comprobante</label>
-                                <input type="file" class="form-control" id="foto_baucher" name="foto_baucher" accept="image/jpeg,image/png">
-                                <small class="form-text text-muted">Formatos permitidos: JPG, PNG. Máximo 2MB.</small>
+                                <label>Voucher o Comprobante</label>
+                                <input type="file" class="form-control shadow-sm" id="foto_baucher" name="foto_baucher" accept="image/jpeg,image/png">
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="observaciones">Observaciones</label>
-                                <textarea class="form-control" id="observaciones" name="observaciones" rows="3"></textarea>
+                                <label>Observaciones</label>
+                                <textarea class="form-control shadow-sm" name="observaciones" rows="3"></textarea>
                             </div>
 
-                            <div class="form-group mb-3">
-                                <label>Pagador</label>
-                                <div class="mb-2">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="pagador_tipo" id="pagador_padre" value="padre" checked>
-                                        <label class="form-check-label" for="pagador_padre">Padre/Tutor del estudiante</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="pagador_tipo" id="pagador_otro" value="otro">
-                                        <label class="form-check-label" for="pagador_otro">Otra persona</label>
-                                    </div>
-                                </div>
-
-                                <div id="pagador-seleccion" class="mb-2">
-                                    <select class="form-select" id="select_padres" name="id_padre">
-                                        <option value="">Seleccione un padre/tutor</option>
-                                    </select>
-                                </div>
-
-                                <div id="pagador-otro" class="d-none">
-                                    <div class="mb-2">
-                                        <input type="text" class="form-control" id="pagador_nombre" name="pagador_nombre" placeholder="Nombre del pagador">
-                                    </div>
-                                    <div>
-                                        <input type="text" class="form-control" id="pagador_dni" name="pagador_dni" placeholder="DNI del pagador">
-                                    </div>
-                                </div>
-
-                                <small class="form-text text-muted">Si el pagador es un padre/tutor, seleccione de la lista; de lo contrario elija "Otra persona" e ingrese nombre y DNI.</small>
-                            </div>
                         </div>
                     </div>
                 </div>
+
+
+
             </div>
 
-            <div class="row">
+            <!-- BOTONES -->
+            <div class="row mt-4">
                 <div class="col-12 text-end">
-                    <a href="index.php?controller=Pago" class="btn btn-secondary me-2">
+                    <button type="button" class="btn btn-secondary me-2" id="btn_cancel">
                         <i class="fas fa-times me-2"></i>Cancelar
-                    </a>
+                    </button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save me-2"></i>Registrar Pago
                     </button>
                 </div>
             </div>
+
         </form>
     </div>
 </div>
 
+<!-- JS ORIGINAL (solo ordenado) -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('formPago');
     const selectEstudiante = document.getElementById('id_estudiante');
     const infoEstudiante = document.getElementById('info-estudiante');
     const montoEstudiante = document.getElementById('monto-estudiante');
     const fechaVencimiento = document.getElementById('fecha-vencimiento');
     const estadoPagoBadge = document.getElementById('estado-pago-badge');
+    const selectPadres = document.getElementById('select_padres');
 
-    // Función para formatear fecha
     function formatearFecha(fecha) {
         if (!fecha) return '--/--/----';
         const f = new Date(fecha);
         return f.toLocaleDateString('es-PE');
     }
 
-    // Actualizar información del estudiante cuando se seleccione uno
-    selectEstudiante.addEventListener('change', function() {
+    selectEstudiante.addEventListener('change', function () {
         const option = this.options[this.selectedIndex];
         if (this.value) {
-            const monto = option.dataset.monto;
-            const fechaVenc = option.dataset.fechaVencimiento;
-            const estadoPago = option.dataset.estadoPago;
+            montoEstudiante.textContent = parseFloat(option.dataset.monto).toFixed(2);
+            fechaVencimiento.textContent = formatearFecha(option.dataset.fechaVencimiento);
 
-            montoEstudiante.textContent = parseFloat(monto).toFixed(2);
-            fechaVencimiento.textContent = formatearFecha(fechaVenc);
+            let badgeClass = 'warning';
+            if (option.dataset.estadoPago === 'pagado') badgeClass = 'success';
+            if (option.dataset.estadoPago === 'vencido') badgeClass = 'danger';
 
-            // Configurar el badge de estado
-            let badgeClass = '';
-            switch(estadoPago) {
-                case 'pagado':
-                    badgeClass = 'success';
-                    break;
-                case 'vencido':
-                    badgeClass = 'danger';
-                    break;
-                default:
-                    badgeClass = 'warning';
-            }
-            estadoPagoBadge.innerHTML = `<span class="badge badge-${badgeClass}">${estadoPago.charAt(0).toUpperCase() + estadoPago.slice(1)}</span>`;
-            
+            estadoPagoBadge.innerHTML =
+                `<span class="badge bg-${badgeClass}">${option.dataset.estadoPago}</span>`;
+
             infoEstudiante.classList.remove('d-none');
-            // Cargar padres asociados al estudiante
+
             fetch('index.php?controller=Estudiante&action=obtenerPadresJSON&id=' + this.value)
                 .then(res => res.json())
                 .then(data => {
-                    const selectPadres = document.getElementById('select_padres');
                     selectPadres.innerHTML = '<option value="">Seleccione un padre/tutor</option>';
-                    data.forEach(function(p) {
+                    data.forEach(p => {
                         const opt = document.createElement('option');
                         opt.value = p.id_padre;
-                        opt.textContent = p.nombre_completo + (p.dni ? (' - DNI: ' + p.dni) : '');
-                        opt.dataset.dni = p.dni || '';
-                        opt.dataset.nombre = p.nombre_completo || '';
+                        opt.textContent = p.nombre_completo + (p.dni ? ' - DNI: ' + p.dni : '');
                         selectPadres.appendChild(opt);
                     });
-                })
-                .catch(err => console.error('Error cargando padres:', err));
+                });
         } else {
             infoEstudiante.classList.add('d-none');
         }
     });
 
-    // Pagador: alternar tipo
-    const radioPadre = document.getElementById('pagador_padre');
-    const radioOtro = document.getElementById('pagador_otro');
+    const btnPadre = document.getElementById('btn_pagador_padre');
+    const btnOtro = document.getElementById('btn_pagador_otro');
+    const pagadorTipo = document.getElementById('pagador_tipo');
     const seccionSeleccion = document.getElementById('pagador-seleccion');
     const seccionOtro = document.getElementById('pagador-otro');
+    const inputPagadorNombre = document.getElementById('pagador_nombre');
+    const inputPagadorDni = document.getElementById('pagador_dni');
+    const btnCancel = document.getElementById('btn_cancel');
 
     function actualizarPagadorUI() {
-        if (radioPadre.checked) {
+        if (pagadorTipo.value === 'padre') {
             seccionSeleccion.classList.remove('d-none');
             seccionOtro.classList.add('d-none');
+            // Requerir el select de padres cuando corresponda
+            selectPadres.required = true;
+            inputPagadorNombre.required = false;
+            inputPagadorDni.required = false;
         } else {
             seccionSeleccion.classList.add('d-none');
             seccionOtro.classList.remove('d-none');
+            selectPadres.required = false;
+            inputPagadorNombre.required = true;
+            inputPagadorDni.required = true;
         }
     }
 
-    radioPadre.addEventListener('change', actualizarPagadorUI);
-    radioOtro.addEventListener('change', actualizarPagadorUI);
-    actualizarPagadorUI();
-
-    // Cuando se seleccione un padre, autopoblar nombre y dni en inputs ocultos si hace falta
-    document.getElementById('select_padres').addEventListener('change', function() {
-        const opt = this.options[this.selectedIndex];
-        if (opt && opt.value) {
-            // Si se quiere autopoblar pagador_nombre/dni cuando se envíe, pueden leerse en el servidor por id_padre
-        }
+    btnPadre.addEventListener('click', function () {
+        pagadorTipo.value = 'padre';
+        btnPadre.classList.add('active');
+        btnOtro.classList.remove('active');
+        actualizarPagadorUI();
     });
 
-    // Antes de enviar el formulario, si el tipo es "otro" validar nombre y dni
-    form.addEventListener('submit', function(event) {
-        if (document.getElementById('pagador_otro').checked) {
-            const nombre = document.getElementById('pagador_nombre').value.trim();
-            const dni = document.getElementById('pagador_dni').value.trim();
+    btnOtro.addEventListener('click', function () {
+        pagadorTipo.value = 'otro';
+        btnOtro.classList.add('active');
+        btnPadre.classList.remove('active');
+        actualizarPagadorUI();
+    });
+
+    actualizarPagadorUI();
+
+    form.addEventListener('submit', function (event) {
+        if (pagadorTipo.value === 'otro') {
+            const nombre = inputPagadorNombre.value.trim();
+            const dni = inputPagadorDni.value.trim();
             if (!nombre || !dni) {
                 event.preventDefault();
-                event.stopPropagation();
-                alert('Por favor ingrese nombre y DNI del pagador.');
+                alert('Ingrese nombre y DNI del pagador.');
                 return;
             }
         }
 
-    // Validación del formulario
-    form.addEventListener('submit', function(event) {
         if (!form.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
@@ -323,7 +345,11 @@ document.addEventListener('DOMContentLoaded', function() {
         form.classList.add('was-validated');
     });
 
-    // Inicializar la fecha de pago con la fecha actual
+    // Cancelar: navegar de forma segura usando JS
+    btnCancel.addEventListener('click', function () {
+        window.location.href = 'index.php?controller=Pago';
+    });
+
     document.getElementById('fecha_pago').valueAsDate = new Date();
 });
 </script>

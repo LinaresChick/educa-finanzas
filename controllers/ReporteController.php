@@ -96,23 +96,58 @@ class ReporteController extends BaseController {
             exit();
         }
         
-        // Parámetros de fecha (por defecto el mes actual)
-        $fechaInicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-m-01');
-        $fechaFin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-m-t');
+        // Parámetros de periodo
+        $periodo = isset($_GET['periodo']) ? $_GET['periodo'] : 'mensual';
+        
+        // Calcular fechas según el periodo seleccionado
+        switch ($periodo) {
+            case 'semanal':
+                $fechaInicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-m-d', strtotime('-7 days'));
+                $fechaFin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-m-d');
+                break;
+            case 'anual':
+                $fechaInicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-01-01');
+                $fechaFin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-12-31');
+                break;
+            case 'mensual':
+            default:
+                $fechaInicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-m-01');
+                $fechaFin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-m-t');
+                break;
+        }
+        
+        // Filtros adicionales
+        $filtros = [];
+        if (!empty($_GET['id_seccion'])) {
+            $filtros['id_seccion'] = $_GET['id_seccion'];
+        }
+        if (!empty($_GET['grado'])) {
+            $filtros['grado'] = $_GET['grado'];
+        }
+        if (!empty($_GET['nivel'])) {
+            $filtros['nivel'] = $_GET['nivel'];
+        }
         
         // Generar reporte financiero
-        $reporteFinanciero = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin);
+        $reporteFinanciero = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin, $periodo, $filtros);
         
-        // Estadísticas generales
-        $estadisticas = $this->reporteModel->obtenerEstadisticasGenerales();
+        // Obtener listas para filtros
+        $secciones = $this->reporteModel->obtenerSecciones();
+        $grados = $this->reporteModel->obtenerGrados();
+        $niveles = $this->reporteModel->obtenerNiveles();
         
         // Datos para mostrar en la vista
         $datos = [
             'titulo' => 'Reporte Financiero',
-            'reporte' => $reporteFinanciero,
-            'estadisticas' => $estadisticas,
+            'reporte' => $reporteFinanciero['periodos'] ?? [],
+            'estadisticas' => $reporteFinanciero['estadisticas'] ?? [],
             'fechaInicio' => $fechaInicio,
-            'fechaFin' => $fechaFin
+            'fechaFin' => $fechaFin,
+            'periodo' => $periodo,
+            'secciones' => $secciones,
+            'grados' => $grados,
+            'niveles' => $niveles,
+            'filtros' => $filtros
         ];
         
         $this->render("reportes/financiero", $datos);
@@ -134,6 +169,19 @@ class ReporteController extends BaseController {
         $tipo = isset($_GET['tipo']) ? $_GET['tipo'] : null;
         $fechaInicio = isset($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : date('Y-m-01');
         $fechaFin = isset($_GET['fecha_fin']) ? $_GET['fecha_fin'] : date('Y-m-t');
+        $periodo = isset($_GET['periodo']) ? $_GET['periodo'] : 'mensual';
+        
+        // Filtros
+        $filtros = [];
+        if (!empty($_GET['id_seccion'])) {
+            $filtros['id_seccion'] = $_GET['id_seccion'];
+        }
+        if (!empty($_GET['grado'])) {
+            $filtros['grado'] = $_GET['grado'];
+        }
+        if (!empty($_GET['nivel'])) {
+            $filtros['nivel'] = $_GET['nivel'];
+        }
         
         $datos = [];
         $nombreArchivo = '';
@@ -146,17 +194,21 @@ class ReporteController extends BaseController {
                     break;
                     
                 case 'financiero':
-                    $datos = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin);
-                    $nombreArchivo = 'reporte_financiero_' . date('Ymd');
+                    $resultado = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin, $periodo, $filtros);
+                    $datos = $resultado['periodos'] ?? [];
+                    $nombreArchivo = 'reporte_financiero_' . $periodo . '_' . date('Ymd');
                     break;
                     
                 case 'pagos':
-                    $datos = $this->pagoModel->generarReportePagos($fechaInicio, $fechaFin);
+                    $datos = $this->pagoModel->obtenerPagosFiltrados([
+                        'fecha_inicio' => $fechaInicio,
+                        'fecha_fin' => $fechaFin
+                    ]);
                     $nombreArchivo = 'reporte_pagos_' . date('Ymd');
                     break;
                     
                 case 'estudiantes':
-                    $datos = $this->estudianteModel->obtenerTodos();
+                    $datos = $this->estudianteModel->obtenerEstudiantesActivos();
                     $nombreArchivo = 'reporte_estudiantes_' . date('Ymd');
                     break;
                     
@@ -176,17 +228,18 @@ class ReporteController extends BaseController {
                 header('Content-Disposition: attachment; filename="' . $nombreArchivo . '.csv"');
                 
                 readfile($rutaArchivo);
+                
+                // Eliminar archivo temporal
+                @unlink($rutaArchivo);
                 exit();
             } else {
                 throw new Exception("Error al generar el archivo CSV");
             }
             
         } catch (Exception $e) {
-            $datos = [
-                'error' => $e->getMessage()
-            ];
-            
-            $this->render("reportes/exportar", $datos);
+            $_SESSION['error'] = $e->getMessage();
+            header("Location: index.php?controller=Reporte&action=financiero");
+            exit();
         }
     }
 }

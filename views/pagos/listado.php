@@ -66,6 +66,7 @@ require_once __DIR__ . '/../templates/navbar.php';
                                value="<?= isset($filtros['concepto']) ? $filtros['concepto'] : '' ?>">
                     </div>
                     
+                                    <td class="text-center">
                     <div class="col-md-3 mb-3">
                         <label for="metodo_pago">Método de Pago:</label>
                         <select class="form-control" id="metodo_pago" name="metodo_pago">
@@ -152,7 +153,7 @@ require_once __DIR__ . '/../templates/navbar.php';
                                     <td><?= !empty($pago['fecha_pago']) ? date('d/m/Y', strtotime($pago['fecha_pago'])) : 'N/A' ?></td>
                                     <td class="text-center">
                                         <?php if (!empty($pago['foto_baucher'])): ?>
-                                            <a href="/educa-finanzas/public/uploads/vouchers/<?= $pago['foto_baucher'] ?>" 
+                                                          <a href="<?= BASE_URL ?>/uploads/vouchers/<?= $pago['foto_baucher'] ?>" 
                                                target="_blank" class="btn btn-sm btn-info" title="Ver voucher">
                                                 <i class="fas fa-eye"></i>
                                             </a>
@@ -163,9 +164,18 @@ require_once __DIR__ . '/../templates/navbar.php';
                                     <td>S/ <?= number_format(($pago['monto'] ?? 0) - ($pago['descuento'] ?? 0) + ($pago['aumento'] ?? 0), 2) ?></td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm">
+                                            <button type="button" 
+                                                    class="btn btn-secondary btn-sm btn-detalles" 
+                                                    title="Ver detalles"
+                                                    data-pago-base64="<?= base64_encode(json_encode($pago, JSON_UNESCAPED_UNICODE)) ?>">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
                                             <a href="?controller=Pago&action=comprobante&id=<?= $pago['id_pago'] ?>" 
                                                class="btn btn-info" title="Ver comprobante">
                                                 <i class="fas fa-receipt"></i>
+                                            </a>
+                                            <a href="?controller=Pago&action=editar&id=<?= $pago['id_pago'] ?>" class="btn btn-primary" title="Editar pago">
+                                                <i class="fas fa-edit"></i>
                                             </a>
                                             <?php if (isset($_SESSION['usuario']['rol']) && in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Colaborador'])): ?>
                                             <button type="button" class="btn btn-danger" 
@@ -285,5 +295,97 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    // Mostrar detalles en modal
+    const modalEl = document.createElement('div');
+        modalEl.innerHTML = `
+        <div class="modal fade" id="modalDetallesPago" tabindex="-1" aria-labelledby="modalDetallesPagoLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalDetallesPagoLabel">Detalles del Pago</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body"><div id="modalDetallesContenido" class="p-2"></div></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(modalEl);
+
+    const modalElement = document.getElementById('modalDetallesPago');
+    let bsModal = null;
+    if (modalElement && typeof bootstrap !== 'undefined') {
+        bsModal = new bootstrap.Modal(modalElement);
+    }
+
+    document.querySelectorAll('.btn-detalles').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const b64 = btn.getAttribute('data-pago-base64') || '';
+            try {
+                const jsonStr = atob(b64);
+                const obj = JSON.parse(jsonStr);
+                const contenido = document.getElementById('modalDetallesContenido');
+                if (contenido) {
+                    const esc = (s) => {
+                        if (s === null || s === undefined) return '';
+                        return String(s)
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#39;');
+                    };
+
+                    const estudiante = obj.estudiante_nombre_completo || ((obj.nombres || '') + ' ' + (obj.apellidos || ''));
+                    const fmtFecha = (f) => {
+                        if (!f) return '';
+                        const d = new Date(f);
+                        if (isNaN(d)) return esc(f);
+                        return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth()+1)).slice(-2) + '/' + d.getFullYear();
+                    };
+
+                    const rows = [];
+                    rows.push(['N° Pago', esc(obj.id_pago || '')]);
+                    rows.push(['Estudiante', esc(estudiante)]);
+                    let pagador = '';
+                    if (obj.pagador_nombre) pagador = esc(obj.pagador_nombre);
+                    else if (obj.id_padre) pagador = 'Padre ID: ' + esc(obj.id_padre);
+                    rows.push(['Pagador', pagador]);
+                    // Preferir DNI directo del pago, si no existe usar DNI del padre (tabla 'padres')
+                    const dniPagador = obj.pagador_dni || obj.pagador_dni_db || '';
+                    rows.push(['DNI del Pagador', esc(dniPagador)]);
+                    rows.push(['Concepto', esc(obj.concepto || '')]);
+                    rows.push(['Banco', esc(obj.banco || '')]);
+                    rows.push(['Método de Pago', esc(obj.metodo_pago || '')]);
+                    rows.push(['Monto', obj.monto !== undefined ? 'S/ ' + parseFloat(obj.monto).toFixed(2) : '']);
+                    rows.push(['Descuento', obj.descuento !== undefined ? 'S/ ' + parseFloat(obj.descuento).toFixed(2) : 'S/ 0.00']);
+                    rows.push(['Aumento', obj.aumento !== undefined ? 'S/ ' + parseFloat(obj.aumento).toFixed(2) : 'S/ 0.00']);
+                    rows.push(['Total', (obj.monto !== undefined ? 'S/ ' + (parseFloat(obj.monto) - (parseFloat(obj.descuento||0)) + (parseFloat(obj.aumento||0))).toFixed(2) : '')]);
+                    rows.push(['Fecha de Pago', fmtFecha(obj.fecha_pago)]);
+                    rows.push(['Observaciones', esc(obj.observaciones || '')]);
+                    if (obj.foto_baucher) {
+                        const url = '<?= BASE_URL ?>' + '/uploads/vouchers/' + esc(obj.foto_baucher);
+                        rows.push(['Voucher', '<a href="' + url + '" target="_blank">Ver voucher</a>']);
+                    } else {
+                        rows.push(['Voucher', 'No disponible']);
+                    }
+                    rows.push(['Registrado por (Usuario ID)', esc(obj.usuario_registro || '')]);
+                    rows.push(['Fecha de creación', fmtFecha(obj.fecha_creacion || obj.fecha_registro || '')]);
+
+                    let html = '<table class="table table-sm table-borderless">';
+                    rows.forEach(r => {
+                        html += '<tr><th style="width:35%; text-align:right; vertical-align:top;">' + r[0] + ':</th><td style="padding-left:15px;">' + r[1] + '</td></tr>';
+                    });
+                    html += '</table>';
+                    contenido.innerHTML = html;
+                }
+                if (bsModal) bsModal.show();
+            } catch (err) {
+                alert('Error al mostrar detalles: ' + err.message);
+            }
+        });
+    });
 });
 </script>

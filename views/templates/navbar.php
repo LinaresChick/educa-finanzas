@@ -33,13 +33,13 @@
 
   <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="userDropdown">
     <li>
-      <a class="dropdown-item" href="<?php echo BASE_URL; ?>usuarios/perfil">
+      <a class="dropdown-item" href="index.php?controller=Usuario&action=perfil">
         <i class="fas fa-user text-success"></i> Mi Perfil
       </a>
     </li>
     <li><hr class="dropdown-divider"></li>
     <li>
-      <a class="dropdown-item text-danger" href="<?php echo BASE_URL; ?>auth/logout">
+      <a class="dropdown-item text-danger" href="index.php?controller=Auth&action=logout">
         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
       </a>
     </li>
