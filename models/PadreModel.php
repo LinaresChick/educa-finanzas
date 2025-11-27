@@ -170,28 +170,41 @@ class PadreModel extends Modelo {
      * @param array|null $datosUsuario Los datos del usuario (opcional)
      * @return int|false El ID del padre creado o false si falla
      */
-    public function crearPadreConUsuario($datosPadre, $datosUsuario = null) {
+    /**
+ * Crea un padre con posible usuario asociado
+ */
+public function crearPadreConUsuario($datosPadre, $datosUsuario = null) {
+    try {
+
         $this->db->beginTransaction();
-        
-        try {
-            // Si se incluyen datos de usuario, crear el usuario primero
-            if ($datosUsuario) {
-                $usuarioModel = new UsuarioModel();
-                $idUsuario = $usuarioModel->insertar($datosUsuario);
-                $datosPadre['id_usuario'] = $idUsuario;
-            }
-            
-            // Crear el padre
-            $idPadre = $this->insertar($datosPadre);
-            
-            $this->db->commit();
-            return $idPadre;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            error_log($e->getMessage());
-            return false;
+        $idUsuario = null;
+
+        // Si viene cuenta de usuario
+        if ($datosUsuario !== null) {
+            $sqlUsuario = "INSERT INTO usuarios (nombre, correo, password, rol, estado)
+                           VALUES (:nombre, :correo, :password, :rol, :estado)";
+            $stmt = $this->db->prepare($sqlUsuario);
+            $stmt->execute($datosUsuario);
+            $idUsuario = $this->db->lastInsertId();
         }
+
+        // Agregar id_usuario si existe
+        if ($idUsuario) {
+            $datosPadre['id_usuario'] = $idUsuario;
+        }
+
+        // Insertar padre
+        $this->insertar($datosPadre);
+        $idPadre = $this->db->lastInsertId();
+
+        $this->db->commit();
+        return $idPadre;
+
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        return false;
     }
+}
     
     /**
      * Actualiza un padre y opcionalmente su cuenta de usuario
@@ -201,27 +214,43 @@ class PadreModel extends Modelo {
      * @param array|null $datosUsuario Los datos del usuario (opcional)
      * @return bool True si la actualización fue exitosa
      */
-    public function actualizarPadreConUsuario($idPadre, $datosPadre, $datosUsuario = null) {
+    /**
+ * Actualiza un padre y su usuario asociado (si existe)
+ */
+public function actualizarPadreConUsuario($idPadre, $datosPadre, $datosUsuario = null) {
+    try {
+
         $this->db->beginTransaction();
-        
-        try {
-            // Si se incluyen datos de usuario, actualizar el usuario primero
-            if ($datosUsuario && !empty($datosPadre['id_usuario'])) {
-                $usuarioModel = new UsuarioModel();
-                $usuarioModel->actualizar($datosPadre['id_usuario'], $datosUsuario);
+
+        // Actualizar usuario si corresponde
+        if ($datosUsuario !== null) {
+
+            $sqlUsuario = "UPDATE usuarios
+                           SET nombre = :nombre, correo = :correo"
+                           . (isset($datosUsuario['password']) ? ", password = :password" : "") .
+                           " WHERE id_usuario = (SELECT id_usuario FROM padres WHERE id_padre = :id_padre)";
+
+            $stmtUser = $this->db->prepare($sqlUsuario);
+
+            foreach ($datosUsuario as $campo => $valor) {
+                $stmtUser->bindValue(":$campo", $valor);
             }
-            
-            // Actualizar el padre
-            $this->actualizar($idPadre, $datosPadre);
-            
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            error_log($e->getMessage());
-            return false;
+            $stmtUser->bindValue(":id_padre", $idPadre);
+
+            $stmtUser->execute();
         }
+
+        // Actualizar padre
+        $this->actualizar($idPadre, $datosPadre);
+
+        $this->db->commit();
+        return true;
+
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        return false;
     }
+}
     
     /**
      * Obtiene los estudiantes asociados a un padre

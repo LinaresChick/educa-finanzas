@@ -4,7 +4,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?php echo $titulo; ?></h1>
         <div>
-            <a href="<?php echo BASE_URL; ?>padres/detalle/<?php echo $padre['id_padre']; ?>" class="btn btn-info">
+            <a href="<?php echo BASE_URL; ?>/padres/detalle/<?php echo $padre['id_padre']; ?>" class="btn btn-info">
                 <i class="fas fa-eye"></i> Ver Detalles
             </a>
             <a href="<?php echo BASE_URL; ?>padres" class="btn btn-secondary">
@@ -26,7 +26,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Formulario de Edición</h6>
         </div>
         <div class="card-body">
-            <form action="<?php echo BASE_URL; ?>padres/actualizar/<?php echo $padre['id_padre']; ?>" method="post">
+            <form action="<?php echo BASE_URL; ?>/padres/actualizar/<?php echo $padre['id_padre']; ?>" method="post">
                 <!-- Datos Personales -->
                 <div class="row mb-4">
                     <div class="col-12">
@@ -109,7 +109,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Guardar Cambios
                         </button>
-                        <a href="<?php echo BASE_URL; ?>padres/detalle/<?php echo $padre['id_padre']; ?>" class="btn btn-secondary">Cancelar</a>
+                        <a href="<?php echo BASE_URL; ?>/padres/detalle/<?php echo $padre['id_padre']; ?>" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </div>
             </form>

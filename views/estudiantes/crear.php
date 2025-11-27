@@ -120,8 +120,18 @@ require_once VIEWS_PATH . '/templates/header.php';
                     </div>
                     
                     <div class="col-md-4 mb-3">
-                        <label for="dni" class="form-label">DNI</label>
-                        <input type="text" class="form-control" id="dni" name="dni" maxlength="20">
+                        <label for="dni" class="form-label">DNI *</label>
+                        <input type="text" 
+                        class="form-control" 
+                        id="dni" 
+                        name="dni" 
+                        maxlength="8"
+                        minlength="8"
+                        pattern="\d{8}"
+                        required>
+                        <div id="dni-alert" class="text-danger mt-1" style="display:none;">
+                            El DNI debe tener exactamente 8 números.
+                        </div>
                     </div>
                     
                     <div class="col-md-4 mb-3">
@@ -191,7 +201,8 @@ require_once VIEWS_PATH . '/templates/header.php';
                     
                     <div class="col-md-6 mb-3 datos-cuenta" style="display: none;">
                         <label for="correo" class="form-label">Correo Electrónico *</label>
-                        <input type="email" class="form-control" id="correo" name="correo">
+                        <input type="email" class="form-control" id="correo" name="correo_usuario">
+
                     </div>
                     
                     <div class="col-md-6 mb-3 datos-cuenta" style="display: none;">
@@ -236,6 +247,22 @@ document.addEventListener('DOMContentLoaded', function() {
     crearCuentaCheck.addEventListener('change', toggleCuentaFields);
     toggleCuentaFields(); // Inicializar estado
 });
+// VALIDACIÓN DNI EN TIEMPO REAL
+const dniInput = document.getElementById('dni');
+const dniAlert = document.getElementById('dni-alert');
+
+dniInput.addEventListener('input', function () {
+    // Solo números
+    this.value = this.value.replace(/\D/g, '');
+
+    // Mostrar advertencia
+    if (this.value.length !== 8) {
+        dniAlert.style.display = 'block';
+    } else {
+        dniAlert.style.display = 'none';
+    }
+});
+
 </script>
 
 <?php require_once VIEWS_PATH . '/templates/footer.php'; ?>

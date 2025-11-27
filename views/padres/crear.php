@@ -39,8 +39,11 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label for="dni" class="form-label">DNI</label>
-                        <input type="text" class="form-control" id="dni" name="dni" maxlength="20">
+                        <label for="dni" class="form-label">DNI *</label>
+                        <input type="text" class="form-control" id="dni" name="dni" maxlength="8" required>
+                        <small id="dniHelp" class="text-danger" style="display:none;">
+                            El DNI debe tener exactamente 8 números.
+                        </small>
                     </div>
                     
                     <div class="col-md-6 mb-3">
@@ -110,6 +113,38 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ======== MAYÚSCULAS AUTOMÁTICAS ========
+    function capitalizar(texto) {
+        return texto.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    document.getElementById('nombres').addEventListener('input', function() {
+        this.value = capitalizar(this.value);
+    });
+
+    document.getElementById('apellidos').addEventListener('input', function() {
+        this.value = capitalizar(this.value);
+    });
+
+    // ======== VALIDACIÓN DNI ========
+    const dni = document.getElementById('dni');
+    const dniHelp = document.getElementById('dniHelp');
+
+    dni.addEventListener('input', function () {
+        // Solo números
+        this.value = this.value.replace(/\D/g, '');
+
+        // Validación
+        if (this.value.length !== 8) {
+            dniHelp.style.display = 'block';
+            dni.classList.add('is-invalid');
+        } else {
+            dniHelp.style.display = 'none';
+            dni.classList.remove('is-invalid');
+        }
+    });
+
+    // ======== CAMPOS DE ACCESO ========
     const crearCuentaCheck = document.getElementById('crear_cuenta');
     const datosCuentaElements = document.querySelectorAll('.datos-cuenta');
     const correoUsuarioInput = document.getElementById('correo_usuario');

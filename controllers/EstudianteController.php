@@ -42,18 +42,6 @@ class EstudianteController extends BaseController {
             $data['titulo'] = 'Registrar Nuevo Estudiante';
             $data['salones'] = $this->estudianteModel->obtenerSalonesDisponibles();
             
-            // ✅ DEBUG: Verificar datos antes de enviar a la vista
-            error_log("Datos para vista crear: " . print_r($data, true));
-            
-            // ✅ VERIFICACIÓN TEMPORAL - Mostrar datos en pantalla
-            echo "<pre style='background: #f0f0f0; padding: 10px;'>";
-            echo "DEBUG - Datos que se envían a la vista:\n";
-            echo "Título: " . $data['titulo'] . "\n";
-            echo "Número de salones: " . count($data['salones']) . "\n";
-            echo "Salones:\n";
-            print_r($data['salones']);
-            echo "</pre>";
-            
             $this->vista->mostrar('estudiantes/crear', $data);
             
         } catch (Exception $e) {

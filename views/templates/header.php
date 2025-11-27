@@ -27,7 +27,7 @@
             font-family: 'Open Sans', sans-serif;
             margin: 0;
             background: linear-gradient(135deg, #a3f527 0%, #baf97d 100%);
-            background-image: url('b485d61b-99c2-4022-b4dd-886d345dbed7.png');
+            background-color: #ffffff; /* SIN FONDO */
             background-repeat: repeat;
             background-size: 250px;
             background-attachment: fixed;
