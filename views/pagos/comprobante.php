@@ -222,35 +222,77 @@ if (!$modo_impresion) {
                     <h2>COMPROBANTE DE PAGO</h2>
                     <h4>N° <?= str_pad($pago['id_pago'], 8, '0', STR_PAD_LEFT) ?></h4>
                 </div>
-
                 <div class="info-section">
                     <div class="info-row">
                         <div class="info-label">Fecha</div>
                         <div class="info-value"><?= $fecha_formateada ?></div>
                     </div>
+                        <div class="info-row">
+                            <div class="info-label">RUC</div>
+                            <div class="info-value"><?php echo isset($pago['ruc']) ? htmlspecialchars($pago['ruc']) : '' ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Razón social</div>
+                            <div class="info-value"><?php echo isset($pago['razon_social']) ? htmlspecialchars($pago['razon_social']) : '' ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Dirección fiscal</div>
+                            <div class="info-value"><?php echo isset($pago['direccion_fiscal']) ? htmlspecialchars($pago['direccion_fiscal']) : '' ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Tipo de comprobante</div>
+                            <div class="info-value"><?php echo isset($pago['tipo_comprobante']) ? htmlspecialchars($pago['tipo_comprobante']) : 'Boleta de venta electrónica' ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Serie y número</div>
+                            <div class="info-value"><?php
+                                $serie = $pago['serie'] ?? 'B001';
+                                $numero = $pago['numero_comprobante'] ?? str_pad($pago['id_pago'], 8, '0', STR_PAD_LEFT);
+                                echo htmlspecialchars($serie . '-' . $numero);
+                            ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Fecha</div>
+                            <div class="info-value"><?= $fecha_formateada ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Datos del cliente</div>
+                            <div class="info-value"><?php
+                                $dni_est = isset($estudiante['dni']) ? $estudiante['dni'] : (isset($estudiante['documento']) ? $estudiante['documento'] : '');
+                                $nombre_est = trim((($estudiante['nombres'] ?? '') . ' ' . ($estudiante['apellidos'] ?? '')));
+                                echo ($dni_est ? 'DNI: ' . htmlspecialchars($dni_est) . ' - ' : '') . htmlspecialchars($nombre_est);
+                            ?></div>
+                        </div>
+                    
                     <div class="info-row">
-                        <div class="info-label">Estudiante</div>
-                        <div class="info-value"><?= htmlspecialchars($estudiante['nombres'] . ' ' . $estudiante['apellidos']) ?></div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Concepto</div>
-                        <div class="info-value"><?= htmlspecialchars($pago['concepto']) ?></div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Pagador</div>
-                        <div class="info-value"><?php
-                            if (!empty($pagador)) {
-                                if (!empty($pagador['nombres']) && !empty($pagador['apellidos'])) {
-                                    echo htmlspecialchars(($pagador['nombres'] ?? '') . ' ' . ($pagador['apellidos'] ?? ''));
-                                } elseif (!empty($pagador['nombres'])) {
-                                    echo htmlspecialchars($pagador['nombres']);
-                                }
-                                if (!empty($pagador['dni'])) echo ' - DNI: ' . htmlspecialchars($pagador['dni']);
-                            } else {
-                                echo '—';
-                            }
-                        ?></div>
-                    </div>
+    <div class="info-label">Pagador</div>
+    <div class="info-value">
+        <?php
+            // Si hay padre/tutor (id_padre)
+            if (!empty($pagador) && (!empty($pagador['nombres']) || !empty($pagador['apellidos']))) {
+                $nombre = trim(($pagador['nombres'] ?? '') . ' ' . ($pagador['apellidos'] ?? ''));
+                echo htmlspecialchars($nombre);
+                if (!empty($pagador['dni'])) echo " - DNI: " . htmlspecialchars($pagador['dni']);
+            }
+
+            // Si NO hay padre pero se ingresó manualmente
+            elseif (!empty($pago['pagador_nombre']) || !empty($pago['pagador_dni'])) {
+                echo htmlspecialchars($pago['pagador_nombre'] ?? '');
+                if (!empty($pago['pagador_dni'])) echo " - DNI: " . htmlspecialchars($pago['pagador_dni']);
+            }
+
+            // Si no hay datos
+            else {
+                echo "—";
+            }
+        ?>
+    </div>
+</div>
+
+                        <div class="info-row">
+                            <div class="info-label">Descripción del servicio</div>
+                            <div class="info-value"><?= htmlspecialchars($pago['concepto']) ?></div>
+                        </div>
                     <div class="info-row">
                         <div class="info-label">Método de Pago</div>
                         <div class="info-value"><?= htmlspecialchars($pago['metodo_pago']) ?></div>
@@ -282,7 +324,31 @@ if (!$modo_impresion) {
                         <div class="info-label">Total</div>
                         <div class="info-value">S/ <?= $monto_total ?></div>
                     </div>
+                        <div class="info-row">
+                            <div class="info-label">IGV</div>
+                            <div class="info-value"><?php
+                                if (isset($pago['igv']) && $pago['igv'] > 0) {
+                                    echo 'S/ ' . number_format($pago['igv'], 2);
+                                } else {
+                                    echo '—';
+                                }
+                            ?></div>
+                        </div>
                 </div>
+                    <div class="info-section" style="margin-top:20px;">
+                        <div class="info-row">
+                            <div class="info-label">Código hash</div>
+                            <div class="info-value"><?php echo isset($pago['hash']) ? htmlspecialchars($pago['hash']) : (isset($pago['codigo_hash']) ? htmlspecialchars($pago['codigo_hash']) : '—'); ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Representación impresa</div>
+                            <div class="info-value"><?php echo isset($pago['representacion_impresa']) ? nl2br(htmlspecialchars($pago['representacion_impresa'])) : '—'; ?></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Enlace verificación SUNAT</div>
+                            <div class="info-value"><?php if (!empty($pago['enlace_sunat'])): ?><a href="<?= htmlspecialchars($pago['enlace_sunat']) ?>" target="_blank"><?= htmlspecialchars($pago['enlace_sunat']) ?></a><?php else: ?><?php echo ''; ?><?php endif; ?></div>
+                        </div>
+                    </div>
 
                 <div class="firma-section">
                     <div class="firma-linea"></div>
@@ -307,3 +373,5 @@ if (!$modo_impresion) {
     require_once __DIR__ . '/../templates/footer.php';
 endif; 
 ?>
+
+
