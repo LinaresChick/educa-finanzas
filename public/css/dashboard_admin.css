@@ -72,7 +72,6 @@ body {
     overflow: hidden;
     height: 100%;
     background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
     border: none;
 }
 
@@ -133,7 +132,6 @@ body {
     padding: 1.5rem;
     margin-bottom: 2rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    backdrop-filter: blur(8px);
 }
 
 /* 📱 Adaptación móvil */

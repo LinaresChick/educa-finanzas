@@ -90,7 +90,6 @@ img{
   border-radius: 1.5rem;
   padding: 3rem 2rem;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(12px);
 }
 
 .login__img {
@@ -129,7 +128,6 @@ img{
   border-radius: 1rem;
   text-align: center;
   box-shadow: 0 8px 20px rgba(90,139,15,0.15);
-  backdrop-filter: blur(8px);
   animation-duration: .4s;
   animation-name: animate-login;
 }

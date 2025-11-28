@@ -61,6 +61,15 @@
                         <input type="password" id="clave_registro" name="clave" placeholder="Contraseña" class="login__input" required>
                     </div>
 
+                    <div class="login__box">
+                        <i class='bx bx-user-check login__icon'></i>
+                        <select name="rol_solicitado" class="login__input" required>
+                            <option value="">Seleccione un rol</option>
+                            <option value="2">Administrador</option>
+                            <option value="3">Colaborador</option>
+                        </select>
+                    </div>
+
                     <button type="submit" class="login__button">Registrar</button>
 
                     <div>

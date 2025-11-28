@@ -272,21 +272,28 @@ class UsuarioController extends BaseController
     /**
      * Elimina o desactiva un usuario
      */
-    public function eliminar($id): void
-    {
-        $idUsuario = $this->validarIdUsuario($id);
-        $usuario = $this->obtenerUsuarioValido($idUsuario);
-        
-        $this->verificarPermisosEliminacion($usuario, $idUsuario);
-        
-        $resultado = $this->usuarioModel->cambiarEstado($idUsuario, 'inactivo');
-        
-        if ($resultado) {
-            $this->redireccionarConExito('usuarios', 'Usuario desactivado correctamente');
-        } else {
-            $this->redireccionarConError('usuarios', 'Error al desactivar el usuario');
-        }
+    public function eliminar() {
+    if (!isset($_GET['id'])) {
+        die("ID no proporcionado");
     }
+
+    $id = intval($_GET['id']);
+
+    require_once __DIR__ . '/../models/UsuarioModel.php';
+    $usuarioModel = new \Models\UsuarioModel();
+
+    $resultado = $usuarioModel->eliminar($id);
+
+    if ($resultado) {
+        header("Location: index.php?controller=Usuario&action=index&msg=eliminado");
+        exit;
+    } else {
+        header("Location: index.php?controller=Usuario&action=index&error=no_eliminado");
+        exit;
+    }
+}
+
+
     
     /**
      * Muestra la página de roles y permisos

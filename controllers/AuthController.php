@@ -64,4 +64,44 @@ class AuthController extends BaseController {
         header("Location: index.php?controller=Auth&action=login");
         exit;
     }
+    public function register() {
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+        $nombre    = $_POST['usuario'] ?? '';
+        $correo    = $_POST['correo'] ?? '';
+        $clave     = $_POST['clave'] ?? '';
+        $rolSolic  = $_POST['rol_solicitado'] ?? null; // 2 o 3
+
+        if (!$rolSolic) {
+            die("Error: Debes seleccionar un rol.");
+        }
+
+        $claveHash = password_hash($clave, PASSWORD_BCRYPT);
+
+        // Rol que irá a la tabla usuarios
+        $rolNombre = ($rolSolic == 2 ? 'Administrador' : 'Colaborador');
+
+        // Crear usuario
+        $idUsuario = $this->usuarioModel->crear([
+            'usuario'  => $nombre,
+            'correo'   => $correo,
+            'password' => $claveHash,
+            'rol'      => $rolNombre,
+            'estado'   => 'inactivo'
+        ]);
+
+        // Guardar rol solicitado en usuarios_roles (inactivo)
+        $this->usuarioModel->asignarRol($idUsuario, $rolSolic, 0);
+
+        echo "<h3>Registro enviado</h3>";
+        echo "Un administrador debe activar tu rol para acceder.";
+        exit;
+    }
+
+    $this->render("auth/login");
+}
+
+
+
 }

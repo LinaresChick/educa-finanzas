@@ -554,4 +554,24 @@ public function crearUsuarioEstudiante($idEstudiante, $correo, $password) {
         $resultado = $stmt->fetch();
         return $resultado['count'] > 0;
     }
+    public function crear($data) {
+    $sql = "INSERT INTO usuarios (nombre, correo, password, rol, estado)
+            VALUES (?, ?, ?, ?, ?)";
+
+    $this->db->prepare($sql)->execute([
+        $data['usuario'],   // Esto va a columna 'nombre'
+        $data['correo'],
+        $data['password'],
+        $data['rol'],
+        $data['estado']
+    ]);
+
+    return $this->db->lastInsertId();
+}
+public function asignarRol($idUsuario, $idRol, $activo = 0) {
+    $sql = "INSERT INTO usuarios_roles (id_usuario, id_rol, activo)
+            VALUES (?, ?, ?)";
+    $this->db->prepare($sql)->execute([$idUsuario, $idRol, $activo]);
+}
+
 }
