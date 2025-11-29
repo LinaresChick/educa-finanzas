@@ -40,7 +40,7 @@ class ConstanciaController extends BaseController {
 
     public function registrar() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?controller=Constancia');
+            header('Location: index.php?controller=Constancia&action=index');
             exit;
         }
 
@@ -61,7 +61,7 @@ class ConstanciaController extends BaseController {
             if ($idNuevo) {
                 $_SESSION['exito'] = 'Constancia registrada correctamente';
                 // Redirigir al listado en lugar de ir directo a imprimir
-                header('Location: index.php?controller=Constancia');
+                header('Location: index.php?controller=Constancia&action=index');
                 exit;
             } else {
                 $_SESSION['error'] = 'No se pudo registrar la constancia.';
@@ -70,7 +70,7 @@ class ConstanciaController extends BaseController {
             $_SESSION['error'] = 'Error al registrar constancia: ' . $e->getMessage();
         }
 
-        header('Location: index.php?controller=Constancia');
+        header('Location: index.php?controller=Constancia&action=index');
         exit;
     }
 
@@ -133,7 +133,13 @@ class ConstanciaController extends BaseController {
             $_SESSION['error'] = 'Error al actualizar monto: ' . $e->getMessage();
         }
 
-        header('Location: index.php?controller=Constancia');
+        // Si quedó pagado (monto >= 40) redirigir directamente a imprimir, sino volver al listado
+        if ($nuevoEstado === 'pagado') {
+            header('Location: index.php?controller=Constancia&action=imprimir&id=' . $id);
+            exit;
+        }
+
+        header('Location: index.php?controller=Constancia&action=index');
         exit;
     }
 

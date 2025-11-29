@@ -58,8 +58,7 @@ $fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
             <p><strong>Observación:</strong> <?= $observacion ?></p>
         <?php endif; ?>
 
-       
-        
+      
 
         <p>Se expide la presente constancia a solicitud del(la) interesado(a), para los fines que estime por conveniente.</p>
 
