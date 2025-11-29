@@ -35,7 +35,7 @@ $fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
 
 <div class="container mt-4" id="constancia-print">
     <div class="text-center mb-3">
-        <img src="img/image.png" alt="Logo" style="max-height:120px;">
+        <img src="img/image.png" alt="Logo" style="max-height:60px; max-width:320px; width:auto;">
     </div>
 
     <div class="text-center">
@@ -43,33 +43,53 @@ $fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
         <h4 style="font-weight:700; margin-top:6px;">CONSTANCIA DE ESTUDIOS</h4>
     </div>
 
-    <div class="mt-4" style="font-size:1.05rem; line-height:1.6;">
-        <p>La Dirección de la <strong>Institución Educativa Particular Independencia</strong> certifica que:</p>
+    <?php
+    // Ruta de la foto del estudiante (si existe)
+    $fotoEstudiante = null;
+    if (!empty($est['foto'])) {
+        // intentar ruta dentro de uploads; ajustar según esquema real si es necesario
+        $fotoEstudiante = 'uploads/' . ltrim($est['foto'], '/');
+    }
+    ?>
 
-        <p><strong><?= $nombreEst ?></strong>, identificado(a) con DNI Nº <strong><?= $dniEst ?></strong>, es estudiante del <strong><?= $grado ?: '—' ?></strong> en el periodo académico <strong><?= $anioImprimir ?></strong>.</p>
+    <div class="row mt-4" style="font-size:1.05rem; line-height:1.6;">
+        <div class="col-md-8">
+            <p>La Dirección de la <strong>Institución Educativa Particular Independencia</strong> certifica que:</p>
 
-        <?php if ($estadoEst !== 'activo'): ?>
-            <p>Estado en registros: <strong><?= $estadoEst ?></strong><?php if (!empty($fechaRetiro)): ?> (<?= $fechaRetiro ?>)<?php endif; ?>.</p>
-        <?php else: ?>
-            <p>El(La) estudiante mencionado(a) viene cursando con normalidad las asignaturas correspondientes a su grado y mantiene la condición de alumno(a) activo(a) en nuestra institución.</p>
-        <?php endif; ?>
+            <p><strong><?= $nombreEst ?></strong>, identificado(a) con DNI Nº <strong><?= $dniEst ?></strong>, es estudiante del <strong><?= $grado ?: '—' ?></strong> en el periodo académico <strong><?= $anioImprimir ?></strong>.</p>
 
-        <?php if ($observacion): ?>
-            <p><strong>Observación:</strong> <?= $observacion ?></p>
-        <?php endif; ?>
+            <?php if ($estadoEst !== 'activo'): ?>
+                <p>Estado en registros: <strong><?= $estadoEst ?></strong><?php if (!empty($fechaRetiro)): ?> (<?= $fechaRetiro ?>)<?php endif; ?>.</p>
+            <?php else: ?>
+                <p>El(La) estudiante mencionado(a) viene cursando con normalidad las asignaturas correspondientes a su grado y mantiene la condición de alumno(a) activo(a) en nuestra institución.</p>
+            <?php endif; ?>
 
-      
+            <?php if ($observacion): ?>
+                <p><strong>Observación:</strong> <?= $observacion ?></p>
+            <?php endif; ?>
 
-        <p>Se expide la presente constancia a solicitud del(la) interesado(a), para los fines que estime por conveniente.</p>
+            <p>Se expide la presente constancia a solicitud del(la) interesado(a), para los fines que estime por conveniente.</p>
 
-        <p><strong>Lugar y fecha:</strong> <?= $ciudad ?>, <?= $day ?> de <?= $month ?> de <?= $year ?>.</p>
+            <p><strong>Lugar y fecha:</strong> <?= $ciudad ?>, <?= $day ?> de <?= $month ?> de <?= $year ?>.</p>
+        </div>
+
+        <div class="col-md-4 text-center">
+            <div style="width:160px; height:200px; margin:0 auto; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
+                <?php if ($fotoEstudiante): ?>
+                    <img src="<?= $fotoEstudiante ?>" alt="Foto del estudiante" style="max-width:100%; max-height:100%; object-fit:cover;">
+                <?php else: ?>
+                    <div style="font-size:0.9rem; color:#666;">Foto del estudiante</div>
+                <?php endif; ?>
+            </div>
+            <div style="font-size:0.85rem; margin-top:6px; color:#666;">Foto</div>
+        </div>
     </div>
 
     <div class="row mt-5">
         <div class="col-6"></div>
         <div class="col-6 text-center">
             <p style="margin-bottom:60px;"></p>
-            <p style="font-weight:700; margin-bottom:0;"><?= $director ?></p>
+            <p style="margin-bottom:0;"><img src="img/firma.png" alt="Firma Director" style="max-height:90px; display:inline-block;"></p>
             <p>Director(a)</p>
             <p>Institución Educativa Particular Independencia</p>
         </div>
