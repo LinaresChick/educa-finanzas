@@ -1,195 +1,219 @@
-<!-- C:\xampp\htdocs\educa-finanzas\views\panel\dashboard_admin.php -->
 <?php if (session_status() === PHP_SESSION_NONE) session_start(); ?>
 <?php if (!isset($_SESSION['usuario'])) { header("Location: index.php?controller=Auth&action=login"); exit; } ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Administrador - Educa Finanzas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<?php require_once __DIR__ . '/../templates/header.php'; ?>
 
-    <style>
-        body {
-            background-color: #f9fafb;
-            font-family: "Poppins", sans-serif;
-            color: #333;
-        }
+<style>
 
-        .dashboard-title {
-            font-weight: 700;
-            color: #5f1987ff;
-        }
+/* ============================================================
+   FONDO ANIMADO MÁS INTENSO (DEGRADADO MULTICOLOR)
+   ============================================================ */
+body {
+    background: linear-gradient(135deg,
+        #c6e8ff,   /* celeste pastel */
+        #c4ffc8,   /* verde pastel   */
+        #fff3a1,   /* amarillo pastel */
+        #ffcfa3    /* naranja pastel  */
+    );
+    background-size: 400% 400%;
+    animation: bgMove 10s ease-in-out infinite;
+    font-family: 'Poppins', sans-serif;
+}
 
-        /* ======= TARJETAS DE MÓDULOS ======= */
-        .module-link {
-            text-decoration: none;
-            color: inherit;
-        }
+@keyframes bgMove {
+    0% { background-position: 0% 50%; filter: brightness(1); }
+    50% { background-position: 100% 50%; filter: brightness(1.15); }
+    100% { background-position: 0% 50%; filter: brightness(1); }
+}
 
-        .module-card {
-            border-radius: 15px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            background: linear-gradient(180deg, #ffffff, #fdfdfd);
-            height: 100%;
-        }
+/* ============================================================
+   ANIMACIONES POTENTES
+   ============================================================ */
 
-        .module-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 6px 15px rgba(0, 128, 0, 0.15);
-            cursor: pointer;
-        }
+@keyframes floatStrong {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
 
-        .module-icon i {
-            font-size: 45px;
-            color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.15);
-            border-radius: 50%;
-            padding: 15px;
-            transition: all 0.3s ease;
-        }
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 0px rgba(255,255,255,0.4); }
+    50% { box-shadow: 0 0 25px rgba(255,255,255,0.9); }
+    100% { box-shadow: 0 0 0px rgba(255,255,255,0.4); }
+}
 
-        .module-card:hover .module-icon i {
-            background-color: #198754;
-            color: #fff;
-        }
+@keyframes bounceIn {
+    0% { transform: scale(0.6); opacity: 0; }
+    60% { transform: scale(1.10); opacity: 1; }
+    100% { transform: scale(1); }
+}
 
-        .btn-module {
-            background-color: #198754;
-            border: none;
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-radius: 8px;
-        }
+@keyframes shine {
+    0% { transform: translateX(-150%); }
+    100% { transform: translateX(250%); }
+}
 
-        .btn-module:hover {
-            background-color: #ffc107;
-            color: #000;
-        }
+/* ============================================================
+   TARJETAS PROFESIONALES SUPER ANIMADAS
+   ============================================================ */
 
-        .stat-card {
-            background: linear-gradient(180deg, #fff8e1, #ffffff);
-            border: 2px solid #ffc107;
-            border-radius: 15px;
-            text-align: center;
-            padding: 20px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
-        }
+.module-card {
+    position: relative;
+    border-radius: 22px;
+    padding: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    transition: 0.4s ease-in-out;
+    cursor: pointer;
+    animation: bounceIn 0.7s ease forwards;
+    overflow: hidden;
+}
 
-        .stat-card h5 {
-            color: #666;
-            font-size: 16px;
-        }
+/* Colores pastel intensificados */
+.module-1 { background: rgba(198, 232, 255, 0.75); } /* celeste */
+.module-2 { background: rgba(196, 255, 200, 0.75); } /* verde */
+.module-3 { background: rgba(255, 243, 161, 0.75); } /* amarillo */
+.module-4 { background: rgba(255, 207, 163, 0.75); } /* naranja */
 
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-        }
+/* Hover con explosión de luz */
+.module-card:hover {
+    transform: translateY(-15px) scale(1.06);
+    border-color: white;
+    animation: pulseGlow 1.5s infinite;
+}
 
-        .navbar {
-            background-color: #fff;
-            border-bottom: 2px solid #d9fdd3;
-        }
+/* Efecto de destello diagonal */
+.module-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 120%;
+    height: 100%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.0), rgba(255,255,255,0.8), rgba(255,255,255,0));
+    transform: skewX(-20deg);
+    animation: shine 3s infinite;
+}
 
-        canvas {
-            margin-top: 20px;
-        }
-    </style>
-</head>
+/* Iconos más grandes + animación fuerte */
+.module-icon i {
+    font-size: 55px;
+    color: #004cbf;
+    animation: floatStrong 3.5s ease-in-out infinite;
+    transition: 0.3s ease;
+}
 
-<body class="bg-light">
+/* Icono explota al pasar */
+.module-card:hover .module-icon i {
+    transform: scale(1.35) rotate(5deg);
+    filter: brightness(1.3);
+}
 
-    <div class="dashboard-container container py-4">
-        <h2 class="dashboard-title text-center mb-5">
-            <i class="fas fa-tachometer-alt me-2"></i>
-            Panel de Administración
-        </h2>
+/* Títulos */
+.card-title {
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-shadow: 0 0 6px white;
+}
 
+/* Delays */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+.delay-6 { animation-delay: 0.6s; }
+
+</style>
+
+
+<!-- ============================================================
+     PANEL DE ADMINISTRACIÓN
+     ============================================================ -->
+
+<div class="main-container container py-4">
+
+    <h2 class="section-title text-center mb-4">
+        <i class="fas fa-tachometer-alt me-2"></i>Panel de Administración
+    </h2>
+
+    <div class="content-card">
         <div class="row g-4">
 
-            <!-- Gestión de Usuarios -->
             <div class="col-md-4">
                 <a href="index.php?controller=Usuario&action=index" class="module-link">
-                    <div class="card module-card text-center shadow-sm border-0 p-4">
+                    <div class="card module-card module-1 delay-1">
                         <div class="module-icon mb-3">
                             <i class="fas fa-users"></i>
                         </div>
                         <h5 class="card-title">Gestión de Usuarios</h5>
-                        <p class="card-text">Administra los usuarios y sus roles en el sistema.</p>
+                        <p>Administra usuarios y roles del sistema.</p>
                     </div>
                 </a>
             </div>
 
-            <!-- Estudiantes -->
             <div class="col-md-4">
                 <a href="index.php?controller=Estudiante&action=index" class="module-link">
-                    <div class="card module-card text-center shadow-sm border-0 p-4">
+                    <div class="card module-card module-2 delay-2">
                         <div class="module-icon mb-3">
                             <i class="fas fa-user-graduate"></i>
                         </div>
                         <h5 class="card-title">Estudiantes</h5>
-                        <p class="card-text">Gestiona el registro y seguimiento de estudiantes.</p>
+                        <p>Registro y seguimiento académico.</p>
                     </div>
                 </a>
             </div>
 
-            <!-- Padres -->
             <div class="col-md-4">
                 <a href="index.php?controller=Padre&action=index" class="module-link">
-                    <div class="card module-card text-center shadow-sm border-0 p-4">
+                    <div class="card module-card module-3 delay-3">
                         <div class="module-icon mb-3">
                             <i class="fas fa-user-friends"></i>
                         </div>
                         <h5 class="card-title">Padres de Familia</h5>
-                        <p class="card-text">Administra la información de padres y tutores.</p>
+                        <p>Administración de tutores.</p>
                     </div>
                 </a>
             </div>
 
-            <!-- Pagos -->
             <div class="col-md-4">
                 <a href="index.php?controller=Pago&action=index" class="module-link">
-                    <div class="card module-card text-center shadow-sm border-0 p-4">
+                    <div class="card module-card module-4 delay-4">
                         <div class="module-icon mb-3">
                             <i class="fas fa-money-bill-wave"></i>
                         </div>
                         <h5 class="card-title">Pagos</h5>
-                        <p class="card-text">Control de pagos y gestión financiera.</p>
+                        <p>Control financiero institucional.</p>
                     </div>
                 </a>
             </div>
 
-            <!-- Reportes -->
             <div class="col-md-4">
                 <a href="index.php?controller=Reporte&action=index" class="module-link">
-                    <div class="card module-card text-center shadow-sm border-0 p-4">
+                    <div class="card module-card module-1 delay-5">
                         <div class="module-icon mb-3">
                             <i class="fas fa-chart-bar"></i>
                         </div>
                         <h5 class="card-title">Reportes</h5>
-                        <p class="card-text">Análisis y estadísticas del sistema.</p>
+                        <p>Indicadores y estadísticas.</p>
                     </div>
                 </a>
             </div>
 
-            <!-- Configuración -->
             <div class="col-md-4">
-                <a href="index.php?controller=Config&action=index" class="module-link">
-                    <div class="card module-card text-center shadow-sm border-0 p-4">
+                <a href="index.php?controller=Constancia&action=index" class="module-link">
+                    <div class="card module-card module-2 delay-6">
                         <div class="module-icon mb-3">
-                            <i class="fas fa-cogs"></i>
+                            <i class="fas fa-file-alt"></i>
                         </div>
-                        <h5 class="card-title">Configuración</h5>
-                        <p class="card-text">Personaliza los parámetros del sistema.</p>
+                        <h5 class="card-title">Constancias</h5>
+                        <p>Generación de documentos oficiales.</p>
                     </div>
                 </a>
             </div>
 
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../templates/footer.php'; ?>
