@@ -21,6 +21,16 @@ $months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','se
 $month = $months[intval(date('n', $ts)) - 1];
 $year = date('Y', $ts);
 
+// Año solicitado por el usuario (si se pasó por GET) — usado para imprimir otro periodo
+$anioImprimir = isset($anio_solicitado) && !empty($anio_solicitado) ? htmlspecialchars($anio_solicitado) : $year;
+
+// Observación opcional: p. ej. "Retirado en 2023"
+$observacion = isset($observacion) && !empty($observacion) ? htmlspecialchars($observacion) : null;
+
+// Estado del estudiante
+$estadoEst = htmlspecialchars($est['estado'] ?? ($constancia['estado'] ?? '—'));
+$fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
+
 ?>
 
 <div class="container mt-4" id="constancia-print">
@@ -36,9 +46,20 @@ $year = date('Y', $ts);
     <div class="mt-4" style="font-size:1.05rem; line-height:1.6;">
         <p>La Dirección de la <strong>Institución Educativa Particular Independencia</strong> certifica que:</p>
 
-        <p><strong><?= $nombreEst ?></strong>, identificado(a) con DNI Nº <strong><?= $dniEst ?></strong>, es estudiante regular del <strong><?= $grado ?: '—' ?></strong> en el periodo académico <strong><?= htmlspecialchars($year) ?></strong>.</p>
+        <p><strong><?= $nombreEst ?></strong>, identificado(a) con DNI Nº <strong><?= $dniEst ?></strong>, es estudiante del <strong><?= $grado ?: '—' ?></strong> en el periodo académico <strong><?= $anioImprimir ?></strong>.</p>
 
-        <p>El(La) estudiante mencionado(a) viene cursando con normalidad las asignaturas correspondientes a su grado y mantiene la condición de alumno(a) activo(a) en nuestra institución.</p>
+        <?php if ($estadoEst !== 'activo'): ?>
+            <p>Estado en registros: <strong><?= $estadoEst ?></strong><?php if (!empty($fechaRetiro)): ?> (<?= $fechaRetiro ?>)<?php endif; ?>.</p>
+        <?php else: ?>
+            <p>El(La) estudiante mencionado(a) viene cursando con normalidad las asignaturas correspondientes a su grado y mantiene la condición de alumno(a) activo(a) en nuestra institución.</p>
+        <?php endif; ?>
+
+        <?php if ($observacion): ?>
+            <p><strong>Observación:</strong> <?= $observacion ?></p>
+        <?php endif; ?>
+
+       
+        
 
         <p>Se expide la presente constancia a solicitud del(la) interesado(a), para los fines que estime por conveniente.</p>
 

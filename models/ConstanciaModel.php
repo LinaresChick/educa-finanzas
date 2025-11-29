@@ -9,7 +9,7 @@ class ConstanciaModel extends \Core\Modelo {
 
     public function crear($datos) {
         try {
-            $campos = ['id_estudiante','nombre_solicitante','dni_solicitante','estado','id_pago'];
+            $campos = ['id_estudiante','nombre_solicitante','dni_solicitante','monto','estado','id_pago'];
             $insert = [];
             foreach ($campos as $c) {
                 if (isset($datos[$c])) $insert[$c] = $datos[$c];
