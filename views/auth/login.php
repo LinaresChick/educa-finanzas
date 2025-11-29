@@ -66,7 +66,9 @@
                         <select name="rol_solicitado" class="login__input" required>
                             <option value="">Seleccione un rol</option>
                             <option value="2">Administrador</option>
-                            <option value="3">Colaborador</option>
+                            <option value="3">Director</option>
+                            <option value="4">Contador</option>
+                            <option value="5">Secretario</option>
                         </select>
                     </div>
 

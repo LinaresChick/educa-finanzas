@@ -1,0 +1,63 @@
+---- Import Debug: 2025-11-30T00:21:05+01:00 ----
+POST: Array
+(
+    [confirm] => 1
+    [docente_id] => 1
+    [id_seccion] => 5
+    [monto] => 32.00
+)
+
+FILES keys: Array
+(
+    [0] => archivo
+)
+
+FILE archivo: error=0 size=66 tmp=C:\xampp\tmp\php8003.tmp exists=yes
+---- Import Debug: 2025-11-30T00:31:10+01:00 ----
+POST: Array
+(
+    [confirm] => 1
+    [docente_id] => 1
+    [id_seccion] => 33
+    [monto] => 20.00
+)
+
+FILES keys: Array
+(
+    [0] => archivo
+)
+
+FILE archivo: error=0 size=66 tmp=C:\xampp\tmp\phpBB4C.tmp exists=yes
+Moved uploaded file to: C:\xampp\htdocs\educa-finanzas\controllers/../temp/1764459070_plantilla_ninos.csv exists=yes
+---- Import Debug: 2025-11-30T00:34:17+01:00 ----
+POST: Array
+(
+    [confirm] => 1
+    [docente_id] => 1
+    [id_seccion] => 24
+    [monto] => 20.00
+)
+
+FILES keys: Array
+(
+    [0] => archivo
+)
+
+FILE archivo: error=0 size=66 tmp=C:\xampp\tmp\php975B.tmp exists=yes
+Moved uploaded file to: C:\xampp\htdocs\educa-finanzas\controllers/../temp/1764459257_plantilla_ninos.csv exists=yes
+---- Import Debug: 2025-11-30T00:37:06+01:00 ----
+POST: Array
+(
+    [confirm] => 1
+    [docente_id] => 2
+    [id_seccion] => 23
+    [monto] => 20.00
+)
+
+FILES keys: Array
+(
+    [0] => archivo
+)
+
+FILE archivo: error=0 size=66 tmp=C:\xampp\tmp\php2BB3.tmp exists=yes
+Moved uploaded file to: C:\xampp\htdocs\educa-finanzas\controllers/../temp/1764459426_plantilla_ninos.csv exists=yes

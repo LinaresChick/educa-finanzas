@@ -157,22 +157,32 @@ require_once VIEWS_PATH . '/templates/header.php';
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label for="id_salon" class="form-label">Grado y Sección</label>
-                        <select class="form-select" id="id_salon" name="id_salon">
-                            <option value="">Seleccione una opción</option>
-                            <?php 
-                            // ✅ VERIFICAR QUE $salones EXISTA Y TENGA DATOS
-                            if (isset($salones) && count($salones) > 0): 
-                                foreach($salones as $salon): 
+                        <label for="id_seccion" class="form-label">Grado y Sección</label>
+                        <select class="form-select" id="id_seccion" name="id_seccion">
+                            <option value="">Seleccione una sección</option>
+                            <?php
+                            // Mostrar las secciones (tabla `secciones`) pero enviar el id_salon correspondiente
+                            if (!empty($secciones) && is_array($secciones)):
+                                foreach ($secciones as $sec):
+                                    // Buscar un salón activo que pertenezca a esta sección
+                                    $valor = '';
+                                    if (!empty($salones) && is_array($salones)) {
+                                        foreach ($salones as $salon) {
+                                            if (isset($salon['id_seccion']) && $salon['id_seccion'] == $sec['id_seccion']) {
+                                                $valor = $salon['id_salon'];
+                                                break;
+                                            }
+                                        }
+                                    }
                             ?>
-                                <option value="<?php echo $salon['id_salon']; ?>">
-                                    <?php echo htmlspecialchars($salon['descripcion']); ?>
+                                <option value="<?php echo $sec['id_seccion']; ?>">
+                                    <?php echo htmlspecialchars($sec['nombre'] . (!empty($sec['descripcion']) ? ' - ' . $sec['descripcion'] : '')); ?>
                                 </option>
-                            <?php 
-                                endforeach; 
-                            else: 
+                            <?php
+                                endforeach;
+                            else:
                             ?>
-                                <option value="">No hay salones disponibles</option>
+                                <option value="">No hay secciones disponibles</option>
                             <?php endif; ?>
                         </select>
                     </div>

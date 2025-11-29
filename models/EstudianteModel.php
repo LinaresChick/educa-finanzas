@@ -58,10 +58,12 @@ class EstudianteModel extends Modelo {
         try {
             $sql = "SELECT 
                     e.*,
+                    sal.id_salon,
                     s.nombre as salon_nombre,
                     (SELECT COALESCE(SUM(monto), 0) FROM pagos WHERE id_estudiante = e.id_estudiante) as total_pagado
                    FROM estudiantes e
-                   LEFT JOIN secciones s ON e.id_salon = s.id_seccion
+                   LEFT JOIN salones sal ON e.id_salon = sal.id_salon
+                   LEFT JOIN secciones s ON sal.id_seccion = s.id_seccion
                    WHERE e.estado = 'activo'
                    ORDER BY e.apellidos, e.nombres";
             
@@ -190,7 +192,7 @@ class EstudianteModel extends Modelo {
                 CONCAT(e.nombres, ' ', e.apellidos) as nombre_completo,
                 u.correo, u.id_usuario,
                 g.nombre as grado_nombre, g.nivel as nivel_educativo,
-                s.nombre as seccion_nombre,
+                s.id_seccion as id_seccion, s.nombre as seccion_nombre,
                 sal.anio as anio_escolar,
                 sal.id_salon
                 FROM estudiantes e
@@ -407,6 +409,7 @@ class EstudianteModel extends Modelo {
     public function obtenerSalonesDisponibles() {
         try {
             $sql = "SELECT sal.id_salon, 
+                    sal.id_seccion,
                     CONCAT(g.nombre, ' - ', s.nombre, ' (', sal.anio, ')') as descripcion,
                     g.nombre as grado_nombre, 
                     g.nivel as nivel_educativo,
@@ -436,6 +439,66 @@ class EstudianteModel extends Modelo {
         } catch (Exception $e) {
             error_log("Error en obtenerSalonesDisponibles: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Busca un salón activo por id_seccion (devuelve el primer salón activo)
+     * @param int $id_seccion
+     * @return array|false
+     */
+    public function obtenerSalonPorSeccion($id_seccion) {
+        $sql = "SELECT * FROM salones WHERE id_seccion = :id_seccion AND estado = 'activo' LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Crea un salón placeholder para una sección cuando no existe uno activo.
+     * Devuelve el id_salon creado o false en caso de error.
+     * @param int $id_seccion
+     * @return int|false
+     */
+    public function crearSalonPlaceholder($id_seccion) {
+        try {
+            $anio = date('Y');
+            $sql = "INSERT INTO salones (id_grado, id_seccion, id_docente, anio, cupo_maximo, estado) 
+                    VALUES (NULL, :id_seccion, NULL, :anio, 0, 'activo')";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
+            $stmt->bindValue(':anio', $anio);
+            $stmt->execute();
+            return $this->db->lastInsertId();
+        } catch (Exception $e) {
+            error_log('Error crearSalonPlaceholder: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Crea un salón asociado a una sección y docente
+     * @param int $id_seccion
+     * @param int|null $id_docente
+     * @param int|null $cupo
+     * @return int|false
+     */
+    public function crearSalonConDocente($id_seccion, $id_docente = null, $cupo = null) {
+        try {
+            $anio = date('Y');
+            $sql = "INSERT INTO salones (id_grado, id_seccion, id_docente, anio, cupo_maximo, estado) 
+                    VALUES (NULL, :id_seccion, :id_docente, :anio, :cupo, 'activo')";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
+            $stmt->bindValue(':id_docente', $id_docente);
+            $stmt->bindValue(':anio', $anio);
+            $stmt->bindValue(':cupo', $cupo ?? 0, PDO::PARAM_INT);
+            $stmt->execute();
+            return $this->db->lastInsertId();
+        } catch (Exception $e) {
+            error_log('Error crearSalonConDocente: ' . $e->getMessage());
+            return false;
         }
     }
     public function obtenerPorId($id_estudiante) {

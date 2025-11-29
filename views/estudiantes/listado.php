@@ -85,10 +85,14 @@ h1, h6 {
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?php echo $titulo; ?></h1>
-        <!-- ✅ CORREGIDO -->
-        <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=crear" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> Nuevo Estudiante
-        </a>
+        <div>
+            <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=crear" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Nuevo Estudiante
+            </a>
+            <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=importarSalon" class="btn btn-secondary ms-2">
+                <i class="fas fa-file-import"></i> Importar Salón
+            </a>
+        </div>
     </div>
     
     <?php if (isset($_SESSION['flash_mensaje'])): ?>

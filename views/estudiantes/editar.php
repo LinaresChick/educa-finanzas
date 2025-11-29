@@ -169,14 +169,21 @@
                     </div>
                     
                     <div class="col-md-6 mb-3">
-                        <label for="id_salon" class="form-label">Grado y Sección</label>
-                        <select class="form-select" id="id_salon" name="id_salon">
-                            <option value="">Seleccione una opción</option>
-                            <?php foreach($salones as $salon): ?>
-                                <option value="<?php echo $salon['id_salon']; ?>" <?php echo $estudiante['id_salon'] == $salon['id_salon'] ? 'selected' : ''; ?>>
-                                    <?php echo $salon['descripcion']; ?>
+                        <label for="id_seccion" class="form-label">Grado y Sección</label>
+                        <select class="form-select" id="id_seccion" name="id_seccion">
+                            <option value="">Seleccione una sección</option>
+                            <?php if (!empty($secciones) && is_array($secciones)):
+                                foreach ($secciones as $sec):
+                            ?>
+                                <option value="<?php echo $sec['id_seccion']; ?>" <?php echo (!empty($estudiante['id_seccion']) && $estudiante['id_seccion'] == $sec['id_seccion']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($sec['nombre'] . (!empty($sec['descripcion']) ? ' - ' . $sec['descripcion'] : '')); ?>
                                 </option>
-                            <?php endforeach; ?>
+                            <?php
+                                endforeach;
+                            else:
+                            ?>
+                                <option value="">No hay secciones disponibles</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     
