@@ -297,8 +297,8 @@ class ReporteModel extends Modelo
                 $headers = $keys;
             }
 
-            // Escribir encabezados amigables
-            fputcsv($archivo, $headers);
+            // Escribir encabezados amigables (usar ';' como separador para compatibilidad con Excel en locales hispanos)
+            fputcsv($archivo, $headers, ';');
 
             // Función auxiliar: formatear valor según tipo
             $formatValue = function($key, $value) {
@@ -311,7 +311,8 @@ class ReporteModel extends Modelo
                 }
                 // Montos: keys que contienen 'monto' o 'total' or 'ingresos'
                 if (is_numeric($value) && preg_match('/monto|total|ingreso|ingresos|precio|amount/i', $key)) {
-                    return number_format((float)$value, 2, '.', ',');
+                    // Usar coma decimal y sin separador de miles para mejor compatibilidad con Excel (ES)
+                    return number_format((float)$value, 2, ',', '');
                 }
                 return $value;
             };
@@ -329,7 +330,8 @@ class ReporteModel extends Modelo
                     }
                     $row[] = $formatValue($k, $val);
                 }
-                fputcsv($archivo, $row);
+                // Escribir usando ';' como separador
+                fputcsv($archivo, $row, ';');
             }
 
             fclose($archivo);

@@ -8,8 +8,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Reporte Financiero - Educa Finanzas</title>
-
-```
 <!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -18,131 +16,10 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Custom styles: mantiene tu estructura y mejora lo visual -->
-<style>
-    :root{
-        --primary:#0d6efd;
-        --muted:#6c757d;
-        --card-radius:12px;
-        --soft-shadow: 0 6px 18px rgba(16,24,40,0.06);
-    }
-
-    body {
-        background: #f5f7fb;
-        font-family: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        color: #243044;
-    }
-
-    /* Layout */
-    .report-header {
-        padding-bottom: 0.5rem;
-        margin-bottom: 1rem;
-    }
-
-    /* Tabs top */
-    .nav-tabs {
-        border-bottom: none;
-        gap: 0.5rem;
-    }
-    .nav-tabs .nav-link {
-        border: none;
-        border-radius: 10px;
-        padding: 8px 18px;
-        color: var(--muted);
-        background: transparent;
-        font-weight: 600;
-        transition: all .15s ease;
-        box-shadow: none;
-    }
-    .nav-tabs .nav-link.active {
-        background: linear-gradient(90deg, rgba(13,110,253,0.12), rgba(13,110,253,0.06));
-        color: var(--primary);
-        border: 1px solid rgba(13,110,253,0.18);
-    }
-
-    /* Top toolbar */
-    .export-group .btn {
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-weight: 600;
-    }
-
-    /* Cards & shadows */
-    .card {
-        border-radius: var(--card-radius);
-        box-shadow: var(--soft-shadow);
-        border: 0;
-    }
-    .card .card-header {
-        background: #fff;
-        border-bottom: 1px solid #eef2f6;
-        padding: 12px 16px;
-        font-weight: 700;
-        color: #333;
-    }
-
-    /* Summary cards */
-    .summary-card {
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    .summary-card .card-body{
-        padding: 18px;
-    }
-    .summary-card .card-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-        color: rgba(255,255,255,0.95);
-    }
-    .summary-card .card-text.display-6 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 0;
-        color: rgba(255,255,255,0.98);
-    }
-
-    /* Filters card */
-    .filters-card .card-header {
-        background: linear-gradient(90deg, rgba(13,110,253,0.96), rgba(0,123,255,0.85));
-        color: #fff;
-        font-weight: 700;
-    }
-
-    /* Table */
-    table.dataTable thead th {
-        background: #0f1724;
-        color: #fff;
-        font-weight: 700;
-    }
-
-    .constancias-table thead {
-        background: #0d6efd;
-        color: #fff;
-    }
-    .constancias-table tbody tr:hover {
-        background: rgba(13,110,253,0.04);
-    }
-
-    /* Responsive tweaks */
-    @media (max-width: 991px) {
-        .export-group { margin-top: 0.75rem; }
-        .report-header { flex-direction: column; gap: .75rem; align-items: flex-start; }
-    }
-
-    /* Print */
-    @media print {
-        .sidebar, .navbar, .btn-toolbar, .card-header .btn, form { display: none !important; }
-        .col-md-9 { flex: 0 0 100%; max-width: 100%; }
-        .card { break-inside: avoid; }
-    }
-</style>
-```
-
+<!-- Custom styles removed -->
 </head>
 <body>
 
-```
 <div class="container-fluid">
     <div class="row">
         <?php require_once '../views/templates/sidebar.php'; ?>
@@ -161,37 +38,10 @@
                     </ul>
                 </div>
 
-                <div class="btn-toolbar mb-2 mb-md-0 export-group" role="toolbar" aria-label="Export toolbar">
-                    <div class="btn-group me-2" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-success" onclick="exportarExcel()">
-                            <i class="bi bi-file-earmark-excel"></i> Excel
-                        </button>
-
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-download"></i> Exportar
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('financiero','dia');return false;">Excel - Día</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('financiero','mes');return false;">Excel - Mes</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('financiero','anio');return false;">Excel - Año</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('matricula','mes');return false;">Matrícula - Mes</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','mes');return false;">Constancias - Mes</a></li>
-                            </ul>
-                        </div>
-
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="exportarPDF()">
-                            <i class="bi bi-file-earmark-pdf"></i> PDF
-                        </button>
-
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">
-                            <i class="bi bi-printer"></i> Imprimir
-                        </button>
-                    </div>
-                </div>
+                
             </div>
 
+            
             <!-- Tab panes -->
             <div class="tab-content mt-3">
                 <div class="tab-pane fade show active" id="pane-financiero" role="tabpanel" aria-labelledby="tab-financiero">
@@ -285,29 +135,95 @@
                                 <a href="index.php?controller=Reporte&action=financiero" class="btn btn-secondary">
                                     <i class="bi bi-arrow-clockwise"></i> Limpiar
                                 </a>
-                                <div class="btn-group ms-2">
-                                    <button class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="bi bi-file-earmark-excel"></i> Reporte Matrícula
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('matricula','dia');return false;">Día</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('matricula','mes');return false;">Mes</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('matricula','anio');return false;">Año</a></li>
-                                    </ul>
-                                </div>
-                                <div class="btn-group ms-2">
-                                    <button class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="bi bi-file-earmark-excel"></i> Reporte Constancias
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','dia','#fecha_inicio','#fecha_fin');return false;">Día</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','mes','#fecha_inicio','#fecha_fin');return false;">Mes</a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','anio','#fecha_inicio','#fecha_fin');return false;">Año</a></li>
-                                    </ul>
-                                </div>
+                             
                             </div>
                         </div>
                     </form>
+                </div>
+
+                <!-- Download controls for Financiero (inside financiero tab) -->
+                <div class="mb-4">
+                    <div style="background:#ffffff;padding:16px;border-radius:8px;border:1px solid #e6e6e6;">
+                        <h6 style="margin:0 0 10px 0;font-weight:700;color:#155724;">📊 Descarga de Reportes Financieros</h6>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                           <div style="display:flex;gap:8px;align-items:center;">
+    <label style="margin:0;font-weight:600;">Fecha:</label>
+
+    <input type="date" id="fecha_financiero" class="form-control" style="width:160px;">
+
+    <button class="btn btn-success" onclick="(function(){
+        const fecha = document.getElementById('fecha_financiero').value;
+        if(!fecha){
+            alert('Seleccione una fecha');
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        params.set('controller','Reporte');
+        params.set('action','exportar');
+        params.set('tipo','financiero');
+        params.set('granularidad','diario');
+        params.set('fecha_inicio', fecha);
+        params.set('fecha_fin', fecha);
+
+        const idSec = document.querySelector('select[name=&quot;id_seccion&quot;]')?.value || '';
+        const grado = document.querySelector('select[name=&quot;grado&quot;]')?.value || '';
+        const nivel = document.querySelector('select[name=&quot;nivel&quot;]')?.value || '';
+
+        if(idSec) params.set('id_seccion', idSec);
+        if(grado) params.set('grado', grado);
+        if(nivel) params.set('nivel', nivel);
+
+        window.location.href = 'index.php?' + params.toString();
+    })(); return false;">📅 Descargar</button>
+</div>
+
+
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <select id="mes_financiero" class="form-select" style="width:150px;">
+                                    <option value="">Selecciona Mes</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                                <select id="anio_financiero" class="form-select" style="width:110px;">
+                                    <?php $y = date('Y'); for ($i = $y; $i >= $y-5; $i--): ?>
+                                        <option value="<?= $i ?>"><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <button class="btn btn-primary" onclick="(function(){
+                                    const mes = document.getElementById('mes_financiero').value;
+                                    const anio = document.getElementById('anio_financiero').value;
+                                    if (!mes) { alert('Seleccione un mes'); return; }
+                                    const params = new URLSearchParams(window.location.search);
+                                    params.set('controller','Reporte'); params.set('action','exportar'); params.set('tipo','financiero'); params.set('granularidad','mes');
+                                    // set month range: first and last day of selected month
+                                    const inicio = anio + '-' + mes + '-01';
+                                    const fin = new Date(anio, parseInt(mes,10), 0).toISOString().split('T')[0];
+                                    params.set('fecha_inicio', inicio); params.set('fecha_fin', fin);
+                                    window.location.href = 'index.php?'+params.toString();
+                                })(); return false;">📆 Descargar Mes</button>
+                            </div>
+
+                            <div>
+                                <select id="anio_financiero_anio" class="form-select" style="width:110px;display:inline-block;">
+                                    <?php $y = date('Y'); for ($i = $y; $i >= $y-5; $i--): ?>
+                                        <option value="<?= $i ?>"><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <button class="btn btn-warning" onclick="(function(){ const anio = document.getElementById('anio_financiero_anio').value; const params = new URLSearchParams(window.location.search); params.set('controller','Reporte'); params.set('action','exportar'); params.set('tipo','financiero'); params.set('granularidad','anio'); params.set('fecha_inicio', anio+'-01-01'); params.set('fecha_fin', anio+'-12-31'); window.location.href = 'index.php?'+params.toString(); })(); return false;">🗓️ Descargar Año</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -382,71 +298,7 @@
             <div class="row mb-4">
                 <div class="col-md-6">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title mb-0"><i class="bi bi-pie-chart-fill"></i> Conceptos de Pago</h5>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="graficoConceptos" height="100"></canvas>
-                        </div>
                             <!-- FINANCIERO PANEL END -->
-                            </div>
-
-                            <div class="tab-pane fade" id="pane-constancias" role="tabpanel" aria-labelledby="tab-constancias">
-                                <!-- CONSTANCIAS PANEL START -->
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-header bg-primary text-white">
-                                        <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Constancias</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <div>
-                                                <label class="form-label fw-bold me-2">Rango de fechas</label>
-                                                <input type="date" id="fecha_inicio_const" class="form-control d-inline-block" style="width:auto;" value="<?= htmlspecialchars($fechaInicio ?? '') ?>">
-                                                <input type="date" id="fecha_fin_const" class="form-control d-inline-block ms-2" style="width:auto;" value="<?= htmlspecialchars($fechaFin ?? '') ?>">
-                                            </div>
-                                            <div>
-                                                <div class="btn-group">
-                                                    <button class="btn btn-outline-success btn-sm dropdown-toggle" data-bs-toggle="dropdown">Exportar Constancias</button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','dia','#fecha_inicio_const','#fecha_fin_const'); return false;">Día</a></li>
-                                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','mes','#fecha_inicio_const','#fecha_fin_const'); return false;">Mes</a></li>
-                                                        <li><a class="dropdown-item" href="#" onclick="exportarTipoGranular('constancias','anio','#fecha_inicio_const','#fecha_fin_const'); return false;">Año</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-hover constancias-table">
-                                                <thead class="table-dark">
-                                                    <tr>
-                                                        <th>Fecha</th>
-                                                        <th>Estudiante</th>
-                                                        <th>Solicitante</th>
-                                                        <th>DNI</th>
-                                                        <th>Monto</th>
-                                                        <th>Estado</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php if (!empty($constancias)): foreach ($constancias as $c): ?>
-                                                        <tr>
-                                                            <td><?= htmlspecialchars(isset($c['fecha_creacion']) ? date('d/m/Y', strtotime($c['fecha_creacion'])) : '') ?></td>
-                                                            <td><?= htmlspecialchars($c['estudiante_nombre'] ?? '') ?></td>
-                                                            <td><?= htmlspecialchars($c['nombre_solicitante'] ?? '') ?></td>
-                                                            <td><?= htmlspecialchars($c['dni_solicitante'] ?? '') ?></td>
-                                                            <td><?= is_numeric($c['monto'] ?? null) ? number_format($c['monto'],2) : htmlspecialchars($c['monto'] ?? '') ?></td>
-                                                            <td><?= htmlspecialchars($c['estado'] ?? '') ?></td>
-                                                        </tr>
-                                                    <?php endforeach; else: ?>
-                                                        <tr><td colspan="6" class="text-center">No hay constancias registradas</td></tr>
-                                                    <?php endif; ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- CONSTANCIAS PANEL END -->
                             </div>
                     </div>
                 </div>
@@ -461,8 +313,58 @@
                     </div>
                 </div>
             </div>
+            
 
             <!-- Tabla de datos por período -->
+            <!-- CONSTANCIAS TAB PANE -->
+            <div class="tab-pane fade" id="pane-constancias" role="tabpanel" aria-labelledby="tab-constancias">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 style="margin:0 0 10px 0;font-weight:700;color:#3a0ca3;">📄 Descarga de Reporte Constancias</h6>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <label style="margin:0;font-weight:600;">Rango:</label>
+                                <input type="date" id="fecha_inicio_const" class="form-control" style="width:150px;" />
+                                <input type="date" id="fecha_fin_const" class="form-control" style="width:150px;" />
+                            </div>
+                            <button class="btn btn-dark" onclick="exportarTipoGranular('constancias','semanal','#fecha_inicio_const','#fecha_fin_const'); return false;">📅 Descargar Semana</button>
+
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <select id="mes_constancias" class="form-select" style="width:150px;">
+                                    <option value="">Selecciona Mes</option>
+                                    <option value="01">Enero</option>
+                                    <option value="02">Febrero</option>
+                                    <option value="03">Marzo</option>
+                                    <option value="04">Abril</option>
+                                    <option value="05">Mayo</option>
+                                    <option value="06">Junio</option>
+                                    <option value="07">Julio</option>
+                                    <option value="08">Agosto</option>
+                                    <option value="09">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                                <select id="anio_constancias" class="form-select" style="width:110px;">
+                                    <?php $y = date('Y'); for ($i = $y; $i >= $y-5; $i--): ?>
+                                        <option value="<?= $i ?>"><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <button class="btn btn-primary" onclick="(function(){ const mes=document.getElementById('mes_constancias').value; const anio=document.getElementById('anio_constancias').value; if(!mes){alert('Seleccione un mes');return;} const params=new URLSearchParams(window.location.search); params.set('controller','Reporte'); params.set('action','exportar'); params.set('tipo','constancias'); params.set('granularidad','mes'); const inicio=anio+'-'+mes+'-01'; const fin=new Date(anio,parseInt(mes,10),0).toISOString().split('T')[0]; params.set('fecha_inicio',inicio); params.set('fecha_fin',fin); window.location.href='index.php?'+params.toString(); })(); return false;">📆 Descargar Mes</button>
+                            </div>
+
+                            <div>
+                                <select id="anio_constancias_anio" class="form-select" style="width:110px;display:inline-block;">
+                                    <?php $y = date('Y'); for ($i = $y; $i >= $y-5; $i--): ?>
+                                        <option value="<?= $i ?>"><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <button class="btn btn-secondary" onclick="(function(){ const anio=document.getElementById('anio_constancias_anio').value; const params=new URLSearchParams(window.location.search); params.set('controller','Reporte'); params.set('action','exportar'); params.set('tipo','constancias'); params.set('granularidad','anio'); params.set('fecha_inicio',anio+'-01-01'); params.set('fecha_fin',anio+'-12-31'); window.location.href='index.php?'+params.toString(); })(); return false;">🗓️ Descargar Año</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white">
                     <h5 class="card-title mb-0"><i class="bi bi-table"></i> Detalle Financiero por Período</h5>
@@ -742,7 +644,20 @@
             fFin = document.querySelector('input[name="fecha_fin"]').value;
         }
 
-        if (granularidad === 'dia') {
+        if (granularidad === 'semanal') {
+            // semanal: use provided selectors if available, otherwise last 7 days
+            if (fInicio && fFin) {
+                params.set('fecha_inicio', fInicio);
+                params.set('fecha_fin', fFin);
+            } else {
+                const hoy = new Date();
+                const fin = hoy.toISOString().split('T')[0];
+                const ini = new Date(); ini.setDate(hoy.getDate() - 6);
+                const inicio = ini.toISOString().split('T')[0];
+                params.set('fecha_inicio', inicio);
+                params.set('fecha_fin', fin);
+            }
+        } else if (granularidad === 'dia') {
             const dia = fInicio || new Date().toISOString().split('T')[0];
             params.set('fecha_inicio', dia);
             params.set('fecha_fin', dia);
@@ -773,6 +688,24 @@
         if (nivel) params.set('nivel', nivel);
 
         window.location.href = 'index.php?' + params.toString();
+    }
+
+    /**
+     * Devuelve objeto {start, end} con fechas YYYY-MM-DD para la semana ISO indicada
+     */
+    function getDateRangeOfISOWeek(week, year) {
+        // ISO week: Monday as first day
+        const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+        const dow = simple.getUTCDay();
+        const ISOweekStart = new Date(simple);
+        // Adjust to Monday
+        const diff = (dow <= 4 ? simple.getUTCDate() - (dow === 0 ? 6 : dow - 1) : simple.getUTCDate() + (8 - dow));
+        ISOweekStart.setUTCDate(diff);
+        const start = new Date(Date.UTC(ISOweekStart.getUTCFullYear(), ISOweekStart.getUTCMonth(), ISOweekStart.getUTCDate()));
+        const end = new Date(start);
+        end.setUTCDate(start.getUTCDate() + 6);
+        const toYMD = d => d.toISOString().split('T')[0];
+        return { start: toYMD(start), end: toYMD(end) };
     }
 
     function exportarPDF() {
@@ -814,7 +747,6 @@
         }
     });
 </script>
-```
 
 </body>
 </html>

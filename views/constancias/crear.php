@@ -11,10 +11,14 @@ require_once __DIR__ . '/../templates/header.php';
     <div class="content-card">
         <form action="index.php?controller=Constancia&action=registrar" method="POST" class="needs-validation" novalidate>
             <div class="mb-3">
-                <label for="id_salon">Grado y Sección</label>
-                <select name="id_salon" id="id_salon" class="form-select mb-2">
-                    <option value="">-- Todos los salones --</option>
-                    <?php if (!empty($salones) && is_array($salones)): ?>
+                <label for="id_seccion">Grado y Sección</label>
+                <select name="id_seccion" id="id_seccion" class="form-select mb-2">
+                    <option value="">-- Todas las secciones --</option>
+                    <?php if (!empty($secciones) && is_array($secciones)): ?>
+                        <?php foreach ($secciones as $sec): ?>
+                            <option value="<?= $sec['id_seccion'] ?>"><?= htmlspecialchars($sec['nombre'] ?? $sec['descripcion'] ?? '') ?></option>
+                        <?php endforeach; ?>
+                    <?php elseif (!empty($salones) && is_array($salones)): ?>
                         <?php foreach ($salones as $salon): ?>
                             <option value="<?= $salon['id_salon'] ?>"><?= htmlspecialchars($salon['descripcion'] ?? ($salon['grado_nombre'].' - '.$salon['seccion_nombre'])) ?></option>
                         <?php endforeach; ?>
@@ -25,7 +29,7 @@ require_once __DIR__ . '/../templates/header.php';
                 <select name="id_estudiante" id="id_estudiante" class="form-select">
                     <option value="">-- Sin seleccionar --</option>
                     <?php foreach ($estudiantes as $e): ?>
-                        <option value="<?= $e['id_estudiante'] ?>" data-salon="<?= htmlspecialchars($e['id_salon'] ?? '') ?>"><?= htmlspecialchars($e['nombres'] . ' ' . $e['apellidos']) ?></option>
+                        <option value="<?= $e['id_estudiante'] ?>" data-seccion="<?= htmlspecialchars($e['id_seccion'] ?? $e['id_salon'] ?? '') ?>"><?= htmlspecialchars($e['nombres'] . ' ' . $e['apellidos']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -59,7 +63,7 @@ require_once __DIR__ . '/../templates/header.php';
             </div>
 
             <div class="text-end">
-                <a href="index.php?controller=Constancia" class="btn btn-secondary">Cancelar</a>
+                <a href="index.php?controller=Constancia&action=index" class="btn btn-secondary">Cancelar</a>
                 <button class="btn btn-primary" type="submit">Registrar</button>
             </div>
         </form>
@@ -68,16 +72,16 @@ require_once __DIR__ . '/../templates/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const salonSelect = document.getElementById('id_salon');
+    const seccionSelect = document.getElementById('id_seccion');
     const estudianteSelect = document.getElementById('id_estudiante');
 
     function filterEstudiantes() {
-        const selectedSalon = salonSelect.value;
+        const selected = seccionSelect.value;
         for (const opt of estudianteSelect.options) {
-            const optSalon = opt.getAttribute('data-salon') || '';
-            if (!selectedSalon || selectedSalon === '') {
+            const optSec = opt.getAttribute('data-seccion') || '';
+            if (!selected) {
                 opt.style.display = '';
-            } else if (optSalon === selectedSalon) {
+            } else if (optSec === selected) {
                 opt.style.display = '';
             } else {
                 opt.style.display = 'none';
@@ -92,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    salonSelect.addEventListener('change', filterEstudiantes);
+    if (seccionSelect) seccionSelect.addEventListener('change', filterEstudiantes);
 });
 </script>
 

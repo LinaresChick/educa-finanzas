@@ -198,24 +198,64 @@ class ReporteController extends BaseController {
                     break;
                     
                 case 'financiero':
-                    $resultado = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin, $periodo, $filtros);
-                    $datos = $resultado['periodos'] ?? [];
-                    $nombreArchivo = 'reporte_financiero_' . $periodo . '_' . date('Ymd');
-                    // Column labels for financial report
+                    // Exportar el detalle de pagos para el período solicitado. Se jala directamente
+                    // de la fuente de `views/pagos` a través de `PagoModel::obtenerPagosFiltrados`.
+                    $filtroPagos = [
+                        'fecha_inicio' => $fechaInicio,
+                        'fecha_fin' => $fechaFin,
+                    ];
+                    if (!empty($filtros['id_seccion'])) $filtroPagos['id_seccion'] = $filtros['id_seccion'];
+                    if (!empty($filtros['grado'])) $filtroPagos['grado'] = $filtros['grado'];
+                    if (!empty($filtros['nivel'])) $filtroPagos['nivel'] = $filtros['nivel'];
+
+                    $pagos = $this->pagoModel->obtenerPagosFiltrados($filtroPagos);
+
+                    // Normalizar columnas para el CSV tal como aparece en la vista de pagos
+                    $datos = array_map(function($p) {
+                        $monto = isset($p['monto']) ? (float)$p['monto'] : 0;
+                        $aumento = isset($p['aumento']) ? (float)$p['aumento'] : 0;
+                        $descuento = isset($p['descuento']) ? (float)$p['descuento'] : 0;
+                        $total = $monto + $aumento - $descuento;
+                        return [
+                            'fecha' => isset($p['fecha_pago']) ? date('Y-m-d', strtotime($p['fecha_pago'])) : '',
+                            'estudiante' => trim((($p['estudiante_nombres'] ?? '') . ' ' . ($p['estudiante_apellidos'] ?? ''))),
+                            'concepto' => $p['concepto'] ?? '',
+                            'monto' => $total,
+                            'descuento' => $descuento,
+                            'aumento' => $aumento,
+                            'metodo_pago' => $p['metodo_pago'] ?? '',
+                            'banco' => $p['banco'] ?? '',
+                            'usuario' => $p['usuario_registro'] ?? ''
+                        ];
+                    }, $pagos ?: []);
+
+                    // Agregar fila de TOTAL al final
+                    $totalMonto = array_reduce($datos, function($carry, $row) {
+                        return $carry + (isset($row['monto']) ? (float)$row['monto'] : 0);
+                    }, 0.0);
+                    $datos[] = [
+                        'fecha' => '',
+                        'estudiante' => 'TOTAL',
+                        'concepto' => '',
+                        'monto' => $totalMonto,
+                        'descuento' => '',
+                        'aumento' => '',
+                        'metodo_pago' => '',
+                        'banco' => '',
+                        'usuario' => ''
+                    ];
+
+                    $nombreArchivo = 'reporte_financiero_pagos_' . date('Ymd');
                     $columnLabels = [
-                        'periodo' => 'Período',
-                        'total_pagos' => 'Transacciones',
-                        'total_ingresos' => 'Total Ingresos (S/)',
-                        'estudiantes_pagaron' => 'Estudiantes que Pagaron',
-                        'monto_efectivo' => 'Efectivo (S/)',
-                        'monto_transferencia' => 'Transferencia (S/)',
-                        'monto_tarjeta' => 'Tarjeta (S/)',
-                        'monto_mensualidad' => 'Mensualidad (S/)',
-                        'monto_matricula' => 'Matrícula (S/)',
-                        'monto_material' => 'Material (S/)',
-                        'monto_uniforme' => 'Uniforme (S/)',
-                        'monto_actividad' => 'Actividad (S/)',
-                        'monto_otro' => 'Otros (S/)'
+                        'fecha' => 'Fecha',
+                        'estudiante' => 'Estudiante',
+                        'concepto' => 'Concepto',
+                        'monto' => 'Monto (S/)',
+                        'descuento' => 'Descuento',
+                        'aumento' => 'Aumento',
+                        'metodo_pago' => 'Método de Pago',
+                        'banco' => 'Banco',
+                        'usuario' => 'Usuario'
                     ];
                     break;
                     

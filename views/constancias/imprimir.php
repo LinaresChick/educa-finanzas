@@ -34,26 +34,39 @@ $fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
 ?>
 
 <div class="container mt-4" id="constancia-print">
-    <div class="text-center mb-3">
-        <img src="img/image.png" alt="Logo" style="max-height:60px; max-width:320px; width:auto;">
-    </div>
-
-    <div class="text-center">
-        <h5 style="font-weight:700;">INSTITUCIÓN EDUCATIVA PARTICULAR INDEPENDENCIA</h5>
-        <h4 style="font-weight:700; margin-top:6px;">CONSTANCIA DE ESTUDIOS</h4>
-    </div>
-
     <?php
-    // Ruta de la foto del estudiante (si existe)
+    // Ruta de la foto del estudiante (si existe) - movida al header
     $fotoEstudiante = null;
     if (!empty($est['foto'])) {
-        // intentar ruta dentro de uploads; ajustar según esquema real si es necesario
         $fotoEstudiante = 'uploads/' . ltrim($est['foto'], '/');
     }
     ?>
 
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div style="width:140px; height:160px; display:flex; align-items:center; justify-content:center; border:1px solid #ccc; background:#f8f9fa;">
+            <?php if ($fotoEstudiante): ?>
+                <img src="<?= $fotoEstudiante ?>" alt="Foto del estudiante" style="max-width:100%; max-height:100%; object-fit:cover;">
+            <?php else: ?>
+                <div style="font-size:0.85rem; color:#666; text-align:center;">Foto del estudiante</div>
+            <?php endif; ?>
+        </div>
+
+        <div class="text-center flex-grow-1 px-3" style="display:flex; flex-direction:column; justify-content:flex-start;">
+            <h5 style="font-weight:600; font-size:0.85rem; margin:0 0 2px 0; line-height:1; transform:translateY(-6px);">INSTITUCIÓN EDUCATIVA PARTICULAR INDEPENDENCIA</h5>
+            
+        </div>
+        
+
+        <div style="width:220px; text-align:right;">
+            <img src="img/image.png" alt="Logo" style="max-height:90px; max-width:100%; width:auto;">
+        </div>
+    </div>
+
     <div class="row mt-4" style="font-size:1.05rem; line-height:1.6;">
-        <div class="col-md-8">
+        <div class="col-12">
+<h4 style="font-weight:800; font-size:1.4rem; margin:18px 0 0 0; text-align:center;">
+    CONSTANCIA DE ESTUDIOS
+</h4>
             <p>La Dirección de la <strong>Institución Educativa Particular Independencia</strong> certifica que:</p>
 
             <p><strong><?= $nombreEst ?></strong>, identificado(a) con DNI Nº <strong><?= $dniEst ?></strong>, es estudiante del <strong><?= $grado ?: '—' ?></strong> en el periodo académico <strong><?= $anioImprimir ?></strong>.</p>
@@ -73,16 +86,7 @@ $fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
             <p><strong>Lugar y fecha:</strong> <?= $ciudad ?>, <?= $day ?> de <?= $month ?> de <?= $year ?>.</p>
         </div>
 
-        <div class="col-md-4 text-center">
-            <div style="width:160px; height:200px; margin:0 auto; border:1px solid #ccc; display:flex; align-items:center; justify-content:center; background:#f8f9fa;">
-                <?php if ($fotoEstudiante): ?>
-                    <img src="<?= $fotoEstudiante ?>" alt="Foto del estudiante" style="max-width:100%; max-height:100%; object-fit:cover;">
-                <?php else: ?>
-                    <div style="font-size:0.9rem; color:#666;">Foto del estudiante</div>
-                <?php endif; ?>
-            </div>
-            <div style="font-size:0.85rem; margin-top:6px; color:#666;">Foto</div>
-        </div>
+        <!-- removed duplicate photo box (header now shows the photo) -->
     </div>
 
     <div class="row mt-5">
@@ -97,7 +101,7 @@ $fechaRetiro = htmlspecialchars($est['fecha_vencimiento'] ?? '');
 
     <div class="mt-4">
         <button class="btn btn-primary" onclick="window.print();">Imprimir</button>
-        <a href="index.php?controller=Constancia" class="btn btn-secondary">Volver</a>
+        <a href="index.php?controller=Constancia&action=index" class="btn btn-secondary">Volver</a>
     </div>
 
 </div>
