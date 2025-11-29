@@ -33,14 +33,19 @@ class ConfiguracionModel extends Modelo {
      * @return string|null El valor de la configuración o null si no existe
      */
     public function obtenerValor($clave) {
-        $sql = "SELECT valor FROM configuraciones WHERE clave = :clave";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':clave', $clave);
-        $stmt->execute();
-        
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        return $resultado ? $resultado['valor'] : null;
+        try {
+            $sql = "SELECT valor FROM configuraciones WHERE clave = :clave";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':clave', $clave);
+            $stmt->execute();
+
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $resultado ? $resultado['valor'] : null;
+        } catch (\Exception $e) {
+            error_log('ConfiguracionModel::obtenerValor - error: ' . $e->getMessage());
+            return null;
+        }
     }
     
     /**
