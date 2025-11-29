@@ -268,35 +268,72 @@ class ReporteModel extends Modelo
         }
     }
     
-    public function exportarCSV($datos, $nombreArchivo) 
+    public function exportarCSV($datos, $nombreArchivo, $columnLabels = null) 
     {
         try {
             if (empty($datos)) {
                 throw new \Exception("No hay datos para exportar");
             }
-            
+
             $rutaArchivo = __DIR__ . '/../temp/' . $nombreArchivo . '.csv';
-            
+
             // Crear directorio si no existe
             if (!file_exists(__DIR__ . '/../temp/')) {
                 mkdir(__DIR__ . '/../temp/', 0755, true);
             }
-            
+
             $archivo = fopen($rutaArchivo, 'w');
-            
+
             // UTF-8 BOM para Excel
             fprintf($archivo, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            // Escribir encabezados
-            fputcsv($archivo, array_keys($datos[0]));
-            
-            // Escribir datos
-            foreach ($datos as $fila) {
-                fputcsv($archivo, $fila);
+
+            // Determinar cabeceras y orden de columnas
+            if (is_array($columnLabels) && !empty($columnLabels)) {
+                // $columnLabels expected as ['key' => 'Label', ...] to set order
+                $headers = array_values($columnLabels);
+                $keys = array_keys($columnLabels);
+            } else {
+                $keys = array_keys($datos[0]);
+                $headers = $keys;
             }
-            
+
+            // Escribir encabezados amigables
+            fputcsv($archivo, $headers);
+
+            // Función auxiliar: formatear valor según tipo
+            $formatValue = function($key, $value) {
+                if ($value === null) return '';
+                // Fechas: si tiene formato YYYY-MM-DD o YYYY-MM-DD hh:mm:ss
+                if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+                    $d = substr($value,0,10);
+                    $parts = explode('-', $d);
+                    if (count($parts) === 3) return $parts[2] . '/' . $parts[1] . '/' . $parts[0];
+                }
+                // Montos: keys que contienen 'monto' o 'total' or 'ingresos'
+                if (is_numeric($value) && preg_match('/monto|total|ingreso|ingresos|precio|amount/i', $key)) {
+                    return number_format((float)$value, 2, '.', ',');
+                }
+                return $value;
+            };
+
+            // Escribir filas en el orden de keys (sanitizar texto para evitar saltos y HTML)
+            foreach ($datos as $fila) {
+                $row = [];
+                foreach ($keys as $k) {
+                    $val = array_key_exists($k, $fila) ? $fila[$k] : '';
+                    // Sanitizar: eliminar etiquetas HTML, reemplazar saltos por espacio y recortar
+                    if (is_string($val)) {
+                        $val = strip_tags($val);
+                        $val = preg_replace('/[\r\n\t]+/', ' ', $val);
+                        $val = trim($val);
+                    }
+                    $row[] = $formatValue($k, $val);
+                }
+                fputcsv($archivo, $row);
+            }
+
             fclose($archivo);
-            
+
             return $rutaArchivo;
         } catch (\Exception $e) {
             error_log('Error al exportar a CSV: ' . $e->getMessage());

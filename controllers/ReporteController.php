@@ -5,6 +5,7 @@ require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/ReporteModel.php';
 require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
+require_once __DIR__ . '/../models/ConstanciaModel.php';
 
 use Core\BaseController;
 
@@ -17,12 +18,14 @@ class ReporteController extends BaseController {
     private $reporteModel;
     private $pagoModel;
     private $estudianteModel;
+    private $constanciaModel;
     
     public function __construct() {
         parent::__construct();
         $this->reporteModel = new ReporteModel();
         $this->pagoModel = new PagoModel();
         $this->estudianteModel = new EstudianteModel();
+        $this->constanciaModel = new \Models\ConstanciaModel();
     }
     
     /**
@@ -147,7 +150,8 @@ class ReporteController extends BaseController {
             'secciones' => $secciones,
             'grados' => $grados,
             'niveles' => $niveles,
-            'filtros' => $filtros
+            'filtros' => $filtros,
+            'constancias' => $this->constanciaModel->listarTodos()
         ];
         
         $this->render("reportes/financiero", $datos);
@@ -197,6 +201,22 @@ class ReporteController extends BaseController {
                     $resultado = $this->reporteModel->generarReporteFinanciero($fechaInicio, $fechaFin, $periodo, $filtros);
                     $datos = $resultado['periodos'] ?? [];
                     $nombreArchivo = 'reporte_financiero_' . $periodo . '_' . date('Ymd');
+                    // Column labels for financial report
+                    $columnLabels = [
+                        'periodo' => 'Período',
+                        'total_pagos' => 'Transacciones',
+                        'total_ingresos' => 'Total Ingresos (S/)',
+                        'estudiantes_pagaron' => 'Estudiantes que Pagaron',
+                        'monto_efectivo' => 'Efectivo (S/)',
+                        'monto_transferencia' => 'Transferencia (S/)',
+                        'monto_tarjeta' => 'Tarjeta (S/)',
+                        'monto_mensualidad' => 'Mensualidad (S/)',
+                        'monto_matricula' => 'Matrícula (S/)',
+                        'monto_material' => 'Material (S/)',
+                        'monto_uniforme' => 'Uniforme (S/)',
+                        'monto_actividad' => 'Actividad (S/)',
+                        'monto_otro' => 'Otros (S/)'
+                    ];
                     break;
                     
                 case 'pagos':
@@ -205,6 +225,69 @@ class ReporteController extends BaseController {
                         'fecha_fin' => $fechaFin
                     ]);
                     $nombreArchivo = 'reporte_pagos_' . date('Ymd');
+                    break;
+
+                case 'matricula':
+                    // Exportar solo pagos cuyo concepto sea matrícula
+                    $pagosMatricula = $this->pagoModel->obtenerPagosFiltrados([
+                        'fecha_inicio' => $fechaInicio,
+                        'fecha_fin' => $fechaFin,
+                        'concepto' => 'matric'
+                    ]);
+                    // Normalizar columnas (fecha, estudiante, concepto, monto, metodo, banco)
+                    $datos = array_map(function($p) {
+                        return [
+                            'fecha' => $p['fecha_pago'] ?? $p['fecha_pago'],
+                            'estudiante' => trim((($p['estudiante_nombres'] ?? '') . ' ' . ($p['estudiante_apellidos'] ?? ''))),
+                            'concepto' => $p['concepto'] ?? '',
+                            'monto' => $p['monto'] ?? '',
+                            'metodo_pago' => $p['metodo_pago'] ?? '',
+                            'banco' => $p['banco'] ?? ''
+                        ];
+                    }, $pagosMatricula ?: []);
+                    $nombreArchivo = 'reporte_matricula_' . date('Ymd');
+                    $columnLabels = [
+                        'fecha' => 'Fecha',
+                        'estudiante' => 'Estudiante',
+                        'concepto' => 'Concepto',
+                        'monto' => 'Monto (S/)',
+                        'metodo_pago' => 'Método de Pago',
+                        'banco' => 'Banco'
+                    ];
+                    break;
+
+                case 'constancias':
+                    // Obtener todas y filtrar por rango de fechas si aplica
+                    $allConstancias = $this->constanciaModel->listarTodos();
+                    $filtered = [];
+                    foreach ($allConstancias as $c) {
+                        $fecha = isset($c['fecha_creacion']) ? date('Y-m-d', strtotime($c['fecha_creacion'])) : null;
+                        if ($fecha) {
+                            if ($fecha >= $fechaInicio && $fecha <= $fechaFin) {
+                                $filtered[] = $c;
+                            }
+                        }
+                    }
+                    // Normalizar columnas para CSV
+                    $datos = array_map(function($c) {
+                        return [
+                            'fecha' => $c['fecha_creacion'] ?? '',
+                            'estudiante' => $c['estudiante_nombre'] ?? '',
+                            'solicitante' => $c['nombre_solicitante'] ?? '',
+                            'dni_solicitante' => $c['dni_solicitante'] ?? '',
+                            'monto' => $c['monto'] ?? '',
+                            'estado' => $c['estado'] ?? ''
+                        ];
+                    }, $filtered ?: []);
+                    $nombreArchivo = 'reporte_constancias_' . date('Ymd');
+                    $columnLabels = [
+                        'fecha' => 'Fecha',
+                        'estudiante' => 'Estudiante',
+                        'solicitante' => 'Solicitante',
+                        'dni_solicitante' => 'DNI Solicitante',
+                        'monto' => 'Monto (S/)',
+                        'estado' => 'Estado'
+                    ];
                     break;
                     
                 case 'estudiantes':
@@ -220,7 +303,7 @@ class ReporteController extends BaseController {
                 throw new Exception("No hay datos para exportar");
             }
             
-            $rutaArchivo = $this->reporteModel->exportarCSV($datos, $nombreArchivo);
+            $rutaArchivo = $this->reporteModel->exportarCSV($datos, $nombreArchivo, $columnLabels ?? null);
             
             if ($rutaArchivo) {
                 // Preparar para descarga
