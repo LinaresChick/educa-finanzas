@@ -13,8 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-light">
-    
-    <?php require_once '../views/templates/navbar.php'; ?>
+
     
     <div class="container-fluid">
         <div class="row">

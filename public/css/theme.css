@@ -1,0 +1,125 @@
+/* Theme: Profesional y limpio
+   Paleta solicitada: celeste, verde pastel, amarillo, naranja
+*/
+:root{
+  --celeste: #6ec5ff; /* azul claro */
+  --verde-pastel: #a8e6cf; /* verde pastel */
+  --amarillo: #ffd166; /* amarillo suave */
+  --naranja: #ff8a4c; /* naranja */
+  --bg: #f6fbff;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0f172a;
+  --radius: 10px;
+}
+
+/* Base */
+html,body{height:100%;}
+body{
+  font-family: 'Open Sans', Arial, sans-serif;
+  background: linear-gradient(180deg, var(--bg), #ffffff 60%);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+}
+
+a{color:var(--celeste);}
+
+/* Navbar */
+.navbar{
+  background: linear-gradient(90deg, var(--celeste) 0%, var(--verde-pastel) 60%);
+  box-shadow: 0 6px 20px rgba(16,24,40,0.06);
+}
+.navbar .navbar-brand{font-weight:700;color:rgba(15,23,42,0.95);}
+.navbar .nav-link{color:rgba(15,23,42,0.8);font-weight:600}
+.navbar .nav-link:hover{color:var(--naranja)}
+
+/* Brand/logo */
+.navbar-brand img.brand-logo{width:42px;height:42px;object-fit:cover;border-radius:8px}
+.navbar-brand .brand-text{font-weight:700;font-size:1rem;color:rgba(15,23,42,0.95)}
+
+/* Toggler icon customization for visibility */
+.navbar-toggler{border-color:rgba(15,23,42,0.08)}
+.navbar-toggler-icon{background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' width='30' height='30'><path stroke='%230f172a' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/></svg>");}
+
+/* Container principal */
+.main-container, .container, .container-fluid{
+  padding:1.5rem;
+}
+.content-card{
+  background:var(--surface);
+  border-radius:var(--radius);
+  padding:1.2rem;
+  box-shadow:0 6px 24px rgba(16,24,40,0.04);
+}
+
+.section-title{font-size:1.4rem;color:var(--text);font-weight:700}
+
+/* Cards y módulos */
+.card{border-radius:calc(var(--radius) - 2px);border:0}
+.module-card{background:linear-gradient(180deg, #ffffff, #fbfdff);padding:1.6rem;border-radius:12px}
+.module-icon i{font-size:36px;color:var(--celeste);background:rgba(110,197,255,0.12);padding:14px;border-radius:50%}
+.module-constancia .module-icon i{font-size:46px;color:var(--naranja);background:rgba(255,138,76,0.12)}
+
+/* Buttons */
+.btn-primary{background:linear-gradient(90deg,var(--celeste),var(--verde-pastel));border:none}
+.btn-primary:hover{background:linear-gradient(90deg,var(--naranja),var(--amarillo));}
+.btn-module{background:var(--celeste);color:#fff;border-radius:8px;padding:0.6rem 1.2rem;border:none}
+.btn-warning{background:var(--amarillo);border:none;color:#111}
+.btn-success{background:var(--verde-pastel);border:none;color:#0b3b2e}
+
+/* Tables */
+.table thead th{background:linear-gradient(90deg, rgba(110,197,255,0.12), rgba(168,230,207,0.08));font-weight:700}
+.table-striped>tbody>tr:nth-of-type(odd){background:rgba(250,250,252,0.6)}
+
+/* Forms */
+.form-control{border-radius:8px;border:1px solid rgba(15,23,42,0.06);padding:.6rem}
+
+/* Alerts */
+.alert{border-radius:8px}
+
+/* Print view tweaks */
+@media print{
+  .navbar, .btn, .no-print{display:none}
+  body{background:white}
+}
+
+/* Small helpers */
+.text-muted{color:var(--muted)}
+.badge-pending{background:var(--amarillo);color:#111;padding:.35rem .6rem;border-radius:6px}
+.badge-paid{background:var(--verde-pastel);color:#08301f;padding:.35rem .6rem;border-radius:6px}
+
+/* ===== Animaciones ===== */
+@keyframes entrance {
+  0% { opacity: 0; transform: translateY(18px) scale(0.995); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes floaty {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: .95; }
+ 100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-entrance { animation: entrance .6s cubic-bezier(.2,.9,.2,1) both; }
+.animate-float { animation: floaty 5s ease-in-out infinite; }
+.animate-pulse { animation: pulse 2.4s ease-in-out infinite; }
+
+/* Utility: small stagger classes */
+.delay-0 { animation-delay: 0s !important; }
+.delay-1 { animation-delay: 0.06s !important; }
+.delay-2 { animation-delay: 0.12s !important; }
+.delay-3 { animation-delay: 0.18s !important; }
+.delay-4 { animation-delay: 0.24s !important; }
+.delay-5 { animation-delay: 0.30s !important; }
+.delay-6 { animation-delay: 0.36s !important; }
+
+/* Reduce motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-entrance, .animate-float, .animate-pulse { animation: none !important; }
+}

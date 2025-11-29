@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../templates/header.php';
-require_once __DIR__ . '/../templates/navbar.php';
+
 
 // $pago, $estudiantes, $padres deben venir desde el controlador
 ?>

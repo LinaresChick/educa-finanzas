@@ -3,8 +3,7 @@
  * Vista de historial de pagos de un estudiante
  */
 require_once __DIR__ . '/../templates/header.php';
-require_once __DIR__ . '/../templates/navbar.php';
-require_once __DIR__ . '/../templates/sidebar.php';
+
 ?>
 
 <div class="content-wrapper">
