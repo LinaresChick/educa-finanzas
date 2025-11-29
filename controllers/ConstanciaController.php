@@ -3,10 +3,12 @@ namespace Controllers;
 require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/ConstanciaModel.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
+require_once __DIR__ . '/../models/ConfiguracionModel.php';
 
 use Core\BaseController;
 use Models\ConstanciaModel;
 use Models\EstudianteModel;
+use Models\ConfiguracionModel;
 
 class ConstanciaController extends BaseController {
     private $model;
@@ -78,8 +80,17 @@ class ConstanciaController extends BaseController {
             header('Location: index.php?controller=Constancia');
             exit;
         }
+        // Obtener datos adicionales del estudiante y configuraciones (director, ciudad)
+        $estudianteDetalle = $this->estModel->obtenerEstudianteDetalle($c['id_estudiante']);
+        $configModel = new ConfiguracionModel();
+        $directorNombre = $configModel->obtenerValor('director_nombre');
+        $ciudad = $configModel->obtenerValor('ciudad');
+
         $data['titulo'] = 'Constancia de Estudios';
         $data['constancia'] = $c;
+        $data['estudiante'] = $estudianteDetalle ?: [];
+        $data['director'] = $directorNombre ?: 'Nombre del Director(a)';
+        $data['ciudad'] = $ciudad ?: 'Independencia';
         $this->render('constancias/imprimir', $data);
     }
 }
