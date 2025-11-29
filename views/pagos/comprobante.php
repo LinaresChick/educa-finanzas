@@ -28,7 +28,7 @@ if (!$modo_impresion) {
             font-family: Arial, sans-serif;
         }
         .comprobante-container::before {
-    content: "INSTITUCIÓN EDUCATIVA PARTICULAR INDEPENDENCIA"; /* Cambiar por el nombre real */
+    content: "INNOVA SCHOOL INDEPENDENCIASOCIEDAD ANONIMA CERRADA "; /* Cambiar por el nombre real */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -229,15 +229,15 @@ if (!$modo_impresion) {
                     </div>
                         <div class="info-row">
                             <div class="info-label">RUC</div>
-                            <div class="info-value"><?php echo isset($pago['ruc']) ? htmlspecialchars($pago['ruc']) : '' ?></div>
+                            <div class="info-value"><?php echo (isset($pago['ruc']) && !empty($pago['ruc'])) ? htmlspecialchars($pago['ruc']) : '20613104314'; ?></div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Razón social</div>
-                            <div class="info-value"><?php echo isset($pago['razon_social']) ? htmlspecialchars($pago['razon_social']) : '' ?></div>
+                            <div class="info-value"><?php echo (isset($pago['razon_social']) && !empty($pago['razon_social'])) ? htmlspecialchars($pago['razon_social']) : 'INNOVA SCHOOL INDEPENDENCIA SOCIEDAD ANONIMA CERRADA'; ?></div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Dirección fiscal</div>
-                            <div class="info-value"><?php echo isset($pago['direccion_fiscal']) ? htmlspecialchars($pago['direccion_fiscal']) : '' ?></div>
+                            <div class="info-value"><?php echo (isset($pago['direccion_fiscal']) && !empty($pago['direccion_fiscal'])) ? htmlspecialchars($pago['direccion_fiscal']) : 'OTR.VIRGEN DE CANDELARIA KM. 109 C.P. VIRGEN CANDELARIA MADRE DE DIOS - TAMBOPATA - TAMBOPATA'; ?></div>
                         </div>
                         <div class="info-row">
                             <div class="info-label">Tipo de comprobante</div>

@@ -64,7 +64,9 @@ class PagoModel extends \Core\Modelo {
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     } catch (\Exception $e) {
         error_log("Error en obtenerPagosConEstudiantes: " . $e->getMessage());
-        throw new \Exception("Error al obtener los pagos");
+        // No lanzar excepción fatal hacia el controlador; retornar lista vacía para permitir
+        // que la vista muestre un mensaje amigable en lugar de un error 500.
+        return [];
     }
 }
 

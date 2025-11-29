@@ -223,7 +223,7 @@ INSERT INTO `padres` (`id_padre`, `id_usuario`, `nombres`, `apellidos`, `dni`, `
 --
 
 CREATE TABLE `pagos` (
-  `id_pago` int(11) NOT NULL,
+  `id_pago` int(11) NOT NULL AUTO_INCREMENT,
   `id_estudiante` int(11) NOT NULL,
   `concepto` varchar(200) NOT NULL,
   `banco` varchar(50) NOT NULL,
@@ -235,8 +235,10 @@ CREATE TABLE `pagos` (
   `observaciones` text DEFAULT NULL,
   `foto_baucher` varchar(255) NOT NULL,
   `usuario_registro` int(11) NOT NULL,
-  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_pago`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 -- --------------------------------------------------------
 

@@ -30,11 +30,32 @@ class PagoController extends BaseController {
             exit();
         }
 
-        $pagos = $this->pagoModel->obtenerPagosConEstudiantes();
+        // Recoger filtros desde GET
+        $filtros = [];
+        $allowed = ['fecha_inicio', 'fecha_fin', 'estudiante', 'concepto', 'metodo_pago'];
+        foreach ($allowed as $k) {
+            if (isset($_GET[$k]) && $_GET[$k] !== '') {
+                $filtros[$k] = trim($_GET[$k]);
+            }
+        }
+
+        try {
+            // Usar el método de filtros si existe
+            if (method_exists($this->pagoModel, 'obtenerPagosFiltrados')) {
+                $pagos = $this->pagoModel->obtenerPagosFiltrados($filtros);
+            } else {
+                $pagos = $this->pagoModel->obtenerPagosConEstudiantes();
+            }
+        } catch (\Exception $e) {
+            error_log('Error al obtener pagos en index: ' . $e->getMessage());
+            $pagos = [];
+            $_SESSION['error'] = 'Error al obtener la lista de pagos';
+        }
 
         $datos = [
             'titulo' => 'Listado de Pagos',
-            'pagos' => $pagos
+            'pagos' => $pagos,
+            'filtros' => $filtros
         ];
 
         $this->render("pagos/listado", $datos);
@@ -55,9 +76,15 @@ class PagoController extends BaseController {
             // Obtener lista de estudiantes activos para el select
             $estudiantes = $this->estudianteModel->obtenerEstudiantesActivos();
 
+            // Obtener lista de secciones (grado y sección) para filtrar estudiantes
+            require_once __DIR__ . '/../models/SeccionModel.php';
+            $seccionModel = new \Models\SeccionModel();
+            $secciones = $seccionModel->obtenerTodas();
+
             $datos = [
                 'titulo' => 'Registrar Nuevo Pago',
-                'estudiantes' => $estudiantes
+                'estudiantes' => $estudiantes,
+                'secciones' => $secciones
             ];
 
             // Verificar si hay mensajes de error en la sesión

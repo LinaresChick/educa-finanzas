@@ -67,22 +67,37 @@ require_once __DIR__ . '/../templates/header.php';
 
                         <div class="card-body">
 
-                            <!-- Selector de estudiante -->
-                            <div class="form-group mb-3">
-                                <label for="id_estudiante">Estudiante <span class="text-danger">*</span></label>
-                                <select class="form-select shadow-sm" id="id_estudiante" name="id_estudiante" required>
-                                    <option value="">Seleccione un estudiante</option>
-                                    <?php foreach ($estudiantes as $estudiante): ?>
-                                        <option value="<?= $estudiante['id_estudiante'] ?>"
-                                            data-monto="<?= $estudiante['monto'] ?>"
-                                            data-fecha-vencimiento="<?= $estudiante['fecha_vencimiento'] ?>"
-                                            data-estado-pago="<?= $estudiante['estado_pago'] ?>">
-                                            <?= htmlspecialchars($estudiante['nombres'] . ' ' . $estudiante['apellidos']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Por favor seleccione un estudiante.</div>
-                            </div>
+                            
+                                <div class="form-group mb-3">
+                                    <label for="id_seccion">Grado y Sección <span class="text-danger">*</span></label>
+                                    <select class="form-select shadow-sm" id="id_seccion" name="id_seccion" required>
+                                        <option value="">Seleccione un grado y sección</option>
+                                        <?php if (!empty($secciones)): ?>
+                                            <?php foreach ($secciones as $seccion): ?>
+                                                <option value="<?= $seccion['id_seccion'] ?>"><?php echo htmlspecialchars($seccion['nombre'] . (isset($seccion['descripcion']) && $seccion['descripcion'] ? ' - ' . $seccion['descripcion'] : '')); ?></option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                    <div class="invalid-feedback">Por favor seleccione un grado y sección.</div>
+                                </div>
+
+                                <!-- Selector de estudiante -->
+                                <div class="form-group mb-3">
+                                    <label for="id_estudiante">Estudiante <span class="text-danger">*</span></label>
+                                    <select class="form-select shadow-sm" id="id_estudiante" name="id_estudiante" required>
+                                        <option value="">Seleccione un estudiante</option>
+                                        <?php foreach ($estudiantes as $estudiante): ?>
+                                            <option value="<?= $estudiante['id_estudiante'] ?>"
+                                                data-monto="<?= $estudiante['monto'] ?>"
+                                                data-fecha-vencimiento="<?= $estudiante['fecha_vencimiento'] ?>"
+                                                data-estado-pago="<?= $estudiante['estado_pago'] ?>"
+                                                data-seccion="<?= isset($estudiante['id_seccion']) ? $estudiante['id_seccion'] : (isset($estudiante['id_salon']) ? $estudiante['id_salon'] : '') ?>">
+                                                <?= htmlspecialchars($estudiante['nombres'] . ' ' . $estudiante['apellidos']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <div class="invalid-feedback">Por favor seleccione un estudiante.</div>
+                                </div>
 
                             <!-- Información dinámica -->
                             <div id="info-estudiante" class="d-none">
@@ -292,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputPagadorNombre = document.getElementById('pagador_nombre');
     const inputPagadorDni = document.getElementById('pagador_dni');
     const btnCancel = document.getElementById('btn_cancel');
+    const selectSeccion = document.getElementById('id_seccion');
 
     function actualizarPagadorUI() {
         if (pagadorTipo.value === 'padre') {
@@ -350,6 +366,34 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('fecha_pago').valueAsDate = new Date();
+
+    // Filtrar estudiantes según la sección seleccionada
+    if (selectSeccion) {
+        selectSeccion.addEventListener('change', function () {
+            const selected = this.value;
+            // recorrer opciones del select de estudiantes
+            for (let i = 0; i < selectEstudiante.options.length; i++) {
+                const opt = selectEstudiante.options[i];
+                const optSeccion = opt.dataset.seccion || '';
+                if (!selected) {
+                    opt.style.display = '';
+                } else {
+                    if (optSeccion === selected) {
+                        opt.style.display = '';
+                    } else {
+                        opt.style.display = 'none';
+                    }
+                }
+            }
+
+            // Si el estudiante seleccionado ya no es visible, limpiar selección e info
+            const currentOpt = selectEstudiante.options[selectEstudiante.selectedIndex];
+            if (currentOpt && currentOpt.style.display === 'none') {
+                selectEstudiante.value = '';
+                infoEstudiante.classList.add('d-none');
+            }
+        });
+    }
 });
 </script>
 

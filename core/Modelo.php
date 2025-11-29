@@ -127,10 +127,36 @@ class Modelo extends BaseDeDatos {
      * @return int El ID del registro insertado
      */
     public function insertar($datos) {
-        // Filtrar los datos permitidos
-        $datos = $this->filtrarDatos($datos);
+        // Si la llamada provee explícitamente la clave primaria, respetarla;
+        // en caso contrario, filtrar por campos permitidos.
+        if (isset($datos[$this->primaryKey])) {
+            $datosFiltrados = $datos;
+        } else {
+            $datosFiltrados = $this->filtrarDatos($datos);
+        }
+
+        // Comprobar si la columna primaria tiene AUTO_INCREMENT; si no tiene y
+        // no se proporcionó el valor de la PK, calcular uno y asignarlo para
+        // evitar inserts con id = 0 en tablas que no tienen AUTO_INCREMENT.
+        try {
+            $sqlInfo = "SELECT EXTRA FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :col";
+            $stmtInfo = $this->db->prepare($sqlInfo);
+            $stmtInfo->execute([':table' => $this->tabla, ':col' => $this->primaryKey]);
+            $info = $stmtInfo->fetch(\PDO::FETCH_ASSOC);
+            $hasAuto = $info && stripos($info['EXTRA'] ?? '', 'auto_increment') !== false;
+        } catch (\Exception $e) {
+            $hasAuto = true; // en caso de error, asumir auto para no cambiar comportamiento
+        }
+
+        if (!$hasAuto && !isset($datosFiltrados[$this->primaryKey])) {
+            // calcular siguiente id seguro
+            $sqlMax = "SELECT COALESCE(MAX({$this->primaryKey}), 0) + 1 as next_id FROM {$this->tabla}";
+            $next = $this->db->query($sqlMax)->fetch(\PDO::FETCH_ASSOC);
+            $nextId = intval($next['next_id'] ?? 1);
+            $datosFiltrados[$this->primaryKey] = $nextId;
+        }
         
-        $campos = array_keys($datos);
+        $campos = array_keys($datosFiltrados);
         $placeholders = array_map(function($campo) {
             return ":{$campo}";
         }, $campos);
@@ -140,17 +166,23 @@ class Modelo extends BaseDeDatos {
         
         try {
             $stmt = $this->db->prepare($sql);
-            
-            foreach ($datos as $campo => $valor) {
+
+            foreach ($datosFiltrados as $campo => $valor) {
                 $stmt->bindValue(":{$campo}", $valor);
             }
-            
+
             $stmt->execute();
-            return $this->db->lastInsertId();
+            $last = $this->db->lastInsertId();
+            // Si la tabla no tiene AUTO_INCREMENT, lastInsertId puede ser '0' o empty.
+            // En ese caso devolver el valor explícito de la PK si lo proporcionamos.
+            if (empty($last) || $last === '0') {
+                if (isset($datosFiltrados[$this->primaryKey])) return $datosFiltrados[$this->primaryKey];
+            }
+            return $last;
         } catch (\PDOException $e) {
             error_log("Error de base de datos: " . $e->getMessage());
             error_log("SQL: " . $sql);
-            error_log("Datos: " . print_r($datos, true));
+            error_log("Datos: " . print_r($datosFiltrados, true));
             throw new \Exception("Error de base de datos: " . $e->getMessage());
         }
     }
