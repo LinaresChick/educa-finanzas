@@ -89,7 +89,9 @@ h1, h6 {
             <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=crear" class="btn btn-primary">
                 <i class="fas fa-user-plus"></i> Nuevo Estudiante
             </a>
-            
+            <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=importarSalon" class="btn btn-secondary ms-2">
+                <i class="fas fa-file-import"></i> Importar Salón
+            </a>
         </div>
     </div>
     

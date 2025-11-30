@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 29-11-2025 a las 04:09:36
+-- Tiempo de generación: 30-11-2025 a las 03:06:38
 -- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.0.30
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -38,6 +38,22 @@ CREATE TABLE `constancias` (
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `constancias`
+--
+
+INSERT INTO `constancias` (`id_constancia`, `id_estudiante`, `nombre_solicitante`, `dni_solicitante`, `monto`, `estado`, `id_pago`, `fecha_creacion`) VALUES
+(1, 1, 'Juan Mendoza luna', '34567890', 0.00, 'pendiente', NULL, '2025-11-29 03:56:12'),
+(2, 5, 'Juan Mendoza luna', '34567890', 0.00, 'pendiente', NULL, '2025-11-29 04:01:43'),
+(3, 5, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:02:11'),
+(4, 1, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:03:08'),
+(5, 5, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:13:04'),
+(6, 5, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:15:25'),
+(7, 5, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:46:37'),
+(8, 1, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:51:35'),
+(9, 1, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 04:53:08'),
+(10, 1, 'Juan Mendoza luna', '34567890', 40.00, 'pagado', NULL, '2025-11-29 20:56:18');
+
 -- --------------------------------------------------------
 
 --
@@ -62,8 +78,8 @@ CREATE TABLE `docentes` (
 --
 
 INSERT INTO `docentes` (`id_docente`, `id_usuario`, `nombres`, `apellidos`, `dni`, `telefono`, `correo`, `especialidad`, `estado`, `fecha_creacion`) VALUES
-(1, 12, 'MAYDA', 'BRAVO TORRES', NULL, NULL, NULL, 'Educación Primaria', 'activo', '2025-09-24 20:47:00'),
-(2, 13, 'JULIO CESAR', 'CAVIEDES ALVAREZ', NULL, NULL, NULL, 'Educación Secundaria', 'activo', '2025-09-24 20:47:17');
+(1, NULL, 'MAYDA', 'BRAVO TORRES', NULL, NULL, NULL, 'Educación Primaria', 'activo', '2025-09-24 20:47:00'),
+(2, NULL, 'JULIO CESAR', 'CAVIEDES ALVAREZ', NULL, NULL, NULL, 'Educación Secundaria', 'activo', '2025-09-24 20:47:17');
 
 -- --------------------------------------------------------
 
@@ -95,8 +111,7 @@ CREATE TABLE `estudiantes` (
 --
 
 INSERT INTO `estudiantes` (`id_estudiante`, `id_usuario`, `id_salon`, `nombres`, `apellidos`, `dni`, `mencion`, `fecha_nacimiento`, `direccion`, `telefono`, `estado`, `monto`, `fecha_vencimiento`, `estado_pago`, `fecha_creacion`, `fecha_actualizacion`) VALUES
-(1, NULL, 1, 'carlos jr', 'camacaro', '74859612', 'ff', '2025-09-02', '', '987654123', 'activo', 0.00, NULL, 'pendiente', '2025-10-19 05:36:19', '2025-10-19 05:36:19'),
-(5, NULL, 1, 'LUIS PEDRO', 'LINARES ASCENCIO', '74852136', 'ff', '0000-00-00', 'Jr San Salvador', '983923774', 'activo', 0.00, NULL, 'pendiente', '2025-11-27 06:27:57', '2025-11-27 06:30:35');
+(1, NULL, 2, 'carlos jr', 'camacaro', '74859612', 'ff', '2025-09-02', '', '987654123', 'activo', 0.00, NULL, 'pendiente', '2025-10-19 05:36:19', '2025-11-29 03:55:37');
 
 -- --------------------------------------------------------
 
@@ -119,7 +134,8 @@ CREATE TABLE `estudiante_padre` (
 INSERT INTO `estudiante_padre` (`id`, `id_estudiante`, `id_padre`, `parentesco`, `fecha_creacion`) VALUES
 (1, 1, 1, 'Padre', '2025-10-19 05:42:04'),
 (2, 1, 12, 'Madre', '2025-11-27 06:31:57'),
-(3, 5, 16, 'Tutor Legal', '2025-11-27 06:32:21');
+(3, 5, 16, 'Tutor Legal', '2025-11-27 06:32:21'),
+(4, 1, 16, 'Tutor Legal', '2025-11-29 15:37:50');
 
 -- --------------------------------------------------------
 
@@ -212,9 +228,7 @@ CREATE TABLE `padres` (
 
 INSERT INTO `padres` (`id_padre`, `id_usuario`, `nombres`, `apellidos`, `dni`, `telefono`, `correo`, `direccion`, `relacion`, `estado`, `fecha_creacion`) VALUES
 (1, NULL, 'carlos21', 'camacaro', '74859612', '987654123', '', '', 'Padre', 'activo', '2025-10-19 01:21:17'),
-(12, NULL, 'LUIS', 'LINARES ASCENCIO', '', '983923774', 'nikomclela1234@gmail.com', 'Jr San Salvador', 'Madre', 'activo', '2025-11-27 05:56:17'),
-(15, NULL, 'CARLOS', 'MACARIOP', '74852145', '951478523', 'SANTIAGO@GMAIL.COM', 'jR. cARLOS', 'Madre', 'activo', '2025-11-27 05:59:22'),
-(16, NULL, 'Carlos Miguel', 'Pedregal Carloil', '74851245', '987654321', '', '', 'Tutor', 'activo', '2025-11-27 06:15:57');
+(12, NULL, 'LUIS', 'LINARES ASCENCIO', '', '983923774', 'nikomclela1234@gmail.com', 'Jr San Salvador', 'Madre', 'activo', '2025-11-27 05:56:17');
 
 -- --------------------------------------------------------
 
@@ -223,22 +237,31 @@ INSERT INTO `padres` (`id_padre`, `id_usuario`, `nombres`, `apellidos`, `dni`, `
 --
 
 CREATE TABLE `pagos` (
-  `id_pago` int(11) NOT NULL AUTO_INCREMENT,
+  `id_pago` int(11) NOT NULL,
   `id_estudiante` int(11) NOT NULL,
+  `id_padre` int(11) DEFAULT NULL,
+  `pagador_nombre` varchar(150) DEFAULT NULL,
+  `pagador_dni` varchar(20) DEFAULT NULL,
   `concepto` varchar(200) NOT NULL,
   `banco` varchar(50) NOT NULL,
   `monto` decimal(10,2) NOT NULL,
   `metodo_pago` enum('efectivo','transferencia','tarjeta') DEFAULT 'efectivo',
   `fecha_pago` date NOT NULL,
-  `descuento` decimal(10,2) DEFAULT 0.00,
-  `aumento` decimal(10,2) DEFAULT 0.00,
+  `descuento` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `aumento` decimal(10,2) NOT NULL DEFAULT 0.00,
   `observaciones` text DEFAULT NULL,
-  `foto_baucher` varchar(255) NOT NULL,
+  `foto_baucher` varchar(255) DEFAULT '',
   `usuario_registro` int(11) NOT NULL,
-  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id_pago`)
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `pagos`
+--
+
+INSERT INTO `pagos` (`id_pago`, `id_estudiante`, `id_padre`, `pagador_nombre`, `pagador_dni`, `concepto`, `banco`, `monto`, `metodo_pago`, `fecha_pago`, `descuento`, `aumento`, `observaciones`, `foto_baucher`, `usuario_registro`, `fecha_creacion`) VALUES
+(1, 1, 1, 'carlos21 camacaro', '74859612', 'pago', 'BCP', 200.00, 'efectivo', '2025-11-29', 0.00, 0.00, '', '', 2, '2025-11-29 15:11:41'),
+(2, 1, 16, '', '', 'pago', 'BCP', 20.00, 'efectivo', '2025-11-29', 0.00, 0.00, '', '', 2, '2025-11-29 15:38:24');
 
 -- --------------------------------------------------------
 
@@ -259,10 +282,9 @@ CREATE TABLE `roles` (
 INSERT INTO `roles` (`id`, `nombre`, `descripcion`) VALUES
 (1, 'Superadmin', 'Rol del super administrador'),
 (2, 'Administrador', 'Rol de administrador'),
-(3, 'Colaborador', 'Rol de colaborador'),
-(4, 'Padre', 'Padre de familia'),
-(5, 'Estudiante', 'Estudiante'),
-(6, 'Docente', 'Docente');
+(3, 'Director', 'Rol de director'),
+(4, 'Colaborador', 'Rol de Colaborador'),
+(5, 'Secretario', 'Rol de Secretario');
 
 -- --------------------------------------------------------
 
@@ -359,7 +381,7 @@ CREATE TABLE `usuarios` (
   `estado` enum('activo','inactivo') DEFAULT 'activo',
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `rol` enum('Superadmin','Administrador','Colaborador','Padre','Estudiante','Docente','Director','Contador','Secretario') NOT NULL DEFAULT 'Estudiante'
+  `rol` enum('Superadmin','Administrador','Director','Contador','Secretario') DEFAULT 'Secretario'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -370,18 +392,12 @@ INSERT INTO `usuarios` (`id_usuario`, `nombre`, `correo`, `password`, `estado`, 
 (1, 'Super Administrador', 'superadmin@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Superadmin'),
 (2, 'Administrador 1', 'admin1@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Administrador'),
 (3, 'Administrador 2', 'admin2@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Administrador'),
-(4, 'Colaborador 1', 'colab1@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Colaborador'),
-(5, 'Colaborador 2', 'colab2@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Colaborador'),
-(6, 'Estudiante Primaria', 'estu_primaria@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-09-24 15:08:07', 'Estudiante'),
-(7, 'Estudiante Secundaria', 'estu_secundaria@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-20 08:41:03', 'Estudiante'),
-(8, 'Padre Familia 1', 'padre1@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Padre'),
-(9, 'Padre Familia 2', 'padre2@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Padre'),
-(10, 'Docente Primaria', 'docente1@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Docente'),
-(11, 'Docente Secundaria', 'docente2@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 15:08:07', '2025-11-28 07:03:20', 'Docente'),
-(12, 'MAYDA BRAVO TORRES', 'mayda.bravo@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 20:47:00', '2025-11-28 07:03:20', 'Docente'),
-(13, 'JULIO CESAR CAVIEDES ALVAREZ23', 'julio.caviedes@educa.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'activo', '2025-09-24 20:47:17', '2025-11-28 07:03:20', 'Docente'),
-(14, 'carlos', 'admin123@educa.edu', '$2y$10$WKuzNw2BTj.IF7DvOwafGeXTskB41mFjHwemMf6u95LFGuJ08a7.a', 'inactivo', '2025-11-28 07:24:05', '2025-11-28 08:13:37', 'Estudiante'),
-(15, 'Pruebas', 'nikomclela1234@gmail.com', '$2y$10$oc7UOC53rPBIBoUlMdz64OSYnDUrUEzNob5jhLet/krAr29aiql0C', 'activo', '2025-11-28 07:30:48', '2025-11-28 08:10:47', 'Administrador');
+(16, 'carlos', 'secretario@educa.edu', '$2y$10$kw8HAXN3WE90Wzb7xSYp5ODSjMMiIr/jUl.Y8qAaApYI6Fhk.vcTq', 'activo', '2025-11-30 00:12:12', '2025-11-30 06:12:47', ''),
+(17, 'hola', 'hola@educa.edu', '$2y$10$WVDULDLewHSiEr0GWkY/J.ICcbj/6mddoXySIVzzsQxTFO8BsrSea', 'inactivo', '2025-11-30 00:14:29', '2025-11-30 06:43:48', 'Contador'),
+(18, 'jose', 'jose@educa.edu', '$2y$10$rEfGW4CmbSw6ZG2Q9QeuHuUCkcoiUfG720Vn5MUAHe967AfyGxu2y', 'inactivo', '2025-11-30 00:17:07', '2025-11-30 00:17:07', ''),
+(19, 'carlos', 'secre@educa.edu', '$2y$10$63CxUlSGixnXl7N1dgBCOuHn7KXRDO1kbZdQkgBWq9fzYk1mwPtGq', 'activo', '2025-11-30 00:22:40', '2025-11-30 06:23:28', 'Secretario'),
+(20, 'director', 'director@educa.edu', '$2y$10$QFJJJEkaoq2E5r5fWBOr0OmLWCfxcPSq4i7sywQNkU.4l0nY5XZgO', 'inactivo', '2025-11-30 00:24:24', '2025-11-30 00:24:24', ''),
+(22, 'Pruebas', 'prueba@educa.edu', '$2y$10$uje.Xzi6R4KfgmRGsjUfbOHY/1Thb8Lshj6ohon70rj.OSOfomaX2', 'activo', '2025-11-30 00:30:16', '2025-11-30 06:30:52', 'Contador');
 
 -- --------------------------------------------------------
 
@@ -404,18 +420,10 @@ INSERT INTO `usuarios_roles` (`id`, `id_usuario`, `id_rol`, `activo`) VALUES
 (1, 1, 1, 1),
 (2, 2, 2, 1),
 (3, 3, 2, 1),
-(4, 4, 3, 1),
-(5, 5, 3, 1),
-(6, 6, 5, 1),
-(7, 7, 5, 1),
-(8, 8, 4, 1),
-(9, 9, 4, 1),
-(10, 10, 6, 1),
-(11, 11, 6, 1),
-(12, 12, 6, 1),
-(13, 13, 6, 1),
-(16, 14, 2, 0),
-(17, 15, 2, 0);
+(20, 18, 5, 0),
+(21, 19, 5, 0),
+(22, 20, 3, 0),
+(23, 22, 4, 0);
 
 --
 -- Índices para tablas volcadas
@@ -484,6 +492,23 @@ ALTER TABLE `padres`
   ADD KEY `id_usuario` (`id_usuario`);
 
 --
+-- Indices de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD PRIMARY KEY (`id_pago`),
+  ADD KEY `id_padre` (`id_padre`),
+  ADD KEY `id_padre_2` (`id_padre`),
+  ADD KEY `id_padre_3` (`id_padre`),
+  ADD KEY `id_padre_4` (`id_padre`),
+  ADD KEY `id_padre_5` (`id_padre`),
+  ADD KEY `id_padre_6` (`id_padre`),
+  ADD KEY `id_padre_7` (`id_padre`),
+  ADD KEY `id_padre_8` (`id_padre`),
+  ADD KEY `id_padre_9` (`id_padre`),
+  ADD KEY `id_padre_10` (`id_padre`),
+  ADD KEY `id_padre_11` (`id_padre`);
+
+--
 -- Indices de la tabla `roles`
 --
 ALTER TABLE `roles`
@@ -528,7 +553,7 @@ ALTER TABLE `usuarios_roles`
 -- AUTO_INCREMENT de la tabla `constancias`
 --
 ALTER TABLE `constancias`
-  MODIFY `id_constancia` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_constancia` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de la tabla `docentes`
@@ -546,7 +571,7 @@ ALTER TABLE `estudiantes`
 -- AUTO_INCREMENT de la tabla `estudiante_padre`
 --
 ALTER TABLE `estudiante_padre`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `facturas_recibos`
@@ -573,6 +598,12 @@ ALTER TABLE `padres`
   MODIFY `id_padre` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
+-- AUTO_INCREMENT de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  MODIFY `id_pago` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT de la tabla `roles`
 --
 ALTER TABLE `roles`
@@ -594,13 +625,13 @@ ALTER TABLE `secciones`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios_roles`
 --
 ALTER TABLE `usuarios_roles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- Restricciones para tablas volcadas
