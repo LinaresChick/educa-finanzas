@@ -43,27 +43,40 @@ class PanelController extends BaseController {
             exit();
         }
 
-        $rol = $_SESSION['usuario']['rol'];
+        $rol = isset($_SESSION['usuario']['rol']) ? strtolower($_SESSION['usuario']['rol']) : '';
         $datos = [];
 
         switch ($rol) {
-            case 'Superadmin':
+            case 'superadmin':
                 $datos = $this->getDatosSuperadmin();
                 $this->render("panel/dashboard_superadmin", $datos);
                 break;
-            case 'Administrador':
+            case 'administrador':
                 $datos = $this->getDatosAdmin();
                 $this->render("panel/dashboard_admin", $datos);
                 break;
-            case 'Colaborador':
+            case 'contador':
+                // Contador debe ver su dashboard específico
+                $datos = $this->getDatosAdmin();
+                $this->render("panel/dashboard_contador", $datos);
+                break;
+            case 'director':
+                $datos = $this->getDatosAdmin();
+                $this->render("panel/dashboard_director", $datos);
+                break;
+            case 'secretario':
+                $datos = $this->getDatosAdmin();
+                $this->render("panel/dashboard_secretario", $datos);
+                break;
+            case 'colaborador':
                 $datos = $this->getDatosColaborador();
                 $this->render("panel/dashboard_colaborador", $datos);
                 break;
-            case 'Padre':
+            case 'padre':
                 $datos = $this->getDatosPadre($_SESSION['usuario']['id']);
                 $this->render("panel/dashboard_padre", $datos);
                 break;
-            case 'Estudiante':
+            case 'estudiante':
                 $datos = $this->getDatosEstudiante($_SESSION['usuario']['id']);
                 $this->render("panel/dashboard_estudiante", $datos);
                 break;

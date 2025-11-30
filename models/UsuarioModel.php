@@ -35,6 +35,7 @@ class UsuarioModel extends Modelo {
         return [
             'Superadmin' => 'Super Administrador',
             'Administrador' => 'Administrador',
+            'Director' => 'Director',
             'Secretario' => 'Secretario',
             'Contador' => 'Contador',
             'Colaborador' => 'Colaborador',
@@ -557,16 +558,54 @@ public function crearUsuarioEstudiante($idEstudiante, $correo, $password) {
     public function crear($data) {
     $sql = "INSERT INTO usuarios (nombre, correo, password, rol, estado)
             VALUES (?, ?, ?, ?, ?)";
+        // Si el correo ya existe, evitar intentar insert y devolver false
+        if (!empty($data['correo']) && $this->correoExiste($data['correo'])) {
+            error_log("UsuarioModel::crear aborted - correo ya existe: " . $data['correo']);
+            return false;
+        }
+        // Normalizar y validar rol: verificar contra la definición real de la columna `rol` en la BD
+        $roleProvided = $data['rol'] ?? '';
+        try {
+            $sqlInfo = "SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'rol'";
+            $stmtInfo = $this->db->prepare($sqlInfo);
+            $stmtInfo->execute();
+            $info = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+            $enumVals = [];
+            if ($info && isset($info['COLUMN_TYPE'])) {
+                // COLUMN_TYPE example: enum('Superadmin','Administrador',...)
+                if (preg_match_all("/'([^']+)'/", $info['COLUMN_TYPE'], $m)) {
+                    $enumVals = $m[1];
+                }
+            }
+        } catch (\Exception $e) {
+            $enumVals = [];
+        }
 
-    $this->db->prepare($sql)->execute([
-        $data['usuario'],   // Esto va a columna 'nombre'
-        $data['correo'],
-        $data['password'],
-        $data['rol'],
-        $data['estado']
-    ]);
+        if (empty($roleProvided) || (is_array($enumVals) && !in_array($roleProvided, $enumVals, true))) {
+            // fallback seguro a un rol que sí existe en la enumeración
+            $data['rol'] = 'Colaborador';
+        }
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $data['usuario'],   // Esto va a columna 'nombre'
+                $data['correo'],
+                $data['password'],
+                $data['rol'],
+                $data['estado']
+            ]);
 
-    return $this->db->lastInsertId();
+            return $this->db->lastInsertId();
+        } catch (\PDOException $e) {
+            // Duplicados (clave única) u otros errores de BD
+            error_log("UsuarioModel::crear PDOException: " . $e->getMessage());
+            // Si es un duplicate entry sobre correo, devolver false para manejo en controlador
+            if ($e->getCode() === '23000') {
+                return false;
+            }
+            // Para otros errores relanzar para no ocultar problemas inesperados
+            throw $e;
+        }
 }
 public function asignarRol($idUsuario, $idRol, $activo = 0) {
     $sql = "INSERT INTO usuarios_roles (id_usuario, id_rol, activo)

@@ -28,8 +28,8 @@ class EstudianteController extends BaseController {
 
         error_log("EstudianteController initialized.");
         
-        // Verificación normal de roles
-        $rolesPermitidos = ['Superadmin', 'Administrador', 'Colaborador'];
+        // Verificación normal de roles (soportar nuevos roles: Administrador, Contador, Director, Secretario)
+        $rolesPermitidos = ['Superadmin', 'Administrador', 'Contador', 'Director', 'Secretario', 'Colaborador'];
         if (!$this->sesion->tieneRol($rolesPermitidos)) {
             $this->redireccionar('auth/acceso_denegado');
         }
@@ -572,7 +572,7 @@ public function editar($id = null) {
      */
     public function eliminar($id = null) {
         // Solo administradores pueden eliminar estudiantes
-        if (!$this->sesion->tieneRol(['Superadmin', 'Administrador'])) {
+        if (!$this->sesion->tieneRol(['Superadmin', 'Administrador', 'Director', 'Secretario'])) {
             $this->sesion->setFlash('error', 'No tienes permisos para eliminar estudiantes.');
             $this->redireccionar('estudiantes');
             return;

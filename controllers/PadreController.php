@@ -31,7 +31,8 @@ class PadreController extends BaseController {
         $this->padreModel = new PadreModel();
         
         // Verificar si el usuario tiene acceso a este controlador
-        $rolesPermitidos = ['Superadmin', 'Administrador', 'Colaborador'];
+        // Se amplían roles permitidos: Administrador, Contador, Director, Secretario
+        $rolesPermitidos = ['Superadmin', 'Administrador', 'Contador', 'Director', 'Secretario', 'Colaborador'];
         if (!$this->sesion->tieneRol($rolesPermitidos)) {
             $this->redireccionar('auth/acceso_denegado');
         }
@@ -231,7 +232,7 @@ class PadreController extends BaseController {
      */
     public function eliminar($id = null) {
         // Solo administradores pueden eliminar padres
-        if (!$this->sesion->tieneRol(['Superadmin', 'Administrador'])) {
+            if (!$this->sesion->tieneRol(['Superadmin', 'Administrador', 'Director', 'Secretario'])) {
             $this->sesion->setFlash('error', 'No tienes permisos para eliminar padres.');
             $this->redireccionar('padres');
             return;

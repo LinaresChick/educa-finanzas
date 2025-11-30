@@ -134,7 +134,7 @@ body {
 <div class="main-container container py-4">
 
     <h2 class="section-title text-center mb-4">
-        <i class="fas fa-tachometer-alt me-2"></i>PANEL DEL DIRECTOR
+        <i class="fas fa-tachometer-alt me-2"></i>PANEL DE SECRETARIA
     </h2>
 
     <div class="content-card">

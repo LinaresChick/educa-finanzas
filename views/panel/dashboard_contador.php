@@ -134,23 +134,12 @@ body {
 <div class="main-container container py-4">
 
     <h2 class="section-title text-center mb-4">
-        <i class="fas fa-tachometer-alt me-2"></i>PANEL DEL DIRECTOR
+        <i class="fas fa-tachometer-alt me-2"></i>Panel de Contador
     </h2>
 
     <div class="content-card">
         <div class="row g-4">
 
-            <div class="col-md-4">
-                <a href="index.php?controller=Usuario&action=index" class="module-link">
-                    <div class="card module-card module-1 delay-1">
-                        <div class="module-icon mb-3">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h5 class="card-title">Gestión de Usuarios</h5>
-                        <p>Administra usuarios y roles del sistema.</p>
-                    </div>
-                </a>
-            </div>
 
             <div class="col-md-4">
                 <a href="index.php?controller=Estudiante&action=index" class="module-link">

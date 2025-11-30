@@ -359,7 +359,7 @@ CREATE TABLE `usuarios` (
   `estado` enum('activo','inactivo') DEFAULT 'activo',
   `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
   `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `rol` enum('Superadmin','Administrador','Colaborador','Padre','Estudiante','Docente') NOT NULL DEFAULT 'Estudiante'
+  `rol` enum('Superadmin','Administrador','Colaborador','Padre','Estudiante','Docente','Director','Contador','Secretario') NOT NULL DEFAULT 'Estudiante'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

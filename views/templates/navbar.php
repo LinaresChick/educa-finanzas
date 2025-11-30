@@ -68,7 +68,7 @@
       </a>
     </li>
 
-    <?php if (isset($_SESSION['usuario']) && in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Colaborador', 'Secretario', 'Contador'])): ?>
+    <?php if (isset($_SESSION['usuario']) && in_array(strtolower($_SESSION['usuario']['rol']), array_map('strtolower', ['Superadmin', 'Administrador', 'Colaborador', 'Secretario', 'Contador']))): ?>
     <li class="sidebar-item">
       <a href="index.php?controller=Estudiante&action=index">
         <i class="fas fa-user-graduate text-success"></i>
@@ -84,7 +84,7 @@
     </li>
     <?php endif; ?>
 
-    <?php if (isset($_SESSION['usuario']) && in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Secretario', 'Contador'])): ?>
+    <?php if (isset($_SESSION['usuario']) && in_array(strtolower($_SESSION['usuario']['rol']), array_map('strtolower', ['Superadmin', 'Administrador', 'Secretario', 'Contador']))): ?>
     <li class="sidebar-item has-submenu">
       <a href="#" class="submenu-toggle">
         <i class="fas fa-cog text-success"></i>

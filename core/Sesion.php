@@ -58,11 +58,15 @@ public function tieneRol($roles) {
         return false;
     }
     
+    // Normalizar comparación en minúsculas para evitar problemas de casing
+    $rolUsuarioLower = strtolower($rolUsuario);
+
     if (is_array($roles)) {
-        return in_array($rolUsuario, $roles);
+        $rolesLower = array_map('strtolower', $roles);
+        return in_array($rolUsuarioLower, $rolesLower);
     }
-    
-    return $rolUsuario === $roles;
+
+    return $rolUsuarioLower === strtolower($roles);
 }
 
 // AGREGAR este método nuevo

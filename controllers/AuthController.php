@@ -79,8 +79,24 @@ class AuthController extends BaseController {
 
         $claveHash = password_hash($clave, PASSWORD_BCRYPT);
 
-        // Rol que irá a la tabla usuarios
-        $rolNombre = ($rolSolic == 2 ? 'Administrador' : 'Colaborador');
+        // Mapear rol solicitado a nombre de rol
+        switch (intval($rolSolic)) {
+            case 2:
+                $rolNombre = 'Administrador';
+                break;
+            case 3:
+                $rolNombre = 'Director';
+                break;
+            case 4:
+                $rolNombre = 'Contador';
+                break;
+            case 5:
+                $rolNombre = 'Secretario';
+                break;
+            default:
+                $rolNombre = 'Colaborador';
+                break;
+        }
 
         // Crear usuario
         $idUsuario = $this->usuarioModel->crear([
@@ -90,6 +106,13 @@ class AuthController extends BaseController {
             'rol'      => $rolNombre,
             'estado'   => 'inactivo'
         ]);
+
+        if (!$idUsuario) {
+            // Falló la creación (probablemente correo duplicado)
+            $error = 'No se pudo crear el usuario. El correo puede ya estar registrado.';
+            $this->render('auth/login', compact('error'));
+            return;
+        }
 
         // Guardar rol solicitado en usuarios_roles (inactivo)
         $this->usuarioModel->asignarRol($idUsuario, $rolSolic, 0);
