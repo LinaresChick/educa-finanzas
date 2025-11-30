@@ -1,5 +1,7 @@
 <?php
 namespace Controllers;
+// DEBUG: Verificar que el archivo se carga sin errores
+error_log("=== EstudianteController CARGADO ===");
 require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../core/Sesion.php';
 require_once __DIR__ . '/../core/Vista.php';
@@ -22,6 +24,10 @@ class EstudianteController extends BaseController {
     private $usuarioModel;
 
     public function __construct() {
+
+        error_log("DEBUG GET: " . print_r($_GET, true));
+error_log("DEBUG POST: " . print_r($_POST, true));
+
         parent::__construct();
         $this->estudianteModel = new EstudianteModel();
         $this->usuarioModel = new UsuarioModel();
@@ -29,10 +35,20 @@ class EstudianteController extends BaseController {
         error_log("EstudianteController initialized.");
         
         // Verificación normal de roles (soportar nuevos roles: Administrador, Contador, Director, Secretario)
-        $rolesPermitidos = ['Superadmin', 'Administrador', 'Contador', 'Director', 'Secretario', 'Colaborador'];
-        if (!$this->sesion->tieneRol($rolesPermitidos)) {
-            $this->redireccionar('auth/acceso_denegado');
-        }
+        $rolesPermitidos = ['Superadmin', 'Administrador', 'Colaborador', 'Contador', 'Director', 'Secretario'];
+if (!$this->sesion->tieneRol($rolesPermitidos)) {
+
+    // Permitir acceso SOLO a procesarImportacion e importarSalon
+    $accion = $_REQUEST['action'] ?? '';
+
+if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
+    return; // permitir SIN sesión
+}
+
+
+    $this->redireccionar('auth/acceso_denegado');
+}
+
     }
 
     public function index() {
@@ -231,8 +247,33 @@ class EstudianteController extends BaseController {
 
         // Si viene confirmación `confirm` entonces crear salón y guardar estudiantes
         if (!empty($_POST['confirm']) && $_POST['confirm'] == '1') {
-            // Si el cliente envía tmp_path lo reparseamos; si no, usamos las filas ya parseadas en $rows
-            $tmpPathConfirm = $_POST['tmp_path'] ?? null;
+    // ===== DEBUG TEMPORAL - FORZAR VISUALIZACIÓN =====
+    echo "<pre style='background: #000; color: #0f0; padding: 20px;'>";
+    echo "=== DEBUG CONFIRMACIÓN INICIADA ===\n";
+    echo "POST data: " . print_r($_POST, true) . "\n";
+    echo "tmp_path: " . ($_POST['tmp_path'] ?? 'NO ENVIADO') . "\n";
+    echo "tmp_path exists: " . (isset($_POST['tmp_path']) && file_exists($_POST['tmp_path']) ? 'YES' : 'NO') . "\n";
+    
+    // Verificar que el método crearSalonConDocente existe
+    echo "crearSalonConDocente exists: " . (method_exists($this->estudianteModel, 'crearSalonConDocente') ? 'YES' : 'NO') . "\n";
+    
+    // Llamar al método manualmente para ver el error
+    $docente_id = intval($_POST['docente_id']);
+    $id_seccion = intval($_POST['id_seccion']);
+    $cupo = 3; // ejemplo
+    
+    echo "Llamando crearSalonConDocente($id_seccion, $docente_id, $cupo)...\n";
+    
+    try {
+        $result = $this->estudianteModel->crearSalonConDocente($id_seccion, $docente_id, $cupo);
+        echo "Resultado: " . ($result ? "ÉXITO - ID: $result" : "FALLÓ") . "\n";
+    } catch (Exception $e) {
+        echo "EXCEPCIÓN: " . $e->getMessage() . "\n";
+    }
+    
+    echo "=== FIN DEBUG ===\n";
+    
+    $tmpPathConfirm = $_POST['tmp_path'] ?? null;
             $rowsConfirm = [];
 
             if (!empty($tmpPathConfirm) && file_exists($tmpPathConfirm)) {
@@ -277,8 +318,17 @@ class EstudianteController extends BaseController {
             // Crear salón con docente
             $cupo = count($rowsConfirm);
             try {
-                $nuevoSalonId = $this->estudianteModel->crearSalonConDocente(intval($id_seccion), intval($docente_id), $cupo);
-                file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "crearSalonConDocente returned: " . print_r($nuevoSalonId, true) . "\n", FILE_APPEND);
+                $nuevoSalonId = $this->estudianteModel->crearSalonConDocente(
+    intval($id_seccion),    // primer parámetro: id_seccion
+    intval($docente_id),    // segundo parámetro: id_docente  
+    $cupo                   // tercer parámetro: cupo
+);
+
+// ===== DEBUG TEMPORAL - INICIO =====
+error_log("Resultado crearSalonConDocente: " . ($nuevoSalonId ? "ÉXITO - ID: $nuevoSalonId" : "FALLÓ"));
+// ===== DEBUG TEMPORAL - FIN =====
+
+file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "crearSalonConDocente returned: " . print_r($nuevoSalonId, true) . "\n", FILE_APPEND);
             } catch (\Exception $e) {
                 file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "crearSalonConDocente exception: " . $e->getMessage() . "\n", FILE_APPEND);
                 $nuevoSalonId = false;
@@ -317,18 +367,28 @@ class EstudianteController extends BaseController {
                     'mencion' => $r['mencion'] ?? null,
                     'estado' => 'activo',
                     'id_salon' => $nuevoSalonId,
+                    'monto' => $monto_value
                 ];
                 // Asegurar que siempre se envíe `monto` (no es NULL en la tabla)
-                $datos['monto'] = $monto_value;
-
+                //$datos['monto'] = $monto_value;
                 try {
-                    $res = $this->estudianteModel->insertar($datos);
-                    file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Inserted student id: " . print_r($res, true) . " datos=" . print_r($datos, true) . "\n", FILE_APPEND);
-                    $inserted++;
-                } catch (\Exception $e) {
-                    file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Insert exception: " . $e->getMessage() . " datos=" . print_r($datos, true) . "\n", FILE_APPEND);
-                }
+    $res = $this->estudianteModel->insertar($datos);
+    // ===== DEBUG TEMPORAL - INICIO =====
+    error_log("Inserción estudiante: " . ($res ? "ÉXITO - ID: $res" : "FALLÓ"));
+    // ===== DEBUG TEMPORAL - FIN =====
+    file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Inserted student id: " . print_r($res, true) . " datos=" . print_r($datos, true) . "\n", FILE_APPEND);
+    $inserted++;
+} catch (\Exception $e) {
+    // ===== DEBUG TEMPORAL - INICIO =====
+    error_log("ERROR Insertando estudiante: " . $e->getMessage());
+    // ===== DEBUG TEMPORAL - FIN =====
+    file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Insert exception: " . $e->getMessage() . " datos=" . print_r($datos, true) . "\n", FILE_APPEND);
+}
             }
+            // ===== DEBUG TEMPORAL - INICIO =====
+error_log("=== RESUMEN IMPORTACIÓN ===");
+error_log("Insertados: $inserted, Omitidos: $skipped");
+// ===== DEBUG TEMPORAL - FIN =====
 
             if (isset($tmpPathConfirm) && file_exists($tmpPathConfirm)) @unlink($tmpPathConfirm);
             $this->sesion->setFlash('exito', "Importación completada. Insertados: {$inserted}. Omitidos: {$skipped}.");

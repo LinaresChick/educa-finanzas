@@ -132,6 +132,10 @@ require_once VIEWS_PATH . '/templates/header.php';
                         <div id="dni-alert" class="text-danger mt-1" style="display:none;">
                             El DNI debe tener exactamente 8 números.
                         </div>
+                        <button type="button" class="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#modalBuscarDNI">
+    Buscar DNI
+</button>
+
                     </div>
                     
                     <div class="col-md-4 mb-3">
@@ -233,6 +237,45 @@ require_once VIEWS_PATH . '/templates/header.php';
         </div>
     </div>
 </div>
+<!-- MODAL BUSCAR DNI -->
+<div class="modal fade" id="modalBuscarDNI" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Buscar DNI</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <label class="form-label">Ingrese DNI</label>
+        <input type="text" id="dni_buscar" maxlength="8" class="form-control">
+
+        <div id="dni_buscar_alert" class="text-danger mt-1" style="display:none;">
+            El DNI debe tener 8 dígitos.
+        </div>
+
+        <button class="btn btn-primary mt-3 w-100" id="btnBuscarDNI">
+            Consultar
+        </button>
+
+        <div id="dni_loader" class="mt-3" style="display:none;">
+            Consultando...
+        </div>
+
+        <div id="dni_resultado" class="mt-3"></div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -272,6 +315,70 @@ dniInput.addEventListener('input', function () {
         dniAlert.style.display = 'none';
     }
 });
+// ==========================
+// CONSULTA API DNI BÁSICA
+// ==========================
+document.getElementById("btnBuscarDNI").addEventListener("click", function () {
+
+    let dni = document.getElementById("dni_buscar").value.trim();
+    let alerta = document.getElementById("dni_buscar_alert");
+    let loader = document.getElementById("dni_loader");
+    let resultado = document.getElementById("dni_resultado");
+
+    if (dni.length !== 8) {
+        alerta.style.display = "block";
+        return;
+    }
+
+    alerta.style.display = "none";
+    loader.style.display = "block";
+    resultado.innerHTML = "";
+
+    fetch("https://apiperu.dev/api/dni", {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Bearer e3cd144f611320be744de2b653d16ba0e2c48a8a9a106e92e80450dd804173d7"
+        },
+        body: JSON.stringify({ dni: dni })
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        loader.style.display = "none";
+
+        if (data.success) {
+
+            // autocompletar campos del formulario
+            document.getElementById("dni").value = dni;
+            document.getElementById("nombres").value = data.data.nombres;
+            document.getElementById("apellidos").value =
+                data.data.apellido_paterno + " " + data.data.apellido_materno;
+
+            resultado.innerHTML = `
+                <div class="alert alert-success">
+                    <b>DNI encontrado:</b><br>
+                    ${data.data.nombre_completo}
+                </div>
+            `;
+
+        } else {
+            resultado.innerHTML = `
+                <div class="alert alert-danger">No se encontró información del DNI.</div>
+            `;
+        }
+
+    })
+    .catch(() => {
+        loader.style.display = "none";
+        resultado.innerHTML = `
+            <div class="alert alert-danger">Error consultando la API.</div>
+        `;
+    });
+});
+
+
 
 </script>
 

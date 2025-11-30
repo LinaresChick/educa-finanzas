@@ -113,6 +113,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
     // ======== MAYÚSCULAS AUTOMÁTICAS ========
     function capitalizar(texto) {
         return texto.replace(/\b\w/g, c => c.toUpperCase());
@@ -131,10 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dniHelp = document.getElementById('dniHelp');
 
     dni.addEventListener('input', function () {
-        // Solo números
         this.value = this.value.replace(/\D/g, '');
-
-        // Validación
         if (this.value.length !== 8) {
             dniHelp.style.display = 'block';
             dni.classList.add('is-invalid');
@@ -142,6 +140,55 @@ document.addEventListener('DOMContentLoaded', function() {
             dniHelp.style.display = 'none';
             dni.classList.remove('is-invalid');
         }
+    });
+
+    // ======== BOTÓN DE CONSULTA DNI ========
+    const dniField = document.getElementById('dni');
+
+    const btnBuscar = document.createElement("button");
+    btnBuscar.type = "button";
+    btnBuscar.className = "btn btn-sm btn-primary mt-2";
+    btnBuscar.innerHTML = "Buscar DNI";
+    dniField.parentNode.appendChild(btnBuscar);
+
+    btnBuscar.addEventListener("click", function () {
+        const numero = dniField.value;
+
+        if (numero.length !== 8) {
+            alert("El DNI debe tener 8 dígitos.");
+            return;
+        }
+
+        btnBuscar.disabled = true;
+        btnBuscar.innerHTML = "Consultando...";
+
+        fetch("https://apiperu.dev/api/dni", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": "Bearer e3cd144f611320be744de2b653d16ba0e2c48a8a9a106e92e80450dd804173d7"
+            },
+            body: JSON.stringify({ dni: numero })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success === true) {
+                document.getElementById("nombres").value = capitalizar(data.data.nombres);
+                document.getElementById("apellidos").value = capitalizar(
+                    data.data.apellido_paterno + " " + data.data.apellido_materno
+                );
+            } else {
+                alert("No se encontró información del DNI.");
+            }
+        })
+        .catch(() => {
+            alert("Error consultando la API.");
+        })
+        .finally(() => {
+            btnBuscar.disabled = false;
+            btnBuscar.innerHTML = "Buscar DNI";
+        });
     });
 
     // ======== CAMPOS DE ACCESO ========
@@ -171,5 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleCuentaFields();
 });
 </script>
+
 
 <?php require_once VIEWS_PATH . '/templates/footer.php'; ?>

@@ -454,53 +454,127 @@ class EstudianteModel extends Modelo {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
     /**
-     * Crea un salón placeholder para una sección cuando no existe uno activo.
-     * Devuelve el id_salon creado o false en caso de error.
-     * @param int $id_seccion
-     * @return int|false
-     */
-    public function crearSalonPlaceholder($id_seccion) {
-        try {
-            $anio = date('Y');
-            $sql = "INSERT INTO salones (id_grado, id_seccion, id_docente, anio, cupo_maximo, estado) 
-                    VALUES (NULL, :id_seccion, NULL, :anio, 0, 'activo')";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
-            $stmt->bindValue(':anio', $anio);
-            $stmt->execute();
-            return $this->db->lastInsertId();
-        } catch (Exception $e) {
-            error_log('Error crearSalonPlaceholder: ' . $e->getMessage());
+ * Crea un salón placeholder para una sección cuando no existe uno activo.
+ * Devuelve el id_salon creado o false en caso de error.
+ * @param int $id_seccion
+ * @return int|false
+ */
+public function crearSalonPlaceholder($id_seccion) {
+    try {
+        $anio = date('Y');
+        
+        // Calcular id_grado automáticamente (misma lógica que arriba)
+        if ($id_seccion >= 1 && $id_seccion <= 7) {
+            $id_grado = 1;
+        } elseif ($id_seccion >= 8 && $id_seccion <= 12) {
+            $id_grado = 2;
+        } elseif ($id_seccion >= 13 && $id_seccion <= 16) {
+            $id_grado = 3;
+        } elseif ($id_seccion >= 17 && $id_seccion <= 20) {
+            $id_grado = 4;
+        } elseif ($id_seccion >= 21 && $id_seccion <= 23) {
+            $id_grado = 5;
+        } elseif ($id_seccion >= 24 && $id_seccion <= 27) {
+            $id_grado = 6;
+        } elseif ($id_seccion >= 28 && $id_seccion <= 31) {
+            $id_grado = 7;
+        } elseif ($id_seccion >= 32 && $id_seccion <= 34) {
+            $id_grado = 8;
+        } elseif ($id_seccion >= 35 && $id_seccion <= 36) {
+            $id_grado = 9;
+        } elseif ($id_seccion >= 37 && $id_seccion <= 38) {
+            $id_grado = 10;
+        } elseif ($id_seccion == 39) {
+            $id_grado = 11;
+        } else {
+            $id_grado = 1;
+        }
+        
+        $sql = "INSERT INTO salones (id_grado, id_seccion, anio, cupo_maximo, estado) 
+                VALUES (:id_grado, :id_seccion, :anio, 0, 'activo')";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_grado', $id_grado, PDO::PARAM_INT);
+        $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
+        $stmt->bindValue(':anio', $anio);
+        $stmt->execute();
+        return $this->db->lastInsertId();
+    } catch (Exception $e) {
+        error_log('Error crearSalonPlaceholder: ' . $e->getMessage());
+        return false;
+    }
+}
+    /**
+ * Crea un salón asociado a una sección y docente
+ * @param int $id_seccion
+ * @param int|null $id_docente
+ * @param int|null $cupo
+ * @return int|false
+ */
+public function crearSalonConDocente($id_seccion, $id_docente = null, $cupo = null) {
+    try {
+        $anio = date('Y');
+        
+        // DEBUG: Verificar parámetros
+        error_log("DEBUG crearSalonConDocente: id_seccion=$id_seccion, id_docente=" . ($id_docente ?? 'NULL') . ", cupo=" . ($cupo ?? 'NULL'));
+        
+        // OBTENER EL id_grado AUTOMÁTICAMENTE desde la sección
+        if ($id_seccion >= 1 && $id_seccion <= 7) {
+            $id_grado = 1;
+        } elseif ($id_seccion >= 8 && $id_seccion <= 12) {
+            $id_grado = 2;
+        } elseif ($id_seccion >= 13 && $id_seccion <= 16) {
+            $id_grado = 3;
+        } elseif ($id_seccion >= 17 && $id_seccion <= 20) {
+            $id_grado = 4;
+        } elseif ($id_seccion >= 21 && $id_seccion <= 23) {
+            $id_grado = 5;
+        } elseif ($id_seccion >= 24 && $id_seccion <= 27) {
+            $id_grado = 6;
+        } elseif ($id_seccion >= 28 && $id_seccion <= 31) {
+            $id_grado = 7;
+        } elseif ($id_seccion >= 32 && $id_seccion <= 34) {
+            $id_grado = 8;
+        } elseif ($id_seccion >= 35 && $id_seccion <= 36) {
+            $id_grado = 9;
+        } elseif ($id_seccion >= 37 && $id_seccion <= 38) {
+            $id_grado = 10;
+        } elseif ($id_seccion == 39) {
+            $id_grado = 11;
+        } else {
+            $id_grado = 1;
+        }
+        
+        error_log("DEBUG: id_grado calculado: $id_grado para sección $id_seccion");
+        
+        // INSERT con id_grado correcto
+        $sql = "INSERT INTO salones (id_grado, id_seccion, id_docente, anio, cupo_maximo, estado) 
+                VALUES (:id_grado, :id_seccion, :id_docente, :anio, :cupo, 'activo')";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_grado', $id_grado, PDO::PARAM_INT);
+        $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
+        $stmt->bindValue(':id_docente', $id_docente, $id_docente ? PDO::PARAM_INT : PDO::PARAM_NULL);
+        $stmt->bindValue(':anio', $anio);
+        $stmt->bindValue(':cupo', $cupo ?? 0, PDO::PARAM_INT);
+        
+        $result = $stmt->execute();
+        
+        if ($result) {
+            $lastId = $this->db->lastInsertId();
+            error_log("ÉXITO: Salón creado con ID: $lastId");
+            return $lastId;
+        } else {
+            $errorInfo = $stmt->errorInfo();
+            error_log("ERROR en INSERT salones: " . print_r($errorInfo, true));
             return false;
         }
+        
+    } catch (Exception $e) {
+        error_log('ERROR crearSalonConDocente: ' . $e->getMessage());
+        return false;
     }
-
-    /**
-     * Crea un salón asociado a una sección y docente
-     * @param int $id_seccion
-     * @param int|null $id_docente
-     * @param int|null $cupo
-     * @return int|false
-     */
-    public function crearSalonConDocente($id_seccion, $id_docente = null, $cupo = null) {
-        try {
-            $anio = date('Y');
-            $sql = "INSERT INTO salones (id_grado, id_seccion, id_docente, anio, cupo_maximo, estado) 
-                    VALUES (NULL, :id_seccion, :id_docente, :anio, :cupo, 'activo')";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
-            $stmt->bindValue(':id_docente', $id_docente);
-            $stmt->bindValue(':anio', $anio);
-            $stmt->bindValue(':cupo', $cupo ?? 0, PDO::PARAM_INT);
-            $stmt->execute();
-            return $this->db->lastInsertId();
-        } catch (Exception $e) {
-            error_log('Error crearSalonConDocente: ' . $e->getMessage());
-            return false;
-        }
-    }
+}
     public function obtenerPorId($id_estudiante) {
     try {
         $sql = "SELECT e.*, 

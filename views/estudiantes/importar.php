@@ -13,8 +13,9 @@
         </div>
         <div class="card-body">
             <p>Sube un archivo <strong>CSV</strong> o <strong>Excel (.xlsx/.xls)</strong> con encabezados: <strong>nombres, apellidos, dni, fecha_nacimiento, direccion, telefono, mencion</strong>. Solo son requeridos <em>nombres</em> y <em>apellidos</em>.</p>
-            <form action="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=procesarImportacion" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="confirm" value="1">
+            <form action="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=procesarImportacion" 
+      method="post" 
+      enctype="multipart/form-data">
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="docente_id">Docente</label>
@@ -49,7 +50,7 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <button class="btn btn-primary" type="submit">Guardar Datos</button>
+                        <button class="btn btn-primary" type="submit">Previsualizar Importación</button>
                         <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=index" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </div>
