@@ -167,7 +167,7 @@ function getRoleBadgeClass($rol) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <a href="#" id="btnConfirmarEliminar" class="btn btn-danger">Eliminar</a>
+                <button type="button" id="btnConfirmarEliminar" class="btn btn-danger">Eliminar</button>
             </div>
         </div>
     </div>
@@ -202,13 +202,8 @@ $(document).on("click", ".btn-eliminar", function (e) {
     // Mostrar el nombre en el modal
     $("#nombreUsuario").text(nombre);
 
-    // Crear la URL
-    var url = "/educa-finanzas/public/index.php?controller=Usuario&action=eliminar&id=" + id;
-
-    // Asignar la URL al botón del modal
-    $("#btnConfirmarEliminar").attr("href", url);
-
-    console.log("✔️ URL GENERADA:", url);
+    // Guardar id en atributo del botón para usar en la petición
+    $("#btnConfirmarEliminar").data('id', id);
 
     // Abrir el modal manualmente
     $("#modalEliminar").modal("show");
@@ -253,7 +248,41 @@ $(document).on("click", ".btn-eliminar", function (e) {
         });
     });
 
-});
+        // Manejar confirmación de eliminar con AJAX y autorefresh
+        $(document).on('click', '#btnConfirmarEliminar', function(e){
+            e.preventDefault();
+            var btn = $(this);
+            var id = btn.data('id');
+            if (!id) {
+                alert('ID de usuario no especificado');
+                return;
+            }
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Eliminando...');
+
+            $.ajax({
+                url: '/educa-finanzas/public/index.php?controller=Usuario&action=eliminar',
+                method: 'POST',
+                dataType: 'json',
+                data: { id: id },
+                success: function(res) {
+                    if (res && res.success) {
+                        // Cerrar modal y refrescar automáticamente la página
+                        $('#modalEliminar').modal('hide');
+                        setTimeout(function(){ location.reload(); }, 300);
+                    } else {
+                        alert((res && res.message) ? res.message : 'Error al eliminar');
+                        btn.prop('disabled', false).html('Eliminar');
+                    }
+                },
+                error: function() {
+                    alert('Error en la petición. Inténtalo de nuevo.');
+                    btn.prop('disabled', false).html('Eliminar');
+                }
+            });
+        });
+
+    });
 </script>
 
 <?php

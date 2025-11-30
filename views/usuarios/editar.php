@@ -143,7 +143,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i> Guardar Cambios
                         </button>
-                        <a href="/usuarios" class="btn btn-secondary">
+                        <a href="/educa-finanzas/public/index.php?controller=Usuario&action=index" class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
                     </div>

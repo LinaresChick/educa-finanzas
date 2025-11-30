@@ -260,7 +260,8 @@ class UsuarioController extends BaseController
         $resultado = $this->usuarioModel->actualizarUsuario($idUsuario, $datos);
         
         if ($resultado) {
-            $this->redireccionarConExito('usuarios', 'Usuario actualizado correctamente');
+            // Redirigir explícitamente al listado de usuarios (ruta completa)
+            $this->redireccionarConExito('educa-finanzas/public/index.php?controller=Usuario&action=index', 'Usuario actualizado correctamente');
         } else {
             $this->redireccionarConError(
                 "usuarios/editar/{$idUsuario}", 
@@ -273,24 +274,44 @@ class UsuarioController extends BaseController
      * Elimina o desactiva un usuario
      */
     public function eliminar() {
-    if (!isset($_GET['id'])) {
-        die("ID no proporcionado");
-    }
+        // Aceptar id por GET o POST
+        $id = null;
+        if (isset($_GET['id'])) $id = intval($_GET['id']);
+        if (isset($_POST['id'])) $id = intval($_POST['id']);
 
-    $id = intval($_GET['id']);
+        if (!$id) {
+            // Si es AJAX, devolver JSON
+            if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode(['success' => false, 'message' => 'ID no proporcionado']);
+                exit;
+            }
+            die("ID no proporcionado");
+        }
 
-    require_once __DIR__ . '/../models/UsuarioModel.php';
-    $usuarioModel = new \Models\UsuarioModel();
+        require_once __DIR__ . '/../models/UsuarioModel.php';
+        $usuarioModel = new \Models\UsuarioModel();
 
-    $resultado = $usuarioModel->eliminar($id);
+        $resultado = $usuarioModel->eliminar($id);
 
-    if ($resultado) {
-        header("Location: index.php?controller=Usuario&action=index&msg=eliminado");
-        exit;
-    } else {
-        header("Location: index.php?controller=Usuario&action=index&error=no_eliminado");
-        exit;
-    }
+        // Si la petición es AJAX, devolver JSON en lugar de redirect
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json; charset=utf-8');
+            if ($resultado) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No se pudo eliminar el usuario']);
+            }
+            exit;
+        }
+
+        if ($resultado) {
+            header("Location: index.php?controller=Usuario&action=index&msg=eliminado");
+            exit;
+        } else {
+            header("Location: index.php?controller=Usuario&action=index&error=no_eliminado");
+            exit;
+        }
 }
 
 
