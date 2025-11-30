@@ -233,9 +233,11 @@ $(document).on("click", ".btn-eliminar", function (e) {
             success: function(response) {
 
                 if (response.success) {
+                    // Asegurar que usamos el estado confirmado por el servidor
+                    var estadoFinal = response.estado || nuevoEstado;
                     label.removeClass('text-success text-danger')
-                         .addClass(nuevoEstado === 'activo' ? 'text-success' : 'text-danger')
-                         .html(nuevoEstado === 'activo' ? 'Activo' : 'Inactivo');
+                         .addClass(estadoFinal === 'activo' ? 'text-success' : 'text-danger')
+                         .html(estadoFinal === 'activo' ? 'Activo' : 'Inactivo');
                 } else {
                     checkbox.prop('checked', !checkbox.prop('checked'));
                     label.html('Error');

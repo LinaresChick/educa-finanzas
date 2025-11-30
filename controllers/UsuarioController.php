@@ -768,7 +768,7 @@ class UsuarioController extends BaseController
         $resultado = $this->usuarioModel->cambiarEstado($id, $estado);
 
         if ($resultado) {
-            echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente']);
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado correctamente', 'estado' => $estado]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el estado']);
         }

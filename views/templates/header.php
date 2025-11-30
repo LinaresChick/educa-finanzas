@@ -19,6 +19,8 @@
 </head>
 
 <body>
+    <!-- jQuery (moved to header so inline page scripts can use $) -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
     <div class="container">
