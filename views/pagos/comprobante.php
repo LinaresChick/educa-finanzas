@@ -41,15 +41,40 @@ if (!$modo_impresion) {
     z-index: 0;
 }
 
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 10px;
+        /* Contenedor que muestra QR a la izquierda y logo centrado */
+        .logo-qr {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 8px 10px;
+            position: relative;
         }
 
-        .logo img {
-            max-width: 200px;
+        .logo-qr .qr {
+            grid-column: 1 / 2;
+            justify-self: start;
+        }
+
+        .logo-qr .qr img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #ffffff;
+            padding: 6px;
+        }
+
+        .logo-qr .logo {
+            grid-column: 2 / 3;
+            justify-self: center;
+        }
+
+        .logo-qr .logo img {
+            max-width: 140px;
             height: auto;
+            display: block;
         }
 
         .comprobante-header {
@@ -162,20 +187,33 @@ if (!$modo_impresion) {
         }
 
         @media print {
-            body {
+            /* apply a full-page gradient background when printing */
+            html, body {
                 margin: 0;
                 padding: 0;
-                background: white;
+                height: 100%;
+                background: linear-gradient(135deg, #a8f78b 0%, #6be58a 40%, #4cd3a6 100%);
             }
+            /* make the receipt container transparent so the page gradient shows through */
             .comprobante-container {
                 box-shadow: none;
-                border: 1px solid #333;
+                border: 1px solid rgba(0,0,0,0.6);
                 padding: 20px;
                 margin: 0 auto;
                 width: 100%;
                 max-width: none;
+                background: transparent !important;
             }
+            /* reduce logo slightly for print */
+            .logo img {
+                max-width: 100px;
+            }
+            /* hide UI elements not meant for print */
             .no-print {
+                display: none !important;
+            }
+            /* hide the page title in the outer layout when printing; keep the uppercase inside the comprobante */
+            .page-title {
                 display: none !important;
             }
             .content-wrapper,
@@ -199,7 +237,7 @@ if (!$modo_impresion) {
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">Comprobante de Pago</h1>
+                    <h1 class="m-0 page-title">Comprobante de Pago</h1>
                 </div>
                 <div class="col-sm-6 text-right">
                     <button onclick="window.print()" class="btn btn-primary no-print">
@@ -214,8 +252,26 @@ if (!$modo_impresion) {
 <?php endif; ?>
 
             <div class="comprobante-container<?= isset($pago['estado']) && $pago['estado'] === 'anulado' ? ' anulado' : '' ?>">
-                <div class="logo">
-                    <img src="/educa-finanzas/public/img/image.png" alt="Logo de la Institución">
+                <?php
+                // Preparar URL para el QR: preferir comprobante público si hay id_pago
+                $qrSrc = '';
+                if (!empty($pago['id_pago'])) {
+                    $base = defined('BASE_URL') ? rtrim(BASE_URL, '/') : '';
+                    $verifyUrl = $base . '/index.php?controller=Pago&action=comprobante&id=' . urlencode($pago['id_pago']);
+                    $qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($verifyUrl);
+                } else {
+                    $current = (isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
+                    $qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($current);
+                }
+                ?>
+
+                <div class="logo-qr">
+                    <div class="qr">
+                        <img src="<?= htmlspecialchars($qrSrc) ?>" alt="QR comprobante">
+                    </div>
+                    <div class="logo">
+                        <img src="/educa-finanzas/public/img/image.png" alt="Logo de la Institución">
+                    </div>
                 </div>
                 
                 <div class="comprobante-header">
@@ -225,7 +281,19 @@ if (!$modo_impresion) {
                 <div class="info-section">
                     <div class="info-row">
                         <div class="info-label">Fecha</div>
-                        <div class="info-value"><?= $fecha_formateada ?></div>
+                        <div class="info-value">
+                            <?= $fecha_formateada ?>
+                            <br>
+                            <small style="color:#666;">Hora registro: <?php
+                                if (!empty($pago['fecha_creacion'])) {
+                                    echo date('H:i:s', strtotime($pago['fecha_creacion']));
+                                } elseif (!empty($pago['fecha_pago'])) {
+                                    echo date('H:i:s', strtotime($pago['fecha_pago']));
+                                } else {
+                                    echo '—';
+                                }
+                            ?></small>
+                        </div>
                     </div>
                         <div class="info-row">
                             <div class="info-label">RUC</div>
@@ -251,10 +319,7 @@ if (!$modo_impresion) {
                                 echo htmlspecialchars($serie . '-' . $numero);
                             ?></div>
                         </div>
-                        <div class="info-row">
-                            <div class="info-label">Fecha</div>
-                            <div class="info-value"><?= $fecha_formateada ?></div>
-                        </div>
+                        
                         <div class="info-row">
                             <div class="info-label">Datos del cliente</div>
                             <div class="info-value"><?php

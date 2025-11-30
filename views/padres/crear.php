@@ -8,20 +8,30 @@
         </a>
     </div>
     
-    <?php if (isset($_SESSION['flash_mensaje'])): ?>
-        <div class="alert alert-<?php echo $_SESSION['flash_tipo']; ?> alert-dismissible fade show" role="alert">
-            <?php echo $_SESSION['flash_mensaje']; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php unset($_SESSION['flash_mensaje'], $_SESSION['flash_tipo']); ?>
-    <?php endif; ?>
+    <?php
+        // Compatibilidad con el sistema de flash: puede venir como 'flash' (array) o como variables sueltas
+        if (isset($_SESSION['flash']) && is_array($_SESSION['flash'])) {
+            $f = $_SESSION['flash'];
+            $tipoRaw = $f['tipo'] ?? 'info';
+            // Mapear tipos a clases bootstrap
+            $tipoMap = [ 'exito' => 'success', 'error' => 'danger', 'info' => 'info' ];
+            $bootTipo = $tipoMap[$tipoRaw] ?? $tipoRaw;
+            $mensajeFlash = $f['mensaje'] ?? '';
+            echo "<div class=\"alert alert-{$bootTipo} alert-dismissible fade show\" role=\"alert\">" . htmlspecialchars($mensajeFlash) . "<button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button></div>";
+            unset($_SESSION['flash']);
+        } elseif (isset($_SESSION['flash_mensaje'])) {
+            // antiguo formato
+            echo "<div class=\"alert alert-" . htmlspecialchars($_SESSION['flash_tipo'] ?? 'info') . " alert-dismissible fade show\" role=\"alert\">" . htmlspecialchars($_SESSION['flash_mensaje']) . "<button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Close\"></button></div>";
+            unset($_SESSION['flash_mensaje'], $_SESSION['flash_tipo']);
+        }
+    ?>
     
     <div class="card shadow mb-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Formulario de Registro</h6>
         </div>
         <div class="card-body">
-            <form action="<?php echo BASE_URL; ?>/padres/guardar" method="post">
+            <form action="<?php echo BASE_URL; ?>/index.php?controller=Padre&action=guardar" method="post">
                 <!-- Datos Personales -->
                 <div class="row mb-4">
                     <div class="col-12">

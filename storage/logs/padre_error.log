@@ -1,0 +1,7 @@
+[2025-11-30 11:41:30] Error crearPadreConUsuario: Error de base de datos: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '74859612' for key 'dni'
+#0 C:\xampp\htdocs\educa-finanzas\models\PadreModel.php(196): Core\Modelo->insertar(Array)
+#1 C:\xampp\htdocs\educa-finanzas\controllers\PadreController.php(118): Models\PadreModel->crearPadreConUsuario(Array, NULL)
+#2 [internal function]: Controllers\PadreController->guardar(NULL)
+#3 C:\xampp\htdocs\educa-finanzas\core\Router.php(44): call_user_func_array(Array, Array)
+#4 C:\xampp\htdocs\educa-finanzas\public\index.php(15): Core\Router->run()
+#5 {main}

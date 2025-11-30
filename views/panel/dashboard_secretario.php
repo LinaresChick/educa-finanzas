@@ -141,18 +141,6 @@ body {
         <div class="row g-4">
 
             <div class="col-md-4">
-                <a href="index.php?controller=Usuario&action=index" class="module-link">
-                    <div class="card module-card module-1 delay-1">
-                        <div class="module-icon mb-3">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h5 class="card-title">Gestión de Usuarios</h5>
-                        <p>Administra usuarios y roles del sistema.</p>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-4">
                 <a href="index.php?controller=Estudiante&action=index" class="module-link">
                     <div class="card module-card module-2 delay-2">
                         <div class="module-icon mb-3">
@@ -184,18 +172,6 @@ body {
                         </div>
                         <h5 class="card-title">Pagos</h5>
                         <p>Control financiero institucional.</p>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-4">
-                <a href="index.php?controller=Reporte&action=index" class="module-link">
-                    <div class="card module-card module-1 delay-5">
-                        <div class="module-icon mb-3">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h5 class="card-title">Reportes</h5>
-                        <p>Indicadores y estadísticas.</p>
                     </div>
                 </a>
             </div>

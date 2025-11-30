@@ -5,8 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Innova School Independencia - Sistema de Gestión</title>
     
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap: use local copy if available, otherwise fall back to CDN -->
+    <?php
+    $localBootstrap = __DIR__ . '/../../public/vendor/bootstrap/css/bootstrap.min.css';
+    if (file_exists($localBootstrap)) {
+        // compute web path relative to project public folder
+        $webPath = str_replace($_SERVER['DOCUMENT_ROOT'], '', realpath($localBootstrap));
+        if ($webPath === '') {
+            // fallback: attempt relative path
+            $webPath = '/public/vendor/bootstrap/css/bootstrap.min.css';
+        }
+        echo '<link href="' . htmlspecialchars($webPath) . '" rel="stylesheet">';
+    } else {
+        echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">';
+    }
+    ?>
 
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">

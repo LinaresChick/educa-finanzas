@@ -173,38 +173,50 @@ class PadreModel extends Modelo {
     /**
  * Crea un padre con posible usuario asociado
  */
-public function crearPadreConUsuario($datosPadre, $datosUsuario = null) {
-    try {
+    public function crearPadreConUsuario($datosPadre, $datosUsuario = null) {
+        try {
+            $this->db->beginTransaction();
+            $idUsuario = null;
 
-        $this->db->beginTransaction();
-        $idUsuario = null;
+            // Si viene cuenta de usuario
+            if ($datosUsuario !== null) {
+                $sqlUsuario = "INSERT INTO usuarios (nombre, correo, password, rol, estado)
+                               VALUES (:nombre, :correo, :password, :rol, :estado)";
+                $stmt = $this->db->prepare($sqlUsuario);
+                $stmt->execute($datosUsuario);
+                $idUsuario = $this->db->lastInsertId();
+            }
 
-        // Si viene cuenta de usuario
-        if ($datosUsuario !== null) {
-            $sqlUsuario = "INSERT INTO usuarios (nombre, correo, password, rol, estado)
-                           VALUES (:nombre, :correo, :password, :rol, :estado)";
-            $stmt = $this->db->prepare($sqlUsuario);
-            $stmt->execute($datosUsuario);
-            $idUsuario = $this->db->lastInsertId();
+            // Agregar id_usuario si existe
+            if ($idUsuario) {
+                $datosPadre['id_usuario'] = $idUsuario;
+            }
+
+            // Insertar padre
+            $this->insertar($datosPadre);
+            $idPadre = $this->db->lastInsertId();
+
+            $this->db->commit();
+            return $idPadre;
+
+        } catch (Exception $e) {
+            // Rollback y registrar el error para depuración
+            try {
+                $this->db->rollBack();
+            } catch (Exception $inner) {
+                // ignore
+            }
+            $logDir = __DIR__ . '/../storage/logs';
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0777, true);
+            }
+            $logFile = $logDir . '/padre_error.log';
+            $msg = "[" . date('Y-m-d H:i:s') . "] Error crearPadreConUsuario: " . $e->getMessage() . PHP_EOL . $e->getTraceAsString() . PHP_EOL;
+            @file_put_contents($logFile, $msg, FILE_APPEND);
+            // Re-lanzar la excepción para que el controlador maneje la respuesta al usuario
+            throw $e;
         }
-
-        // Agregar id_usuario si existe
-        if ($idUsuario) {
-            $datosPadre['id_usuario'] = $idUsuario;
-        }
-
-        // Insertar padre
-        $this->insertar($datosPadre);
-        $idPadre = $this->db->lastInsertId();
-
-        $this->db->commit();
-        return $idPadre;
-
-    } catch (Exception $e) {
-        $this->db->rollBack();
-        return false;
     }
-}
     
     /**
      * Actualiza un padre y opcionalmente su cuenta de usuario
@@ -334,6 +346,21 @@ public function actualizarPadreConUsuario($idPadre, $datosPadre, $datosUsuario =
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    /**
+     * Verifica si ya existe un padre con el DNI proporcionado
+     *
+     * @param string $dni
+     * @return bool
+     */
+    public function existePorDni($dni) {
+        if (empty($dni)) return false;
+        $dni = preg_replace('/\D/', '', $dni);
+        $sql = "SELECT COUNT(*) FROM padres WHERE dni = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$dni]);
+        return (int)$stmt->fetchColumn() > 0;
     }
     
     /**

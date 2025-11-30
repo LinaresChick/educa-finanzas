@@ -76,6 +76,21 @@ class PadreController extends BaseController {
             'relacion' => $_POST['relacion'],
             'estado' => 'activo'
         ];
+
+        // Validación mínima
+        $errores = [];
+        if (empty(trim($datosPadre['nombres'] ?? ''))) $errores[] = 'El campo nombres es requerido.';
+        if (empty(trim($datosPadre['apellidos'] ?? ''))) $errores[] = 'El campo apellidos es requerido.';
+        if (empty(trim($datosPadre['relacion'] ?? ''))) $errores[] = 'Seleccione la relación.';
+        if (!empty($datosPadre['dni']) && strlen(preg_replace('/\D/', '', $datosPadre['dni'])) !== 8) {
+            $errores[] = 'El DNI debe contener 8 dígitos.';
+        }
+
+        if (!empty($errores)) {
+            $this->sesion->setFlash('error', implode(' ', $errores));
+            $this->redireccionar('padres/crear');
+            return;
+        }
         
         // Si se indica crear cuenta de usuario
         $datosUsuario = null;
@@ -98,14 +113,45 @@ class PadreController extends BaseController {
             ];
         }
         
-        // Guardar el padre
-        $resultado = $this->padreModel->crearPadreConUsuario($datosPadre, $datosUsuario);
-        
-        if ($resultado) {
-            $this->sesion->setFlash('exito', 'Padre o tutor registrado correctamente.');
-            $this->redireccionar('padres/detalle/' . $resultado);
-        } else {
+        // Comprobaciones previas para evitar errores de integridad (dni/correo duplicados)
+        if (!empty($datosPadre['dni']) && $this->padreModel->existePorDni($datosPadre['dni'])) {
+            $this->sesion->setFlash('error', 'El DNI ya se encuentra registrado en el sistema.');
+            $this->redireccionar('padres/crear');
+            return;
+        }
+
+        if ($datosUsuario !== null) {
+            if (!isset($this->usuarioModel)) {
+                require_once MODELS_PATH . 'UsuarioModel.php';
+                $this->usuarioModel = new \Models\UsuarioModel();
+            }
+            if ($this->usuarioModel->correoExiste($datosUsuario['correo'])) {
+                $this->sesion->setFlash('error', 'El correo de usuario ya está registrado. Utilice otro correo.');
+                $this->redireccionar('padres/crear');
+                return;
+            }
+        }
+
+        // Guardar el padre con manejo de excepciones
+        try {
+            $resultado = $this->padreModel->crearPadreConUsuario($datosPadre, $datosUsuario);
+            if ($resultado) {
+                $this->sesion->setFlash('exito', 'Padre o tutor registrado correctamente.');
+                $this->redireccionar('padres/detalle/' . $resultado);
+                return;
+            }
+            // Si por alguna razón no se lanzó excepción pero no hay resultado
             $this->sesion->setFlash('error', 'Error al registrar el padre o tutor.');
+            $this->redireccionar('padres/crear');
+        } catch (\Exception $e) {
+            // Registrar detalle del error para depuración y mostrar mensaje genérico al usuario
+            $logDir = __DIR__ . '/../storage/logs';
+            if (!is_dir($logDir)) @mkdir($logDir, 0777, true);
+            $logFile = $logDir . '/padre_controller_error.log';
+            $debugMsg = "[" . date('Y-m-d H:i:s') . "] PadreController::guardar error: " . $e->getMessage() . PHP_EOL . $e->getTraceAsString() . PHP_EOL;
+            @file_put_contents($logFile, $debugMsg, FILE_APPEND);
+
+            $this->sesion->setFlash('error', 'Error al registrar el padre o tutor. Revise los datos o contacte al administrador.');
             $this->redireccionar('padres/crear');
         }
     }

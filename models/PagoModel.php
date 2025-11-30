@@ -72,12 +72,13 @@ class PagoModel extends \Core\Modelo {
 
     public function obtenerPagosFiltrados($filtros) {
         try {
-            $sql = "SELECT p.*, 
-                          e.nombres AS estudiante_nombres, 
-                          e.apellidos AS estudiante_apellidos 
-                   FROM pagos p 
-                   LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante 
-                   WHERE 1=1";
+                 $sql = "SELECT p.*, 
+                         e.nombres AS estudiante_nombres, 
+                         e.apellidos AS estudiante_apellidos,
+                         CONCAT(e.nombres, ' ', e.apellidos) AS estudiante_nombre_completo
+                     FROM pagos p 
+                     LEFT JOIN estudiantes e ON p.id_estudiante = e.id_estudiante 
+                     WHERE 1=1";
             $params = [];
 
             if (!empty($filtros['fecha_inicio'])) {
@@ -111,7 +112,7 @@ class PagoModel extends \Core\Modelo {
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute($params);
-            return $stmt->fetchAll();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\PDOException $e) {
             error_log("Error en obtenerPagosFiltrados: " . $e->getMessage());
             throw new \Exception("Error al filtrar los pagos");
