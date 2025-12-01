@@ -194,4 +194,5 @@ class SeccionModel extends Modelo {
         $stmt->execute($params);
         return $stmt->fetchColumn() > 0;
     }
+    
 }
