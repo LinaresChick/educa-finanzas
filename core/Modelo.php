@@ -23,6 +23,15 @@ class Modelo extends BaseDeDatos {
         $this->tabla = $tabla;
         $this->primaryKey = $primaryKey;
     }
+
+    /**
+     * Obtener la conexión PDO (getter)
+     *
+     * @return \PDO
+     */
+    public function getDb() {
+        return $this->db;
+    }
     
     /**
      * Obtiene todos los registros de la tabla

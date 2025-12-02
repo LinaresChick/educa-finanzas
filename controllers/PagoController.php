@@ -5,11 +5,19 @@ require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/PagoModel.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
 require_once __DIR__ . '/../models/PadreModel.php';
+require_once __DIR__ . '/../models/SalonModel.php';
+require_once __DIR__ . '/../models/GradoModel.php';
+require_once __DIR__ . '/../models/SeccionModel.php';
+// Cargar autoload de composer para PhpSpreadsheet
+require_once __DIR__ . '/../vendor/autoload.php';
 
 use Core\BaseController;
 use Models\PagoModel;
 use Models\EstudianteModel;
 use Models\PadreModel;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class PagoController extends BaseController {
     private $pagoModel;
@@ -52,10 +60,24 @@ class PagoController extends BaseController {
             $_SESSION['error'] = 'Error al obtener la lista de pagos';
         }
 
+        // Obtener datos para selects (grado y seccion) para la vista de exportar
+        try {
+            $gradoModel = new \Models\GradoModel();
+            $seccionModel = new \Models\SeccionModel();
+            $grados = $gradoModel->obtenerTodos();
+            $secciones = $seccionModel->obtenerTodas();
+        } catch (\Exception $e) {
+            error_log('Error al cargar grados/secciones: ' . $e->getMessage());
+            $grados = [];
+            $secciones = [];
+        }
+
         $datos = [
             'titulo' => 'Listado de Pagos',
             'pagos' => $pagos,
             'filtros' => $filtros
+            , 'grados' => $grados
+            , 'secciones' => $secciones
         ];
 
         $this->render("pagos/listado", $datos);
@@ -189,6 +211,27 @@ class PagoController extends BaseController {
 
                     if (!$idPago) {
                         throw new \Exception("Error al registrar el pago");
+                    }
+
+                    // Después de registrar el pago, actualizar estado del estudiante
+                    try {
+                        $est = $this->estudianteModel->obtenerPorId($datos['id_estudiante']);
+                        if ($est && isset($est['monto'])) {
+                            $montoAsignado = floatval($est['monto']);
+                            // monto efectivo pagado: monto - descuento + aumento
+                            $montoEfectivo = floatval($datos['monto']) - floatval($datos['descuento'] ?? 0) + floatval($datos['aumento'] ?? 0);
+                            // Comparación con tolerancia para centavos
+                            if (abs($montoAsignado - $montoEfectivo) < 0.01) {
+                                // Actualizar estado_pago a 'pagado'
+                                try {
+                                    $this->estudianteModel->actualizar($datos['id_estudiante'], ['estado_pago' => 'pagado']);
+                                } catch (\Exception $inner) {
+                                    error_log('No se pudo actualizar estado_pago del estudiante: ' . $inner->getMessage());
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        error_log('Error al obtener estudiante para actualizar estado: ' . $e->getMessage());
                     }
 
                     $_SESSION['exito'] = "✅ Pago registrado correctamente";
@@ -537,5 +580,116 @@ class PagoController extends BaseController {
         ];
         
         $this->render("pagos/historial", $datos);
+    }
+
+    /**
+     * Exportar listado de estudiantes (por grado y sección) a Excel
+     */
+    public function exportarExcel() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['usuario']) || !in_array($_SESSION['usuario']['rol'], ['Superadmin', 'Administrador', 'Colaborador', 'Secretario', 'Contador'])) {
+            header("Location: index.php?controller=Auth&action=acceso_denegado");
+            exit();
+        }
+
+        $id_grado = isset($_GET['grado']) ? (int)$_GET['grado'] : null;
+        $id_seccion = isset($_GET['seccion']) ? (int)$_GET['seccion'] : null;
+
+        if (!$id_grado || !$id_seccion) {
+            $_SESSION['error'] = 'Seleccione grado y sección para exportar';
+            header('Location: index.php?controller=Pago&action=index');
+            exit();
+        }
+
+        try {
+            $salonModel = new \Models\SalonModel();
+            $salones = $salonModel->obtenerPorGradoSeccion($id_grado, $id_seccion);
+            $idsSalon = array_map(function($s){ return $s['id_salon']; }, $salones);
+
+            $db = $this->estudianteModel->getDb();
+
+            if (empty($idsSalon)) {
+                $estudiantes = [];
+            } else {
+                // Construir placeholders
+                $placeholders = implode(',', array_fill(0, count($idsSalon), '?'));
+                $sql = "SELECT e.id_estudiante, e.nombres, e.apellidos, e.dni, e.monto AS monto_estudiante, e.estado, g.nombre AS grado_nombre, s.nombre AS seccion_nombre, COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_estudiante = e.id_estudiante),0) AS monto_pagado FROM estudiantes e JOIN salones sal ON e.id_salon = sal.id_salon JOIN grados g ON sal.id_grado = g.id_grado JOIN secciones s ON sal.id_seccion = s.id_seccion WHERE sal.id_salon IN ($placeholders) ORDER BY e.apellidos, e.nombres";
+                $stmt = $db->prepare($sql);
+                foreach ($idsSalon as $k => $v) {
+                    $stmt->bindValue($k+1, $v);
+                }
+                $stmt->execute();
+                $estudiantes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            }
+
+            // Generar Excel
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Pagos por Salon');
+
+            $headers = ['Nombre','Apellido','DNI','Monto Asignado','Monto Pagado','Grado','Sección','Estado','Deuda'];
+            $col = 'A';
+            foreach ($headers as $h) {
+                $sheet->setCellValue($col.'1', $h);
+                $sheet->getStyle($col.'1')->getFont()->setBold(true);
+                $col++;
+            }
+
+            $rowNum = 2;
+            foreach ($estudiantes as $row) {
+                $nombre = $row['nombres'] ?? '';
+                $apellido = $row['apellidos'] ?? '';
+                $montoAsignado = is_numeric($row['monto_estudiante']) ? (float)$row['monto_estudiante'] : 0.0;
+                $montoPagado = is_numeric($row['monto_pagado']) ? (float)$row['monto_pagado'] : 0.0;
+                $deuda = $montoAsignado - $montoPagado;
+
+                $sheet->setCellValue('A'.$rowNum, $nombre);
+                $sheet->setCellValue('B'.$rowNum, $apellido);
+                $sheet->setCellValue('C'.$rowNum, $row['dni'] ?? '');
+                $sheet->setCellValue('D'.$rowNum, $montoAsignado);
+                $sheet->setCellValue('E'.$rowNum, $montoPagado);
+                $sheet->setCellValue('F'.$rowNum, $row['grado_nombre'] ?? '');
+                $sheet->setCellValue('G'.$rowNum, $row['seccion_nombre'] ?? '');
+                $sheet->setCellValue('H'.$rowNum, $row['estado'] ?? '');
+                $sheet->setCellValue('I'.$rowNum, $deuda);
+
+                // Colorear: rojo pastel si hay deuda (>0), verde pastel si deuda <= 0
+                $color = $deuda > 0 ? 'F8D7DA' : 'D4EDDA';
+                $sheet->getStyle('A'.$rowNum.':G'.$rowNum)->getFill()
+                      ->setFillType(Fill::FILL_SOLID)
+                      ->getStartColor()->setRGB($color);
+
+                $rowNum++;
+            }
+
+            // Formato números (Asignado, Pagado, Deuda)
+            $sheet->getStyle('D2:D'.$rowNum)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('E2:E'.$rowNum)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('I2:I'.$rowNum)->getNumberFormat()->setFormatCode('#,##0.00');
+
+            // Auto size columns
+            foreach (range('A','I') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $filename = 'pagos_grado_'.$id_grado.'_seccion_'.$id_seccion.'_'.date('Ymd_His').'.xlsx';
+
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+            exit();
+
+        } catch (\Exception $e) {
+            error_log('Error en exportarExcel: ' . $e->getMessage());
+            $_SESSION['error'] = 'Error al generar el Excel: ' . $e->getMessage();
+            header('Location: index.php?controller=Pago&action=index');
+            exit();
+        }
     }
 }

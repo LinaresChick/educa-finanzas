@@ -24,6 +24,51 @@ require_once __DIR__ . '/../templates/header.php';
     </div>
 
     <div class="content-card">
+        <!-- Exportar Excel (grado / sección) -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Exportar listado a Excel</h5>
+            </div>
+            <div class="card-body">
+                <form action="" method="GET" class="row" target="_blank" onsubmit="return submitExport(this);">
+                    <input type="hidden" name="controller" value="Pago">
+                    <input type="hidden" name="action" value="exportarExcel">
+
+                    <div class="col-md-4 mb-3">
+                        <label for="grado_select">Grado:</label>
+                        <select id="grado_select" name="grado" class="form-control">
+                            <option value="">Seleccione grado</option>
+                            <?php if (!empty(
+                                $grados) && is_array($grados)): ?>
+                                <?php foreach ($grados as $g): ?>
+                                    <option value="<?= $g['id_grado'] ?>"><?= htmlspecialchars($g['nombre'] . ' - ' . $g['nivel']) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="seccion_select">Sección:</label>
+                        <select id="seccion_select" name="seccion" class="form-control">
+                            <option value="">Seleccione sección</option>
+                            <?php if (!empty($secciones) && is_array($secciones)): ?>
+                                <?php foreach ($secciones as $s): ?>
+                                    <option value="<?= $s['id_seccion'] ?>"><?= htmlspecialchars($s['nombre']) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-file-excel"></i> Exportar Excel
+                        </button>
+                        <small class="text-muted ms-3">Los alumnos sin pagos se marcarán en rojo pastel; los que ya pagaron en verde pastel.</small>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Filtros -->
         <div class="card mb-4">
             <div class="card-header">
@@ -382,4 +427,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function submitExport(form) {
+    var grado = form.grado.value;
+    var seccion = form.seccion.value;
+    if (!grado || !seccion) {
+        alert('Seleccione grado y sección antes de exportar');
+        return false;
+    }
+    return true;
+}
 </script>

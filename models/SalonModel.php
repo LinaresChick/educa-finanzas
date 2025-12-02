@@ -68,9 +68,9 @@ class SalonModel extends Modelo {
      */
     public function obtenerPorGradoSeccion($idGrado, $idSeccion) {
         $sql = "SELECT * FROM salones 
-                WHERE id_grado = :id_grado 
-                AND id_seccion = :id_seccion
-                ORDER BY nombre ASC";
+            WHERE id_grado = :id_grado 
+            AND id_seccion = :id_seccion
+            ORDER BY id_salon ASC";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
