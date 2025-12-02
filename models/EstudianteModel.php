@@ -59,6 +59,7 @@ class EstudianteModel extends Modelo {
             $sql = "SELECT 
                     e.*,
                     sal.id_salon,
+                    s.id_seccion AS id_seccion,
                     s.nombre as salon_nombre,
                     (SELECT COALESCE(SUM(monto), 0) FROM pagos WHERE id_estudiante = e.id_estudiante) as total_pagado
                    FROM estudiantes e

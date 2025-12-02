@@ -23,7 +23,7 @@ function getRoleBadgeClass($rol) {
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="/educa-finanzas/public/index.php?controller=Panel&action=index">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="index.php?controller=Panel&action=dashboard">Inicio</a></li>
                         <li class="breadcrumb-item active">Usuarios</li>
                     </ol>
                 </div>

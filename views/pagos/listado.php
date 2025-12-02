@@ -14,12 +14,6 @@ require_once __DIR__ . '/../templates/header.php';
                     <i class="fas fa-money-bill-wave me-2"></i>
                     Gestión de Pagos
                 </h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0 mt-2">
-                        <li class="breadcrumb-item"><a href="/panel" class="text-success">Inicio</a></li>
-                        <li class="breadcrumb-item active">Pagos</li>
-                    </ol>
-                </nav>
             </div>
             <div class="col-md-4 text-right">
                 <a href="<?php echo BASE_URL; ?>/index.php?controller=Pago&action=crear" class="btn btn-primary">

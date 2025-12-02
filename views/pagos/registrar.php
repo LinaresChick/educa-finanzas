@@ -34,8 +34,8 @@ require_once __DIR__ . '/../templates/header.php';
                 </h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="index.php?controller=Panel" class="text-success">Inicio</a></li>
-                        <li class="breadcrumb-item"><a href="index.php?controller=Pago" class="text-success">Pagos</a></li>
+                        <li class="breadcrumb-item"><a href="index.php?controller=Panel&action=dashboard" class="text-success">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="index.php?controller=Pago&action=index" class="text-success">Pagos</a></li>
                         <li class="breadcrumb-item active">Registrar Pago</li>
                     </ol>
                 </nav>
@@ -308,6 +308,60 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputPagadorDni = document.getElementById('pagador_dni');
     const btnCancel = document.getElementById('btn_cancel');
     const selectSeccion = document.getElementById('id_seccion');
+
+    // Capitalizar nombres (reutilizable)
+    function capitalizar(texto) {
+        if (!texto) return '';
+        return texto.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    // Agregar botón de búsqueda de DNI para "Otra persona"
+    const btnBuscarPagador = document.createElement('button');
+    btnBuscarPagador.type = 'button';
+    btnBuscarPagador.className = 'btn btn-sm btn-primary mt-2';
+    btnBuscarPagador.innerHTML = 'Buscar DNI';
+    inputPagadorDni.parentNode.appendChild(btnBuscarPagador);
+
+    // Validar solo números en el campo DNI del pagador
+    inputPagadorDni.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+        if (this.value.length > 8) this.value = this.value.slice(0, 8);
+    });
+
+    btnBuscarPagador.addEventListener('click', function () {
+        const numero = inputPagadorDni.value.trim();
+        if (numero.length !== 8) {
+            alert('El DNI debe tener 8 dígitos.');
+            return;
+        }
+
+        btnBuscarPagador.disabled = true;
+        btnBuscarPagador.innerText = 'Consultando...';
+
+        fetch('https://apiperu.dev/api/dni', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer e3cd144f611320be744de2b653d16ba0e2c48a8a9a106e92e80450dd804173d7'
+            },
+            body: JSON.stringify({ dni: numero })
+        }).then(res => res.json())
+        .then(data => {
+            if (data && data.success === true) {
+                const nombres = capitalizar(data.data.nombres || '');
+                const apellidos = capitalizar((data.data.apellido_paterno || '') + ' ' + (data.data.apellido_materno || ''));
+                inputPagadorNombre.value = (nombres + ' ' + apellidos).trim();
+            } else {
+                alert('No se encontró información del DNI.');
+            }
+        }).catch(() => {
+            alert('Error consultando la API de DNI.');
+        }).finally(() => {
+            btnBuscarPagador.disabled = false;
+            btnBuscarPagador.innerText = 'Buscar DNI';
+        });
+    });
 
     function actualizarPagadorUI() {
         if (pagadorTipo.value === 'padre') {

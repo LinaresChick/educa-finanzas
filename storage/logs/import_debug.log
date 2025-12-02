@@ -673,3 +673,18 @@ FILES keys: Array
 FILE archivo: error=0 size=5952 tmp=C:\xampp\tmp\php31D6.tmp exists=yes
 Moved uploaded file to: C:\xampp\htdocs\educa-finanzas\controllers/../temp/1764498684_datos_niños.xlsx exists=yes
 PhpSpreadsheet not installed, cannot parse Excel file.
+---- Import Debug: 2025-12-01T16:15:55+01:00 ----
+POST: Array
+(
+    [docente_id] => 1
+    [id_seccion] => 23
+    [monto] => 29.00
+)
+
+FILES keys: Array
+(
+    [0] => archivo
+)
+
+FILE archivo: error=0 size=66 tmp=C:\xampp\tmp\phpF38.tmp exists=yes
+Moved uploaded file to: C:\xampp\htdocs\educa-finanzas\controllers/../temp/1764602155_plantilla_ninos.csv exists=yes
