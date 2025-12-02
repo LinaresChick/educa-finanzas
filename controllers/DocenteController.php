@@ -29,41 +29,55 @@ class DocenteController {
         $docentes = $this->model->obtenerDocentesConSalon();
         require __DIR__ . '/../views/docentes/listado.php';
     }
-
     public function crear() {
 
-        // 🔥 NUEVO: enviar grados, secciones y salones a la vista
-        $grados    = $this->gradoModel->obtenerTodos();
-        $secciones = $this->seccionModel->obtenerTodas();
-        $salones   = $this->salonModel->obtenerDisponibles();
+    // Grados y secciones (si aún los usas)
+    $grados    = $this->gradoModel->obtenerTodos();
+    $secciones = $this->seccionModel->obtenerTodas();
 
-        require __DIR__ . '/../views/docentes/crear.php';
-    }
+    // Salones disponibles correctamente
+    $salones = $this->salonModel->getSalonesDisponibles();
+
+    require __DIR__ . '/../views/docentes/crear.php';
+}
 
     public function guardar() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header("Location: index.php?controller=Docente&action=index");
-            exit;
-        }
-
-        $data = [
-            'nombres'       => $_POST['nombres'] ?? '',
-            'apellidos'     => $_POST['apellidos'] ?? '',
-            'dni'           => $_POST['dni'] ?? null,
-            'telefono'      => $_POST['telefono'] ?? null,
-            'correo'        => $_POST['correo'] ?? null,
-            'especialidad'  => $_POST['especialidad'] ?? null,
-            'id_grado'      => $_POST['id_grado'] ?? null,
-            'id_seccion'    => $_POST['id_seccion'] ?? null,
-            'id_salon'      => $_POST['id_salon'] ?? null,
-            'estado'        => 'activo'
-        ];
-
-        $this->model->insert($data);
-
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         header("Location: index.php?controller=Docente&action=index");
         exit;
     }
+
+    // 1️⃣ Guardar DOCENTE
+    $data = [
+        'nombres'      => $_POST['nombres'],
+        'apellidos'    => $_POST['apellidos'],
+        'dni'          => $_POST['dni'],
+        'telefono'     => $_POST['telefono'],
+        'correo'       => $_POST['correo'],
+        'especialidad' => $_POST['especialidad'],
+        'estado'       => 'activo'
+    ];
+
+    $idDocente = $this->model->insert($data);
+
+    // 2️⃣ Registrar el salón basado en GRADO + SECCIÓN escogidos
+    if (!empty($_POST['id_grado']) && !empty($_POST['id_seccion'])) {
+
+        $this->salonModel->insertar([
+            'id_grado'     => $_POST['id_grado'],
+            'id_seccion'   => $_POST['id_seccion'],
+            'id_docente'   => $idDocente,
+            'anio'         => date('Y'),
+            'cupo_maximo'  => 30,
+            'estado'       => 'activo'
+        ]);
+    }
+
+    header("Location: index.php?controller=Docente&action=index");
+    exit;
+}
+
+
 
     public function editar() {
         if (!isset($_GET['id'])) {

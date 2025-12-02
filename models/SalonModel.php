@@ -99,6 +99,26 @@ public function obtenerDisponibles() {
     $stmt = $this->db->query($sql);
     return $stmt->fetchAll();
 }
+public function insertar($data) {
+    $sql = "INSERT INTO salones (id_grado, id_seccion, id_docente, anio, cupo_maximo, estado)
+            VALUES (:id_grado, :id_seccion, :id_docente, :anio, :cupo_maximo, :estado)";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute($data);
+    
+    return $this->db->lastInsertId();
+}
+public function getSalonesDisponibles() {
+    $sql = "SELECT s.id_salon, g.nombre AS grado, sec.nombre AS seccion
+            FROM salones s
+            INNER JOIN grados g ON s.id_grado = g.id_grado
+            INNER JOIN secciones sec ON s.id_seccion = sec.id_seccion
+            WHERE s.id_docente IS NULL";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 
 
