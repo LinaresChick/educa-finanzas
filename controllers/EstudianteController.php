@@ -101,66 +101,50 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
             return;
         }
 
-        // DEBUG: registrar POST y FILES para depuración
-        try {
-            $debugPath = __DIR__ . '/../storage/logs/import_debug.log';
-            $dbg = "---- Import Debug: " . date('c') . " ----\n";
-            $dbg .= "POST: " . print_r($_POST, true) . "\n";
-            $dbg .= "FILES keys: " . print_r(array_keys($_FILES), true) . "\n";
-            foreach ($_FILES as $k => $f) {
-                $dbg .= "FILE {$k}: error={$f['error']} size={$f['size']} tmp=" . ($f['tmp_name'] ?? '') . " exists=" . (isset($f['tmp_name']) && file_exists($f['tmp_name']) ? 'yes' : 'no') . "\n";
-            }
-            file_put_contents($debugPath, $dbg, FILE_APPEND);
-        } catch (\Exception $e) {
-            error_log('No se pudo escribir import_debug: ' . $e->getMessage());
-        }
-
         $docente_id = $_POST['docente_id'] ?? null;
         $id_seccion = $_POST['id_seccion'] ?? null;
         $monto = $_POST['monto'] ?? null;
 
-        // Validaciones básicas
-        if (empty($docente_id) || empty($id_seccion) || !isset($_FILES['archivo'])) {
-            $this->sesion->setFlash('error', 'Debe seleccionar docente, sección y subir un archivo CSV.');
+        // PASO 2: Si viene confirmación, guardar estudiantes
+        if (!empty($_POST['confirm']) && $_POST['confirm'] == '1') {
+            $this->confirmarImportacion();
+            return;
+        }
+
+        // PASO 1: Validar y mostrar preview
+        if (empty($docente_id) || empty($id_seccion)) {
+            $this->sesion->setFlash('error', 'Debe seleccionar docente y sección.');
+            $this->redireccionar('estudiantes/importarSalon');
+            return;
+        }
+
+        if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+            $this->sesion->setFlash('error', 'Debe subir un archivo válido.');
             $this->redireccionar('estudiantes/importarSalon');
             return;
         }
 
         // Guardar archivo en temp
         $uploaded = $_FILES['archivo'];
-        if ($uploaded['error'] !== UPLOAD_ERR_OK) {
-            $this->sesion->setFlash('error', 'Error al subir el archivo.');
-            $this->redireccionar('estudiantes/importarSalon');
-            return;
-        }
-
         $tmpDir = __DIR__ . '/../temp';
         if (!is_dir($tmpDir)) @mkdir($tmpDir, 0755, true);
+        
         $tmpPath = $tmpDir . '/' . time() . '_' . basename($uploaded['name']);
         if (!move_uploaded_file($uploaded['tmp_name'], $tmpPath)) {
             $this->sesion->setFlash('error', 'No se pudo mover el archivo subido.');
             $this->redireccionar('estudiantes/importarSalon');
             return;
         }
-        // DEBUG: verificar que el archivo fue movido
-        try {
-            $dbg = "Moved uploaded file to: {$tmpPath} exists=" . (file_exists($tmpPath) ? 'yes' : 'no') . "\n";
-            file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', $dbg, FILE_APPEND);
-        } catch (\Exception $e) {}
 
-        // Parse CSV (esperamos encabezados: nombres, apellidos, dni, fecha_nacimiento, direccion, telefono, mencion)
-        // Detect file type by extension and parse (.csv or .xlsx/.xls)
+        // Parsear archivo (CSV o Excel)
         $ext = strtolower(pathinfo($tmpPath, PATHINFO_EXTENSION));
         $rows = [];
         $allowed = ['nombres','apellidos','dni','fecha_nacimiento','direccion','telefono','mencion'];
 
         if (in_array($ext, ['xlsx','xls'])) {
-            // Try to use PhpSpreadsheet if available
             if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
-                // Log and instruct to install library
-                file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "PhpSpreadsheet not installed, cannot parse Excel file.\n", FILE_APPEND);
-                $this->sesion->setFlash('error', 'Para importar archivos Excel instala la librería phpoffice/phpspreadsheet: run `composer require phpoffice/phpspreadsheet` in the project root.');
-                if (file_exists($tmpPath)) @unlink($tmpPath);
+                @unlink($tmpPath);
+                $this->sesion->setFlash('error', 'Para importar archivos Excel, instale phpoffice/phpspreadsheet.');
                 $this->redireccionar('estudiantes/importarSalon');
                 return;
             }
@@ -192,9 +176,8 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
                     if (!empty($row['nombres']) && !empty($row['apellidos'])) $rows[] = $row;
                 }
             } catch (\Exception $e) {
-                file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Error parsing Excel: " . $e->getMessage() . "\n", FILE_APPEND);
                 @unlink($tmpPath);
-                $this->sesion->setFlash('error', 'Error al leer el archivo Excel. Revisa el archivo o instala phpoffice/phpspreadsheet.');
+                $this->sesion->setFlash('error', 'Error al leer el archivo Excel: ' . $e->getMessage());
                 $this->redireccionar('estudiantes/importarSalon');
                 return;
             }
@@ -233,170 +216,13 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
         }
 
         if (empty($rows)) {
-            $this->sesion->setFlash('error', 'No se encontraron filas válidas en el CSV (se requieren al menos "nombres" y "apellidos").');
             @unlink($tmpPath);
+            $this->sesion->setFlash('error', 'No se encontraron filas válidas (se requieren "nombres" y "apellidos").');
             $this->redireccionar('estudiantes/importarSalon');
             return;
         }
 
-        // DEBUG: número de filas parseadas
-        try {
-            $dbg2 = "Parsed rows count: " . count($rows) . "\n";
-            file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', $dbg2, FILE_APPEND);
-        } catch (\Exception $e) {}
-
-        // Si viene confirmación `confirm` entonces crear salón y guardar estudiantes
-        if (!empty($_POST['confirm']) && $_POST['confirm'] == '1') {
-    // ===== DEBUG TEMPORAL - FORZAR VISUALIZACIÓN =====
-    echo "<pre style='background: #000; color: #0f0; padding: 20px;'>";
-    echo "=== DEBUG CONFIRMACIÓN INICIADA ===\n";
-    echo "POST data: " . print_r($_POST, true) . "\n";
-    echo "tmp_path: " . ($_POST['tmp_path'] ?? 'NO ENVIADO') . "\n";
-    echo "tmp_path exists: " . (isset($_POST['tmp_path']) && file_exists($_POST['tmp_path']) ? 'YES' : 'NO') . "\n";
-    
-    // Verificar que el método crearSalonConDocente existe
-    echo "crearSalonConDocente exists: " . (method_exists($this->estudianteModel, 'crearSalonConDocente') ? 'YES' : 'NO') . "\n";
-    
-    // Llamar al método manualmente para ver el error
-    $docente_id = intval($_POST['docente_id']);
-    $id_seccion = intval($_POST['id_seccion']);
-    $cupo = 3; // ejemplo
-    
-    echo "Llamando crearSalonConDocente($id_seccion, $docente_id, $cupo)...\n";
-    
-    try {
-        $result = $this->estudianteModel->crearSalonConDocente($id_seccion, $docente_id, $cupo);
-        echo "Resultado: " . ($result ? "ÉXITO - ID: $result" : "FALLÓ") . "\n";
-    } catch (Exception $e) {
-        echo "EXCEPCIÓN: " . $e->getMessage() . "\n";
-    }
-    
-    echo "=== FIN DEBUG ===\n";
-    
-    $tmpPathConfirm = $_POST['tmp_path'] ?? null;
-            $rowsConfirm = [];
-
-            if (!empty($tmpPathConfirm) && file_exists($tmpPathConfirm)) {
-                $fh2 = fopen($tmpPathConfirm, 'r');
-                if ($fh2) {
-                    $header2 = fgetcsv($fh2);
-                    $cols2 = array_map(function($c){ return trim(strtolower($c)); }, $header2 ?: []);
-                    $allowed = ['nombres','apellidos','dni','fecha_nacimiento','direccion','telefono','mencion'];
-                    while (($data2 = fgetcsv($fh2)) !== false) {
-                        $row2 = [];
-                        foreach ($cols2 as $i => $col) {
-                            if (in_array($col, $allowed)) {
-                                $row2[$col] = isset($data2[$i]) ? trim($data2[$i]) : '';
-                            }
-                        }
-                        if (!empty($row2['nombres']) && !empty($row2['apellidos'])) {
-                            $rowsConfirm[] = $row2;
-                        }
-                    }
-                    fclose($fh2);
-                } else {
-                    $this->sesion->setFlash('error', 'No se puede leer el archivo temporal.');
-                    if (file_exists($tmpPathConfirm)) @unlink($tmpPathConfirm);
-                    $this->redireccionar('estudiantes/importarSalon');
-                    return;
-                }
-            } else {
-                // usar filas ya parseadas en esta petición
-                $rowsConfirm = $rows;
-                $tmpPathConfirm = $tmpPath; // para eliminar después
-            }
-
-            // Preparar monto (la columna `monto` es NOT NULL en la tabla)
-            $monto_value = ($monto === null || $monto === '') ? 0.00 : floatval(str_replace(',', '.', $monto));
-
-            // DEBUG: logear valores clave antes de crear el salón
-            try {
-                $dbg3 = "About to create salon: docente_id=" . intval($docente_id) . " id_seccion=" . intval($id_seccion) . " cupo=" . count($rowsConfirm) . " monto=" . $monto_value . "\n";
-                file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', $dbg3, FILE_APPEND);
-            } catch (\Exception $e) {}
-
-            // Crear salón con docente
-            $cupo = count($rowsConfirm);
-            try {
-                $nuevoSalonId = $this->estudianteModel->crearSalonConDocente(
-    intval($id_seccion),    // primer parámetro: id_seccion
-    intval($docente_id),    // segundo parámetro: id_docente  
-    $cupo                   // tercer parámetro: cupo
-);
-
-// ===== DEBUG TEMPORAL - INICIO =====
-error_log("Resultado crearSalonConDocente: " . ($nuevoSalonId ? "ÉXITO - ID: $nuevoSalonId" : "FALLÓ"));
-// ===== DEBUG TEMPORAL - FIN =====
-
-file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "crearSalonConDocente returned: " . print_r($nuevoSalonId, true) . "\n", FILE_APPEND);
-            } catch (\Exception $e) {
-                file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "crearSalonConDocente exception: " . $e->getMessage() . "\n", FILE_APPEND);
-                $nuevoSalonId = false;
-            }
-
-            if (!$nuevoSalonId) {
-                $this->sesion->setFlash('error', 'No se pudo crear el salón.');
-                if (isset($tmpPathConfirm) && file_exists($tmpPathConfirm)) @unlink($tmpPathConfirm);
-                $this->redireccionar('estudiantes/importarSalon');
-                return;
-            }
-
-            // Insertar cada estudiante
-            $inserted = 0;
-            $skipped = 0;
-            foreach ($rowsConfirm as $r) {
-                // Evitar duplicados por DNI si se proporcionó
-                $existe = false;
-                if (!empty($r['dni'])) {
-                    $busq = $this->estudianteModel->buscar(['dni' => $r['dni']]);
-                    if (!empty($busq)) $existe = true;
-                }
-
-                if ($existe) {
-                    $skipped++;
-                    continue;
-                }
-
-                $datos = [
-                    'nombres' => $r['nombres'],
-                    'apellidos' => $r['apellidos'],
-                    'dni' => $r['dni'] ?? null,
-                    'fecha_nacimiento' => $r['fecha_nacimiento'] ?? null,
-                    'direccion' => $r['direccion'] ?? null,
-                    'telefono' => $r['telefono'] ?? null,
-                    'mencion' => $r['mencion'] ?? null,
-                    'estado' => 'activo',
-                    'id_salon' => $nuevoSalonId,
-                    'monto' => $monto_value
-                ];
-                // Asegurar que siempre se envíe `monto` (no es NULL en la tabla)
-                //$datos['monto'] = $monto_value;
-                try {
-    $res = $this->estudianteModel->insertar($datos);
-    // ===== DEBUG TEMPORAL - INICIO =====
-    error_log("Inserción estudiante: " . ($res ? "ÉXITO - ID: $res" : "FALLÓ"));
-    // ===== DEBUG TEMPORAL - FIN =====
-    file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Inserted student id: " . print_r($res, true) . " datos=" . print_r($datos, true) . "\n", FILE_APPEND);
-    $inserted++;
-} catch (\Exception $e) {
-    // ===== DEBUG TEMPORAL - INICIO =====
-    error_log("ERROR Insertando estudiante: " . $e->getMessage());
-    // ===== DEBUG TEMPORAL - FIN =====
-    file_put_contents(__DIR__ . '/../storage/logs/import_debug.log', "Insert exception: " . $e->getMessage() . " datos=" . print_r($datos, true) . "\n", FILE_APPEND);
-}
-            }
-            // ===== DEBUG TEMPORAL - INICIO =====
-error_log("=== RESUMEN IMPORTACIÓN ===");
-error_log("Insertados: $inserted, Omitidos: $skipped");
-// ===== DEBUG TEMPORAL - FIN =====
-
-            if (isset($tmpPathConfirm) && file_exists($tmpPathConfirm)) @unlink($tmpPathConfirm);
-            $this->sesion->setFlash('exito', "Importación completada. Insertados: {$inserted}. Omitidos: {$skipped}.");
-            $this->redireccionar('estudiantes');
-            return;
-        }
-
-        // Mostrar vista previa y botón confirmar
+        // Mostrar vista previa
         $data['titulo'] = 'Previsualización de importación';
         $data['rows'] = $rows;
         $data['tmp_path'] = $tmpPath;
@@ -404,6 +230,153 @@ error_log("Insertados: $inserted, Omitidos: $skipped");
         $data['id_seccion'] = $id_seccion;
         $data['monto'] = $monto;
         $this->vista->mostrar('estudiantes/importar_preview', $data);
+    }
+
+    /**
+     * Confirmar y guardar la importación de estudiantes
+     */
+    private function confirmarImportacion() {
+        $docente_id = $_POST['docente_id'] ?? null;
+        $id_seccion = $_POST['id_seccion'] ?? null;
+        $monto = $_POST['monto'] ?? null;
+        $tmpPathConfirm = $_POST['tmp_path'] ?? null;
+
+        if (!$tmpPathConfirm || !file_exists($tmpPathConfirm)) {
+            $this->sesion->setFlash('error', 'El archivo temporal no existe.');
+            $this->redireccionar('estudiantes/importarSalon');
+            return;
+        }
+
+        // Parsear archivo nuevamente desde el archivo temporal
+        $ext = strtolower(pathinfo($tmpPathConfirm, PATHINFO_EXTENSION));
+        $rowsConfirm = [];
+        $allowed = ['nombres','apellidos','dni','fecha_nacimiento','direccion','telefono','mencion'];
+
+        if (in_array($ext, ['xlsx','xls'])) {
+            try {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmpPathConfirm);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rowsData = $sheet->toArray(null, true, true, true);
+                $header = array_map(function($c){ return trim(strtolower($c)); }, array_values($rowsData[1]));
+                $rowKeys = array_keys($rowsData);
+                for ($i = 2; $i <= end($rowKeys); $i++) {
+                    if (!isset($rowsData[$i])) continue;
+                    $vals = array_values($rowsData[$i]);
+                    $row = [];
+                    foreach ($header as $j => $col) {
+                        if (in_array($col, $allowed)) {
+                            $row[$col] = isset($vals[$j]) ? trim($vals[$j]) : '';
+                        }
+                    }
+                    if (!empty($row['nombres']) && !empty($row['apellidos'])) $rowsConfirm[] = $row;
+                }
+            } catch (\Exception $e) {
+                @unlink($tmpPathConfirm);
+                $this->sesion->setFlash('error', 'Error al procesar archivo Excel.');
+                $this->redireccionar('estudiantes/importarSalon');
+                return;
+            }
+        } else {
+            $fh = fopen($tmpPathConfirm, 'r');
+            if (!$fh) {
+                @unlink($tmpPathConfirm);
+                $this->sesion->setFlash('error', 'No se puede leer el archivo temporal.');
+                $this->redireccionar('estudiantes/importarSalon');
+                return;
+            }
+            $header = fgetcsv($fh);
+            $cols = array_map(function($c){ return trim(strtolower($c)); }, $header ?: []);
+            while (($data = fgetcsv($fh)) !== false) {
+                $row = [];
+                foreach ($cols as $i => $col) {
+                    if (in_array($col, $allowed)) {
+                        $row[$col] = isset($data[$i]) ? trim($data[$i]) : '';
+                    }
+                }
+                if (!empty($row['nombres']) && !empty($row['apellidos'])) {
+                    $rowsConfirm[] = $row;
+                }
+            }
+            fclose($fh);
+        }
+
+        if (empty($rowsConfirm)) {
+            @unlink($tmpPathConfirm);
+            $this->sesion->setFlash('error', 'No hay datos para importar.');
+            $this->redireccionar('estudiantes/importarSalon');
+            return;
+        }
+
+        // Preparar monto
+        $monto_value = ($monto === null || $monto === '') ? 0.00 : floatval(str_replace(',', '.', $monto));
+
+        // Crear salón con docente
+        $cupo = count($rowsConfirm);
+        try {
+            $nuevoSalonId = $this->estudianteModel->crearSalonConDocente(
+                intval($id_seccion),
+                intval($docente_id),
+                $cupo
+            );
+        } catch (\Exception $e) {
+            @unlink($tmpPathConfirm);
+            $this->sesion->setFlash('error', 'Error al crear el salón: ' . $e->getMessage());
+            $this->redireccionar('estudiantes/importarSalon');
+            return;
+        }
+
+        if (!$nuevoSalonId) {
+            @unlink($tmpPathConfirm);
+            $this->sesion->setFlash('error', 'No se pudo crear el salón.');
+            $this->redireccionar('estudiantes/importarSalon');
+            return;
+        }
+
+        // Insertar cada estudiante
+        $inserted = 0;
+        $skipped = 0;
+        foreach ($rowsConfirm as $r) {
+            // Evitar duplicados por DNI
+            if (!empty($r['dni'])) {
+                $busq = $this->estudianteModel->buscar(['dni' => $r['dni']]);
+                if (!empty($busq)) {
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            $datos = [
+                'nombres' => $r['nombres'],
+                'apellidos' => $r['apellidos'],
+                'dni' => $r['dni'] ?? null,
+                'fecha_nacimiento' => $r['fecha_nacimiento'] ?? null,
+                'direccion' => $r['direccion'] ?? null,
+                'telefono' => $r['telefono'] ?? null,
+                'mencion' => $r['mencion'] ?? null,
+                'estado' => 'activo',
+                'id_salon' => $nuevoSalonId,
+                'monto' => $monto_value
+            ];
+
+            try {
+                $this->estudianteModel->insertar($datos);
+                $inserted++;
+            } catch (\Exception $e) {
+                error_log("Error insertando estudiante: " . $e->getMessage());
+            }
+        }
+
+        @unlink($tmpPathConfirm);
+        
+        if ($inserted > 0) {
+            $msg = "✅ Importación exitosa: {$inserted} estudiante(s) guardado(s).";
+            if ($skipped > 0) $msg .= " {$skipped} omitido(s) por DNI duplicado.";
+            $this->sesion->setFlash('exito', $msg);
+        } else {
+            $this->sesion->setFlash('error', '❌ No se pudo importar ningún estudiante.');
+        }
+        
+        $this->redireccionar('estudiantes');
     }
 
     public function guardar() {

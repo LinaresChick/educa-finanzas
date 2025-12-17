@@ -194,6 +194,34 @@
                     </div>
                 </div>
                 
+                <!-- Datos de Pago -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2">Datos de Pago</h5>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="monto" class="form-label">Monto de Pensión</label>
+                        <input type="number" step="0.01" class="form-control" id="monto" name="monto" value="<?php echo $estudiante['monto'] ?? '0.00'; ?>" placeholder="0.00">
+                        <div class="form-text">Monto mensual de pensión</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="fecha_vencimiento" class="form-label">Fecha de Vencimiento</label>
+                        <input type="date" class="form-control" id="fecha_vencimiento" name="fecha_vencimiento" value="<?php echo $estudiante['fecha_vencimiento'] ?? ''; ?>">
+                        <div class="form-text">Fecha límite de pago mensual</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="estado_pago" class="form-label">Estado de Pago</label>
+                        <select class="form-select" id="estado_pago" name="estado_pago">
+                            <option value="al_dia" <?php echo (isset($estudiante['estado_pago']) && $estudiante['estado_pago'] == 'al_dia') ? 'selected' : ''; ?>>Al Día</option>
+                            <option value="pendiente" <?php echo (isset($estudiante['estado_pago']) && $estudiante['estado_pago'] == 'pendiente') ? 'selected' : ''; ?>>Pendiente</option>
+                            <option value="atrasado" <?php echo (isset($estudiante['estado_pago']) && $estudiante['estado_pago'] == 'atrasado') ? 'selected' : ''; ?>>Atrasado</option>
+                        </select>
+                    </div>
+                </div>
+                
                 <!-- Datos de Acceso -->
                 <?php if (isset($estudiante['id_usuario']) && $estudiante['id_usuario']): ?>
                     <div class="row mb-4">

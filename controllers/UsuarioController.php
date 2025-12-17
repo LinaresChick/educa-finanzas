@@ -166,7 +166,8 @@ class UsuarioController extends BaseController
         $this->verificarPermisosAdministrativos();
         
         try {
-            $usuarios = $this->usuarioModel->obtenerTodos();
+            // Mostrar solo usuarios activos para que las bajas desaparezcan del listado
+            $usuarios = $this->usuarioModel->obtenerTodos(['*'], ['estado' => 'activo'], 'id_usuario ASC');
             $this->vista->mostrar('usuarios/listado', [
                 'usuarios' => $usuarios,
                 'titulo' => 'Gestión de Usuarios'

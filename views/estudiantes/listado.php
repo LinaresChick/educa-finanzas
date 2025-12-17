@@ -127,9 +127,13 @@ h1, h6 {
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Nombres y Apellidos</th>
+                                <th>Nombres</th>
+                                <th>Apellidos</th>
                                 <th>DNI</th>
-                                <th>Grado y Sección</th>
+                                <th>Salón</th>
+                                <th>Mención</th>
+                                <th>Monto</th>
+                                <th>Estado Pago</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -138,9 +142,29 @@ h1, h6 {
                             <?php foreach ($estudiantes as $estudiante): ?>
                                 <tr>
                                     <td><?php echo $estudiante['id_estudiante']; ?></td>
-                                    <td><?php echo $estudiante['nombre_completo']; ?></td>
+                                    <td><?php echo htmlspecialchars($estudiante['nombres'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($estudiante['apellidos'] ?? ''); ?></td>
                                     <td><?php echo $estudiante['dni'] ?? 'No registrado'; ?></td>
-                                    <td><?php echo $estudiante['grado'] ?? 'No asignado'; ?> - <?php echo $estudiante['seccion'] ?? ''; ?></td>
+                                    <td>
+                                        <?php 
+                                        if (!empty($estudiante['grado']) && !empty($estudiante['seccion'])) {
+                                            echo htmlspecialchars($estudiante['grado'] . ' - ' . $estudiante['seccion']);
+                                        } else {
+                                            echo 'No asignado';
+                                        }
+                                        ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($estudiante['mencion'] ?? '-'); ?></td>
+                                    <td><?php echo isset($estudiante['monto']) ? 'S/. ' . number_format($estudiante['monto'], 2) : '-'; ?></td>
+                                    <td>
+                                        <?php 
+                                        $estado_pago = $estudiante['estado_pago'] ?? 'pendiente';
+                                        $badge_class = $estado_pago === 'al_dia' ? 'success' : ($estado_pago === 'atrasado' ? 'danger' : 'warning');
+                                        ?>
+                                        <span class="badge badge-<?php echo $badge_class; ?>">
+                                            <?php echo ucfirst(str_replace('_', ' ', $estado_pago)); ?>
+                                        </span>
+                                    </td>
                                     <td>
                                         <span class="badge badge-<?php 
                                             echo $estudiante['estado'] === 'activo' ? 'success' : 

@@ -48,7 +48,7 @@
                 </table>
 
                 <div class="mt-3">
-                    <button type="submit" class="btn btn-success">Confirmar y Guardar</button>
+                    <button type="submit" class="btn btn-success">Subir datos</button>
                     <a href="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=importarSalon" class="btn btn-secondary">Cancelar</a>
                 </div>
             </form>
