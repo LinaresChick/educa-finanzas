@@ -23,6 +23,13 @@
                 <!-- === LOGIN === -->
                 <form method="post" action="index.php?controller=Auth&action=login" class="login__registre" id="login-in">
                     <h1 class="login__title">Iniciar Sesión</h1>
+                    
+                    <?php
+                    if (!isset($_SESSION['csrf_token'])) {
+                        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+                    }
+                    ?>
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
                     <div class="login__box">
                         <i class='bx bx-at login__icon'></i>
@@ -45,6 +52,8 @@
                 <!-- === SIGN UP === -->
                 <form method="post" action="index.php?controller=Auth&action=register" class="login__create none" id="login-up">
                     <h1 class="login__title">Crear Cuenta</h1>
+                    
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
                     <div class="login__box">
                         <i class='bx bx-user login__icon'></i>

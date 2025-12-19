@@ -444,6 +444,38 @@ class EstudianteModel extends Modelo {
     }
 
     /**
+     * Obtiene info de un salón por ID (incluye grado y sección)
+     */
+    public function obtenerSalonPorId($id_salon) {
+        $sql = "SELECT id_salon, id_grado, id_seccion FROM salones WHERE id_salon = :id_salon LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_salon', $id_salon, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Verifica si existe un estudiante con mismo nombre en el mismo grado y sección
+     */
+    public function existeNombreEnGradoSeccion($nombres, $apellidos, $id_grado, $id_seccion) {
+        $sql = "SELECT 1
+                FROM estudiantes e
+                INNER JOIN salones s ON e.id_salon = s.id_salon
+                WHERE LOWER(e.nombres) = LOWER(:nombres)
+                  AND LOWER(e.apellidos) = LOWER(:apellidos)
+                  AND s.id_grado = :id_grado
+                  AND s.id_seccion = :id_seccion
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':nombres', $nombres);
+        $stmt->bindValue(':apellidos', $apellidos);
+        $stmt->bindValue(':id_grado', $id_grado, PDO::PARAM_INT);
+        $stmt->bindValue(':id_seccion', $id_seccion, PDO::PARAM_INT);
+        $stmt->execute();
+        return (bool)$stmt->fetchColumn();
+    }
+
+    /**
      * Busca un salón activo por id_seccion (devuelve el primer salón activo)
      * @param int $id_seccion
      * @return array|false

@@ -5,6 +5,7 @@ error_log("=== EstudianteController CARGADO ===");
 require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../core/Sesion.php';
 require_once __DIR__ . '/../core/Vista.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../models/EstudianteModel.php';
 require_once __DIR__ . '/../models/UsuarioModel.php';
 require_once __DIR__ . '/../models/SeccionModel.php';
@@ -96,7 +97,10 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
      * Procesar archivo CSV subido y mostrar vista previa, o guardar tras confirmación
      */
     public function procesarImportacion() {
+        error_log("DEBUG: procesarImportacion INICIADA");
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("DEBUG: REQUEST_METHOD no es POST");
             $this->redireccionar('estudiantes');
             return;
         }
@@ -105,20 +109,25 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
         $id_seccion = $_POST['id_seccion'] ?? null;
         $monto = $_POST['monto'] ?? null;
 
+        error_log("DEBUG: POST data - docente_id=$docente_id, id_seccion=$id_seccion, monto=$monto");
+
         // PASO 2: Si viene confirmación, guardar estudiantes
         if (!empty($_POST['confirm']) && $_POST['confirm'] == '1') {
+            error_log("DEBUG: Confirmación detectada, llamando confirmarImportacion");
             $this->confirmarImportacion();
             return;
         }
 
         // PASO 1: Validar y mostrar preview
         if (empty($docente_id) || empty($id_seccion)) {
+            error_log("DEBUG: Falta docente_id o id_seccion");
             $this->sesion->setFlash('error', 'Debe seleccionar docente y sección.');
             $this->redireccionar('estudiantes/importarSalon');
             return;
         }
 
         if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+            error_log("DEBUG: Archivo no válido. FILES: " . print_r($_FILES, true));
             $this->sesion->setFlash('error', 'Debe subir un archivo válido.');
             $this->redireccionar('estudiantes/importarSalon');
             return;
@@ -131,19 +140,34 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
         
         $tmpPath = $tmpDir . '/' . time() . '_' . basename($uploaded['name']);
         if (!move_uploaded_file($uploaded['tmp_name'], $tmpPath)) {
+            error_log("DEBUG: No se pudo mover el archivo a: $tmpPath");
             $this->sesion->setFlash('error', 'No se pudo mover el archivo subido.');
             $this->redireccionar('estudiantes/importarSalon');
             return;
         }
+        
+        error_log("DEBUG: Archivo movido a: $tmpPath");
 
         // Parsear archivo (CSV o Excel)
         $ext = strtolower(pathinfo($tmpPath, PATHINFO_EXTENSION));
+        error_log("DEBUG: Extensión detectada: $ext");
+        
         $rows = [];
         $allowed = ['nombres','apellidos','dni','fecha_nacimiento','direccion','telefono','mencion'];
 
-        if (in_array($ext, ['xlsx','xls'])) {
+        if (in_array($ext, ['xlsx','xls','xlsm','xlsb','ods'])) {
+            error_log("DEBUG: Procesando como archivo Excel");
+            
+            if (!class_exists('ZipArchive')) {
+                @unlink($tmpPath);
+                error_log("DEBUG: ZipArchive no está habilitado");
+                $this->sesion->setFlash('error', 'Debe habilitar la extensión ZipArchive en PHP (php.ini) para leer archivos Excel.');
+                $this->redireccionar('estudiantes/importarSalon');
+                return;
+            }
             if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
                 @unlink($tmpPath);
+                error_log("DEBUG: PhpSpreadsheet no está instalado");
                 $this->sesion->setFlash('error', 'Para importar archivos Excel, instale phpoffice/phpspreadsheet.');
                 $this->redireccionar('estudiantes/importarSalon');
                 return;
@@ -153,47 +177,77 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
                 $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmpPath);
                 $sheet = $spreadsheet->getActiveSheet();
                 $rowsData = $sheet->toArray(null, true, true, true);
+                
+                error_log("DEBUG: Datos Excel leídos. Filas totales: " . count($rowsData));
+                error_log("DEBUG: Datos Excel (primeras 3 filas): " . print_r(array_slice($rowsData, 0, 3), true));
+                
+                // Filtrar filas vacías
+                $rowsData = array_filter($rowsData, function($row) {
+                    return !empty(array_filter($row, function($cell) {
+                        return $cell !== null && $cell !== '';
+                    }));
+                });
+                
+                error_log("DEBUG: Después de filtrar filas vacías: " . count($rowsData));
+                
                 if (empty($rowsData) || count($rowsData) < 2) {
                     @unlink($tmpPath);
+                    error_log("DEBUG: No hay suficientes filas en el Excel");
                     $this->sesion->setFlash('error', 'El archivo Excel está vacío o no contiene filas válidas.');
                     $this->redireccionar('estudiantes/importarSalon');
                     return;
                 }
 
-                // header is first row
-                $header = array_map(function($c){ return trim(strtolower($c)); }, array_values($rowsData[1]));
+                // Obtener encabezados de la primera fila
+                $rowsArray = array_values($rowsData);
+                $header = array_map(function($c){ 
+                    return trim(strtolower(preg_replace('/\s+/', '', $c))); 
+                }, array_values($rowsArray[0]));
+                
+                error_log("DEBUG: Header normalizado: " . print_r($header, true));
+                
                 // build rows starting from row 2
-                $rowKeys = array_keys($rowsData);
-                for ($i = 2; $i <= end($rowKeys); $i++) {
-                    if (!isset($rowsData[$i])) continue;
-                    $vals = array_values($rowsData[$i]);
+                for ($i = 1; $i < count($rowsArray); $i++) {
+                    $vals = array_values($rowsArray[$i]);
                     $row = [];
                     foreach ($header as $j => $col) {
                         if (in_array($col, $allowed)) {
                             $row[$col] = isset($vals[$j]) ? trim($vals[$j]) : '';
                         }
                     }
-                    if (!empty($row['nombres']) && !empty($row['apellidos'])) $rows[] = $row;
+                    if (!empty($row['nombres']) && !empty($row['apellidos'])) {
+                        $rows[] = $row;
+                    }
                 }
+                
+                error_log("DEBUG: Filas procesadas del Excel: " . count($rows));
+                
             } catch (\Exception $e) {
                 @unlink($tmpPath);
+                error_log("DEBUG: Excepción Excel: " . $e->getMessage());
                 $this->sesion->setFlash('error', 'Error al leer el archivo Excel: ' . $e->getMessage());
                 $this->redireccionar('estudiantes/importarSalon');
                 return;
             }
 
         } else {
+            error_log("DEBUG: Procesando como archivo CSV");
+            
             // CSV parsing
             $fh = fopen($tmpPath, 'r');
             if (!$fh) {
+                error_log("DEBUG: No se puede abrir el archivo CSV");
                 $this->sesion->setFlash('error', 'No se puede leer el archivo subido.');
                 $this->redireccionar('estudiantes/importarSalon');
                 return;
             }
 
             $header = fgetcsv($fh);
+            error_log("DEBUG: Header CSV: " . print_r($header, true));
+            
             if (!$header) {
                 fclose($fh);
+                error_log("DEBUG: Header CSV vacío");
                 $this->sesion->setFlash('error', 'El archivo CSV está vacío o tiene formato incorrecto.');
                 $this->redireccionar('estudiantes/importarSalon');
                 return;
@@ -201,6 +255,8 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
 
             // Normalizar encabezados
             $cols = array_map(function($c){ return trim(strtolower($c)); }, $header);
+            error_log("DEBUG: Cols normalizadas: " . print_r($cols, true));
+            
             while (($data = fgetcsv($fh)) !== false) {
                 $row = [];
                 foreach ($cols as $i => $col) {
@@ -213,16 +269,22 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
                 }
             }
             fclose($fh);
+            
+            error_log("DEBUG: Filas procesadas del CSV: " . count($rows));
         }
 
+        error_log("DEBUG: Total de filas válidas encontradas: " . count($rows));
+        
         if (empty($rows)) {
             @unlink($tmpPath);
+            error_log("DEBUG: No hay filas válidas para mostrar");
             $this->sesion->setFlash('error', 'No se encontraron filas válidas (se requieren "nombres" y "apellidos").');
             $this->redireccionar('estudiantes/importarSalon');
             return;
         }
 
         // Mostrar vista previa
+        error_log("DEBUG: Mostrando vista previa con " . count($rows) . " filas");
         $data['titulo'] = 'Previsualización de importación';
         $data['rows'] = $rows;
         $data['tmp_path'] = $tmpPath;
@@ -252,16 +314,32 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
         $rowsConfirm = [];
         $allowed = ['nombres','apellidos','dni','fecha_nacimiento','direccion','telefono','mencion'];
 
-        if (in_array($ext, ['xlsx','xls'])) {
+        if (in_array($ext, ['xlsx','xls','xlsm','xlsb','ods'])) {
+            if (!class_exists('ZipArchive')) {
+                @unlink($tmpPathConfirm);
+                $this->sesion->setFlash('error', 'Debe habilitar la extensión ZipArchive en PHP (php.ini) para leer archivos Excel.');
+                $this->redireccionar('estudiantes/importarSalon');
+                return;
+            }
             try {
                 $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($tmpPathConfirm);
                 $sheet = $spreadsheet->getActiveSheet();
                 $rowsData = $sheet->toArray(null, true, true, true);
-                $header = array_map(function($c){ return trim(strtolower($c)); }, array_values($rowsData[1]));
-                $rowKeys = array_keys($rowsData);
-                for ($i = 2; $i <= end($rowKeys); $i++) {
-                    if (!isset($rowsData[$i])) continue;
-                    $vals = array_values($rowsData[$i]);
+                
+                // Filtrar filas vacías
+                $rowsData = array_filter($rowsData, function($row) {
+                    return !empty(array_filter($row, function($cell) {
+                        return $cell !== null && $cell !== '';
+                    }));
+                });
+                
+                $rowsArray = array_values($rowsData);
+                $header = array_map(function($c){ 
+                    return trim(strtolower(preg_replace('/\s+/', '', $c))); 
+                }, array_values($rowsArray[0]));
+                
+                for ($i = 1; $i < count($rowsArray); $i++) {
+                    $vals = array_values($rowsArray[$i]);
                     $row = [];
                     foreach ($header as $j => $col) {
                         if (in_array($col, $allowed)) {
@@ -334,17 +412,8 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
 
         // Insertar cada estudiante
         $inserted = 0;
-        $skipped = 0;
+        $errors = [];
         foreach ($rowsConfirm as $r) {
-            // Evitar duplicados por DNI
-            if (!empty($r['dni'])) {
-                $busq = $this->estudianteModel->buscar(['dni' => $r['dni']]);
-                if (!empty($busq)) {
-                    $skipped++;
-                    continue;
-                }
-            }
-
             $datos = [
                 'nombres' => $r['nombres'],
                 'apellidos' => $r['apellidos'],
@@ -363,15 +432,22 @@ if (in_array($accion, ['procesarImportacion', 'importarSalon'])) {
                 $inserted++;
             } catch (\Exception $e) {
                 error_log("Error insertando estudiante: " . $e->getMessage());
+                $errors[] = "No se guardó '" . ($r['nombres'] ?? '') . " " . ($r['apellidos'] ?? '') . "': " . $e->getMessage();
             }
         }
 
         @unlink($tmpPathConfirm);
+        error_log("DEBUG confirmarImportacion: inserted={$inserted}, errores=" . count($errors) . ", total=" . count($rowsConfirm));
         
         if ($inserted > 0) {
             $msg = "✅ Importación exitosa: {$inserted} estudiante(s) guardado(s).";
-            if ($skipped > 0) $msg .= " {$skipped} omitido(s) por DNI duplicado.";
+            if (!empty($errors)) {
+                $msg .= " " . count($errors) . " no se guardaron. Ejemplo: " . $errors[0];
+            }
             $this->sesion->setFlash('exito', $msg);
+        } elseif (!empty($errors)) {
+            $detalle = implode(' | ', array_slice($errors, 0, 3));
+            $this->sesion->setFlash('error', "❌ No se insertó ningún estudiante. Motivos: " . $detalle);
         } else {
             $this->sesion->setFlash('error', '❌ No se pudo importar ningún estudiante.');
         }

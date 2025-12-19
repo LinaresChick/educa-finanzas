@@ -81,6 +81,26 @@ class SalonModel extends Modelo {
         return $stmt->fetchAll();
     }
     /**
+     * Obtener el salón asignado a un docente, incluyendo grado/sección/nivel
+     */
+    public function obtenerPorDocente($idDocente) {
+        $sql = "SELECT sal.id_salon,
+                       g.nombre AS grado,
+                       s.nombre AS seccion,
+                       g.nivel  AS nivel
+                FROM salones sal
+                INNER JOIN grados g   ON sal.id_grado = g.id_grado
+                INNER JOIN secciones s ON sal.id_seccion = s.id_seccion
+                WHERE sal.id_docente = :id_docente
+                ORDER BY sal.id_salon ASC
+                LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_docente', $idDocente, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+    /**
  * Obtener salones que todavía NO tienen docente asignado
  */
 public function obtenerDisponibles() {
@@ -119,6 +139,27 @@ public function getSalonesDisponibles() {
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+    /**
+     * Liberar cualquier salón actualmente asignado al docente
+     */
+    public function liberarDocenteDeSalones($idDocente) {
+        $sql = "UPDATE salones SET id_docente = NULL WHERE id_docente = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id', $idDocente, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    /**
+     * Asignar el docente a un salón específico
+     */
+    public function asignarDocenteASalon($idSalon, $idDocente) {
+        $sql = "UPDATE salones SET id_docente = :id_docente WHERE id_salon = :id_salon";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':id_docente', $idDocente, PDO::PARAM_INT);
+        $stmt->bindValue(':id_salon', $idSalon, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
 
 
 

@@ -10,6 +10,16 @@ class DocenteModel extends Modelo {
 
     public function __construct() {
         parent::__construct('docentes', 'id_docente');
+        $this->allowedFields = [
+            'id_usuario',
+            'nombres',
+            'apellidos',
+            'dni',
+            'telefono',
+            'correo',
+            'especialidad',
+            'estado'
+        ];
     }
 
     /**
@@ -61,20 +71,15 @@ public function obtenerDocentesConSalon()
             d.nombres,
             d.apellidos,
             d.dni,
+                d.telefono,
             d.correo,
             d.estado,
-
-            s.id_salon,
-            g.nombre AS grado,
-            g.nivel,
-            sec.nombre AS seccion
-
+            GROUP_CONCAT(DISTINCT CONCAT(g.nombre, ' - ', sec.nombre, ' (', g.nivel, ')') SEPARATOR ', ') AS salones_asignados
         FROM docentes d
         LEFT JOIN salones s ON s.id_docente = d.id_docente
         LEFT JOIN grados g ON g.id_grado = s.id_grado
         LEFT JOIN secciones sec ON sec.id_seccion = s.id_seccion
-
-        WHERE d.estado = 'activo'
+        GROUP BY d.id_docente
         ORDER BY d.apellidos, d.nombres
     ";
 

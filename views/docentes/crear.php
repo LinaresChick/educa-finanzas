@@ -1,5 +1,3 @@
-<?php require_once VIEWS_PATH . '/templates/header.php'; ?>
-
 <style>
     .card {
         border: none;

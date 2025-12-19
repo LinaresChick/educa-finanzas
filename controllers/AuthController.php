@@ -14,12 +14,25 @@ class AuthController extends BaseController {
         $this->usuarioModel = new UsuarioModel();
     }
 
+    // Página inicial con datos de la institución y acceso al login
+    public function landing() {
+        $this->render("auth/landing");
+    }
+
     
     public function login() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Validar token CSRF
+            if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || 
+                !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+                $error = "Token de seguridad inválido. Intente nuevamente.";
+                $this->render("auth/login", compact('error'));
+                return;
+            }
+            
             $correo = $_POST['correo'] ?? '';
             $clave = $_POST['clave'] ?? '';
 
@@ -67,6 +80,13 @@ class AuthController extends BaseController {
     public function register() {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Validar token CSRF
+        if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || 
+            !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+            $error = "Token de seguridad inválido. Intente nuevamente.";
+            $this->render('auth/login', compact('error'));
+            return;
+        }
 
         $nombre    = $_POST['usuario'] ?? '';
         $correo    = $_POST['correo'] ?? '';

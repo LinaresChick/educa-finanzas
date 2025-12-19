@@ -10,7 +10,7 @@ class Router {
         // Si no hay URL desde .htaccess, usar los parámetros tradicionales
         if (empty($url)) {
             $controller = $_GET['controller'] ?? 'Auth';
-            $action = $_GET['action'] ?? 'login';
+            $action = $_GET['action'] ?? 'landing';
             $params = $_GET['id'] ?? null;
         } else {
             // Parsear la URL amigable: /controller/action/param

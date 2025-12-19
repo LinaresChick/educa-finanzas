@@ -1,85 +1,53 @@
-
-<?php
-require_once __DIR__ . '/../templates/header.php';
-
-?>
-
-
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Lista de Docentes</h2>
-        <a href="index.php?controller=Docente&action=crear" class="btn btn-primary">
-            Nuevo Docente
-        </a>
-    </div>
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Listado de Docentes</h2>
+		<a href="index.php?controller=Docente&action=crear" class="btn btn-primary">Nuevo Docente</a>
+	</div>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Docente</th>
-                <th>DNI</th>
-                <th>Grado / Sección</th>
-                <th>Correo</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            <?php if (!empty($docentes)): ?>
-                <?php foreach ($docentes as $docente): ?>
-                    <tr>
-                        <!-- ID -->
-                        <td><?= $docente['id_docente'] ?></td>
-
-                        <!-- Nombre Completo -->
-                        <td><?= $docente['nombres'] . ' ' . $docente['apellidos'] ?></td>
-
-                        <!-- DNI -->
-                        <td><?= $docente['dni'] ?: '-' ?></td>
-                        <td>
-    <?php if ($docente['grado']): ?>
-        <?= $docente['grado'] ?> - <?= $docente['seccion'] ?>
-        <br><small class="text-muted"><?= $docente['nivel'] ?></small>
-    <?php else: ?>
-        <span class="text-muted">Sin asignación</span>
-    <?php endif; ?>
-</td>
-
-
-                        <!-- Correo -->
-                        <td><?= $docente['correo'] ?: '-' ?></td>
-
-
-
-                        <!-- Acciones -->
-                        <td>
-                            <a href="index.php?controller=Docente&action=ver&id=<?= $docente['id_docente'] ?>" 
-                               class="btn btn-info btn-sm">Ver</a>
-
-                            <a href="index.php?controller=Docente&action=editar&id=<?= $docente['id_docente'] ?>" 
-                               class="btn btn-warning btn-sm">Editar</a>
-
-                            <a href="index.php?controller=Docente&action=eliminar&id=<?= $docente['id_docente'] ?>" 
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('¿Seguro de eliminar este docente?')">
-                                Eliminar
-                            </a>
-                        </td>
-                        
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="6" class="text-center">
-                        No hay docentes registrados.
-                    </td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-
-    </table>
+	<?php if (!empty($docentes)): ?>
+		<div class="table-responsive">
+			<table class="table table-striped table-hover align-middle">
+				<thead>
+					<tr>
+						<th>Nombre</th>
+						<th>DNI</th>
+						<th>Teléfono</th>
+						<th>Correo</th>
+						<th>Estado</th>
+						<th>Salones Asignados</th>
+						<th style="width: 220px;">Acciones</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php foreach ($docentes as $d): ?>
+					<tr>
+						<td>
+							<?= htmlspecialchars(($d['apellidos'] ?? '') . ', ' . ($d['nombres'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+						</td>
+						<td><?= htmlspecialchars($d['dni'] ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
+						<td><?= htmlspecialchars($d['telefono'] ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
+						<td><?= htmlspecialchars($d['correo'] ?? '—', ENT_QUOTES, 'UTF-8') ?></td>
+						<td>
+							<?php $estado = $d['estado'] ?? '—'; ?>
+							<span class="badge bg-<?= $estado === 'activo' ? 'success' : 'secondary' ?>">
+								<?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?>
+							</span>
+						</td>
+						<td>
+							<?= htmlspecialchars($d['salones_asignados'] ?? '—', ENT_QUOTES, 'UTF-8') ?>
+						</td>
+						<td>
+							<a class="btn btn-sm btn-info" href="index.php?controller=Docente&action=ver&id=<?= urlencode($d['id_docente']) ?>">Ver</a>
+							<a class="btn btn-sm btn-warning" href="index.php?controller=Docente&action=editar&id=<?= urlencode($d['id_docente']) ?>">Editar</a>
+							<a class="btn btn-sm btn-outline-danger" href="index.php?controller=Docente&action=eliminar&id=<?= urlencode($d['id_docente']) ?>"
+							   onclick="return confirm('¿Desea marcar como inactivo este docente?');">Eliminar</a>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
+	<?php else: ?>
+		<div class="alert alert-info">No hay docentes registrados aún.</div>
+	<?php endif; ?>
 </div>
-
-<?php require_once __DIR__ . '/../templates/footer.php'; ?>

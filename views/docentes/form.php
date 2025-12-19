@@ -48,17 +48,24 @@
 
 <div class="col-md-6">
     <label>Salón Asignado</label>
+    <?php $listaSalones = $salones ?? ($salonesDisponibles ?? []); ?>
     <select name="id_salon" class="form-control" required>
         <option value="">Seleccione un salón...</option>
 
-        <?php foreach ($salonesDisponibles as $sal): ?>
-            <option value="<?= $sal['id_salon'] ?>">
-                <?= $sal['grado_nivel'] ?> - <?= $sal['grado_nombre'] ?> / <?= $sal['seccion_nombre'] ?>
+        <?php foreach ($listaSalones as $sal): ?>
+            <?php 
+                $gradoNivel    = $sal['grado_nivel']   ?? ($sal['grado']   ?? '');
+                $gradoNombre   = $sal['grado_nombre']  ?? '';
+                $seccionNombre = $sal['seccion_nombre']?? ($sal['seccion'] ?? '');
+                $selected      = (isset($docente['id_salon']) && $docente['id_salon'] == $sal['id_salon']) ? 'selected' : '';
+            ?>
+            <option value="<?= $sal['id_salon'] ?>" <?= $selected ?> >
+                <?= $gradoNivel ?> - <?= $gradoNombre ?> / <?= $seccionNombre ?>
             </option>
         <?php endforeach; ?>
     </select>
 
-    <?php if (empty($salonesDisponibles)): ?>
+    <?php if (empty($listaSalones)): ?>
         <small class="text-danger">No hay salones disponibles sin docente.</small>
     <?php endif; ?>
 </div>

@@ -48,7 +48,7 @@
                     </div>
                     <div class="col-md-8">
                         <label for="archivo">Archivo (CSV o Excel) *</label>
-                        <input type="file" class="form-control" name="archivo" id="archivo" accept=".csv,.xlsx,.xls" required>
+                        <input type="file" class="form-control" name="archivo" id="archivo" accept=".csv,.xlsx,.xls,.xlsm,.xlsb,.ods" required>
                     </div>
                 </div>
 

@@ -77,5 +77,25 @@ public function usuarioAutenticado() {
     public function estaLogueado() {
         return isset($_SESSION['usuario']);
     }
+
+    /**
+     * Genera un token CSRF y lo almacena en la sesión
+     */
+    public function generarTokenCSRF() {
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    /**
+     * Valida un token CSRF
+     */
+    public function validarTokenCSRF($token) {
+        if (!isset($_SESSION['csrf_token'])) {
+            return false;
+        }
+        return hash_equals($_SESSION['csrf_token'], $token);
+    }
 }
 ?>

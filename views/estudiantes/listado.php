@@ -33,7 +33,7 @@ h1, h6 {
 .btn-primary {
   background: linear-gradient(90deg, var(--verde) 0%, var(--amarillo) 100%);
   border: none;
-  color: #fff;
+  color: #ffffffff;
   font-weight: 600;
   transition: transform 0.2s ease;
 }
@@ -50,7 +50,7 @@ h1, h6 {
 }
 .table th {
   background: var(--verde);
-  color: white;
+  color: black;
   text-align: center;
 }
 .table td {
@@ -106,15 +106,7 @@ h1, h6 {
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Lista de Estudiantes</h6>
-            <div class="d-flex">
-                <!-- ✅ CORREGIDO -->
-                <form action="<?php echo BASE_URL; ?>/index.php?controller=Estudiante&action=buscar" method="get" class="d-flex">
-                    <input type="text" name="termino" class="form-control" placeholder="Buscar estudiante" required>
-                    <button type="submit" class="btn btn-outline-primary ml-2">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
-            </div>
+            
         </div>
         <div class="card-body">
             <?php if (empty($estudiantes)): ?>

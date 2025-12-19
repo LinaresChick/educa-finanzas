@@ -6,6 +6,49 @@ require_once __DIR__ . '/../templates/header.php';
 
 ?>
 
+<style>
+    .btn-primary {
+        background: linear-gradient(90deg, #00ff5e, #00aaff);
+        border: none;
+        color: white;
+        font-weight: 600;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #00cc66, #0088cc);
+        transform: translateY(-2px);
+    }
+    .btn-success {
+        background: linear-gradient(90deg, #00ff5e, #00dd88);
+        border: none;
+    }
+    .btn-success:hover {
+        background: linear-gradient(90deg, #00cc66, #00bb77);
+    }
+    .btn-info {
+        background: #00aaff;
+        border: none;
+    }
+    .btn-info:hover {
+        background: #0088cc;
+    }
+    .card-header {
+        background: linear-gradient(90deg, #00ff5e, #00aaff);
+        color: white;
+    }
+    .section-title {
+        color: #00aa66;
+    }
+    .thead-dark {
+        background: linear-gradient(90deg, #00cc66, #0088cc);
+        color: white;
+    }
+    .alert-success {
+        background-color: #d4f4dd;
+        border-color: #00cc66;
+        color: #006633;
+    }
+</style>
+
 <div class="main-container">
     <div class="content-header">
         <div class="d-flex justify-content-between align-items-center mb-4">
