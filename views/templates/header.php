@@ -38,7 +38,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="index.php?controller=Panel&action=index">
-            <img class="brand-logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPR6X-Y9clrkN6XY9AtX6lRof4SAJkL1JZNg&s" alt="Innova Schools Logo">
+            <img class="brand-logo" src="/educa-finanzas/public/img/image.png" alt="Innova Schools Logo">
             <span class="ms-2 brand-text"> INSTITUCIÓN EDUCATIVA PARTICULAR INDEPENDENCIA</span>
         </a>
 

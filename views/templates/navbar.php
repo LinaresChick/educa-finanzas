@@ -7,7 +7,7 @@
         </button>
 
         <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPR6X-Y9clrkN6XY9AtX6lRof4SAJkL1JZNg&s" alt="Logo">
+            <img src="/educa-finanzas/public/img/image.png" alt="Logo">
             INSTITUCIÓN EDUCATIVA PARTICULAR INDEPENDENCIA
         </a>
 
@@ -16,12 +16,8 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarMain">
-            <ul class="navbar-nav me-auto">
-                <!-- Los elementos del menú superior se mantienen aquí -->
-            </ul>
+            <ul class="navbar-nav me-auto"></ul>
 
-            <!-- Perfil Usuario -->
-            <!-- Perfil Usuario -->
 <?php if (isset($_SESSION['usuario'])): ?>
 <div class="dropdown ms-3">
   <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -68,7 +64,7 @@
       </a>
     </li>
 
-    <?php if (isset($_SESSION['usuario']) && in_array(strtolower($_SESSION['usuario']['rol']), array_map('strtolower', ['Superadmin', 'Administrador', 'Colaborador', 'Secretario', 'Contador']))): ?>
+<?php if (isset($_SESSION['usuario']) && in_array(strtolower($_SESSION['usuario']['rol']), array_map('strtolower', ['Superadmin','Administrador','Colaborador','Secretario','Contador']))): ?>
     <li class="sidebar-item">
       <a href="index.php?controller=Estudiante&action=index">
         <i class="fas fa-user-graduate text-success"></i>
@@ -82,9 +78,9 @@
         <span>Pagos</span>
       </a>
     </li>
-    <?php endif; ?>
+<?php endif; ?>
 
-    <?php if (isset($_SESSION['usuario']) && in_array(strtolower($_SESSION['usuario']['rol']), array_map('strtolower', ['Superadmin', 'Administrador', 'Secretario', 'Contador']))): ?>
+<?php if (isset($_SESSION['usuario']) && in_array(strtolower($_SESSION['usuario']['rol']), array_map('strtolower', ['Superadmin','Administrador','Secretario','Contador']))): ?>
     <li class="sidebar-item has-submenu">
       <a href="#" class="submenu-toggle">
         <i class="fas fa-cog text-success"></i>
@@ -104,158 +100,84 @@
         </li>
       </ul>
     </li>
-    <?php endif; ?>
+<?php endif; ?>
   </ul>
 </div>
 
-<!-- 🌿 Estilos Modernos -->
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: "Poppins", sans-serif; background: #bced72ff; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Poppins",sans-serif;background:#bced72ff;overflow-x:hidden}
 
 /* NAVBAR */
-.main-navbar {
-  background: linear-gradient(90deg, #2e7d32, #cddc39);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+.main-navbar{
+  background:linear-gradient(90deg,#2e7d32,#cddc39);
+  box-shadow:0 3px 10px rgba(0,0,0,.2)
 }
 
-.navbar-brand img {
-  width: 42px;
-  height: 42px;
-  margin-right: 10px;
-  border-radius: 50%;
-  border: 2px solid #fff;
+.navbar-brand img{
+  width:42px;height:42px;margin-right:10px;border-radius:50%;border:2px solid #fff
 }
 
-.user-avatar {
-  width: 35px;
-  height: 35px;
-  background-color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  font-weight: bold;
-  color: #2e7d32;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+.user-avatar{
+  width:35px;height:35px;background:#fff;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:bold;color:#2e7d32
 }
 
 /* SIDEBAR */
-.sidebar {
-  position: fixed;
-  left: -280px;
-  top: 0;
-  width: 280px;
-  height: 100vh;
-  background: #84e714ff;
-  box-shadow: 3px 0 8px rgba(0,0,0,0.1);
-  transition: left 0.3s ease;
-  z-index: 1040;
-  padding-top: 60px;
-  border-right: 4px solid #cddc39;
+.sidebar{
+  position:fixed;left:-280px;top:0;width:280px;height:100vh;
+  background:#84e714ff;transition:left .3s;z-index:1040;
+  padding-top:60px;border-right:4px solid #cddc39
+}
+.sidebar.active{left:0}
+
+.sidebar-header{
+  padding:15px 20px;border-bottom:2px solid #e6ee9c;
+  display:flex;justify-content:space-between;align-items:center
 }
 
-.sidebar.active { left: 0; }
-
-.sidebar-header {
-  padding: 15px 20px;
-  border-bottom: 2px solid #e6ee9c;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #2e7d32;
-  font-weight: 600;
+.sidebar-item a{
+  display:flex;align-items:center;padding:14px 20px;
+  color:#333;text-decoration:none;font-weight:500
 }
+.sidebar-item a:hover{background:#f1f8e9;color:#2e7d32}
 
-.sidebar-menu { list-style: none; margin: 0; padding: 0; }
-.sidebar-item { border-bottom: 1px solid #f1f8e9; }
+.submenu{display:none;background:#f9fbe7}
+.has-submenu.open .submenu{display:block}
+.submenu li a{padding-left:50px}
 
-.sidebar-item a {
-  display: flex;
-  align-items: center;
-  padding: 14px 20px;
-  color: #333;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
+.main-content.shifted{margin-left:280px}
+
+/* ===== RESPONSIVE (AÑADIDO, NO MODIFICA NADA) ===== */
+@media(max-width:768px){
+  .sidebar{width:260px;left:-260px}
+  .sidebar.active{left:0}
+  .main-content.shifted{margin-left:0}
+  .navbar-brand{font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #sidebarToggle{font-size:1.5rem;padding:8px}
 }
-
-.sidebar-item a:hover {
-  background: #f1f8e9;
-  color: #2e7d32;
-  border-left: 4px solid #cddc39;
-}
-
-.sidebar-item a.active {
-  background: #e6ee9c;
-  color: #1b5e20;
-  border-left: 4px solid #2e7d32;
-  font-weight: 600;
-}
-
-.sidebar-item i {
-  margin-right: 10px;
-  width: 20px;
-  text-align: center;
-}
-
-.submenu { list-style: none; padding: 0; margin: 0; background: #f9fbe7; display: none; }
-.submenu li a { padding-left: 50px; }
-
-.has-submenu > a { position: relative; }
-.submenu-icon {
-  position: absolute;
-  right: 20px;
-  transition: transform 0.3s ease;
-}
-
-.has-submenu.open .submenu-icon { transform: rotate(180deg); }
-.has-submenu.open .submenu { display: block; }
-
-#sidebarToggle { color: white; border: none; padding: 5px; font-size: 1.2rem; }
-#sidebarClose { color: #2e7d32; font-size: 1.2rem; }
-
-.main-content { transition: margin-left 0.3s ease; }
-.main-content.shifted { margin-left: 280px; }
 </style>
 
-<!-- Script -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const sidebarToggle = document.getElementById('sidebarToggle');
-  const sidebarClose = document.getElementById('sidebarClose');
-  const sidebar = document.getElementById('sidebar');
-  const mainContent = document.querySelector('.main-content');
-  const submenuToggles = document.querySelectorAll('.submenu-toggle');
+document.addEventListener('DOMContentLoaded',()=>{
+  const t=document.getElementById('sidebarToggle'),
+        c=document.getElementById('sidebarClose'),
+        s=document.getElementById('sidebar'),
+        m=document.querySelector('.main-content'),
+        subs=document.querySelectorAll('.submenu-toggle');
 
-  // Abrir/cerrar menú lateral
-  sidebarToggle.addEventListener('click', function() {
-    sidebar.classList.toggle('active');
-    if (mainContent) mainContent.classList.toggle('shifted');
-  });
+  t.onclick=()=>{s.classList.toggle('active');m?.classList.toggle('shifted')}
+  c.onclick=()=>{s.classList.remove('active');m?.classList.remove('shifted')}
 
-  sidebarClose.addEventListener('click', function() {
-    sidebar.classList.remove('active');
-    if (mainContent) mainContent.classList.remove('shifted');
-  });
-
-  // Cerrar al hacer clic fuera
-  document.addEventListener('click', function(e) {
-    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && sidebar.classList.contains('active')) {
-      sidebar.classList.remove('active');
-      if (mainContent) mainContent.classList.remove('shifted');
+  document.onclick=e=>{
+    if(!s.contains(e.target)&&!t.contains(e.target)&&s.classList.contains('active')){
+      s.classList.remove('active');m?.classList.remove('shifted')
     }
-  });
+  }
 
-  // Submenús
-  submenuToggles.forEach(toggle => {
-    toggle.addEventListener('click', function(e) {
-      e.preventDefault();
-      const parent = this.closest('.has-submenu');
-      parent.classList.toggle('open');
-    });
-  });
-});
+  subs.forEach(x=>x.onclick=e=>{
+    e.preventDefault();x.closest('.has-submenu').classList.toggle('open')
+  })
+})
 </script>

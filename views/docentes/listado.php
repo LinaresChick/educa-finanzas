@@ -1,3 +1,97 @@
+<style>
+/* ====== RESPONSIVE MULTIPLATAFORMA SIN TOCAR HTML ====== */
+
+/* Ajustes generales */
+.table td, .table th {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Botones de acciones alineados */
+.table td:last-child {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Tablets (≤ 992px) */
+@media (max-width: 992px) {
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    .btn {
+        font-size: 0.85rem;
+    }
+}
+
+/* Celulares (≤ 768px) */
+@media (max-width: 768px) {
+
+    /* El contenedor se adapta mejor */
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* Tabla en modo tarjetas */
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+        width: 100%;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tr {
+        background: #fff;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        padding: 10px;
+    }
+
+    td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border: none;
+        border-bottom: 1px solid #eee;
+        font-size: 0.9rem;
+    }
+
+    td:last-child {
+        border-bottom: none;
+        justify-content: flex-start;
+    }
+
+    /* Etiquetas automáticas */
+    td:nth-child(1)::before { content: "Nombre"; font-weight: bold; }
+    td:nth-child(2)::before { content: "DNI"; font-weight: bold; }
+    td:nth-child(3)::before { content: "Teléfono"; font-weight: bold; }
+    td:nth-child(4)::before { content: "Correo"; font-weight: bold; }
+    td:nth-child(5)::before { content: "Estado"; font-weight: bold; }
+    td:nth-child(6)::before { content: "Salones"; font-weight: bold; }
+    td:nth-child(7)::before { content: "Acciones"; font-weight: bold; }
+
+    /* Botones en columna */
+    td:last-child {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+
 <div class="container mt-4">
 	<div class="d-flex justify-content-between align-items-center mb-3">
 		<h2 class="mb-0">Listado de Docentes</h2>

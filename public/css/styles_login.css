@@ -1,299 +1,191 @@
-/*===== GOOGLE FONTS =====*/
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/*===== VARIABLES CSS =====*/
-:root {
-  --first-color: #a3f527;
-  --first-color-dark: #5a8b0f;
-  --first-color-light: #92d817;
-  --first-color-lighten: #f4ffea;
-
-  --body-font: "Poppins", sans-serif;
-  --h1-font-size: 1.7rem;
-  --normal-font-size: 1rem;
-  --small-font-size: 0.85rem;
-  --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  --radius: 1rem;
+:root{
+    --green:#22c55e;
+    --green-dark:#16a34a;
+    --bg:#0b2533;
+    --glass:rgba(255,255,255,.12);
+    --border:rgba(255,255,255,.18);
+    --text-muted:#9ca3af;
 }
 
-@media screen and (min-width: 768px) {
-  :root {
-    --normal-font-size: 1rem;
-    --small-font-size: 0.9rem;
-  }
+*{
+    box-sizing:border-box;
 }
 
-/*===== RESET =====*/
-*,
-::before,
-::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+body{
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:linear-gradient(135deg,#071b26,#0b2533);
+    min-height:100vh;
 }
 
-body {
-  height: 100vh;
-  font-family: var(--body-font);
-  color: var(--first-color-dark);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-image: url("/educa-finanzas/public/img/cole.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  position: relative;
+/* ===== CONTENEDOR ===== */
+.login{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:2rem;
+    position:relative;
+    overflow:hidden;
 }
 
-
-h1{
-  margin: 0;
+/* ===== ONDA ===== */
+.login::after{
+    content:"";
+    position:absolute;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:260px;
+    background:url("data:image/svg+xml,%3Csvg viewBox='0 0 1440 320' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='white' d='M0,192L48,181.3C96,171,192,149,288,160C384,171,480,213,576,213.3C672,213,768,171,864,165.3C960,160,1056,192,1152,197.3C1248,203,1344,181,1392,170.7L1440,160L1440,320L0,320Z'/%3E%3C/svg%3E") no-repeat center bottom;
+    background-size:cover;
+    z-index:-1;
 }
 
-a{
-  text-decoration: none;
+/* ===== CONTENIDO ===== */
+.login__content{
+    width:100%;
+    max-width:950px;
+    display:flex;
+    gap:3rem;
+    backdrop-filter:blur(8px);
 }
 
-img{
-  max-width: 100%;
-  height: auto;
-  display: block;
+/* ===== IMAGEN ===== */
+.login__img{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
-/*===== LOGIN =====*/
-/* ===== LOGIN PAGE LAYOUT ===== */
-.login {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-image: url("/educa-finanzas/public/img/cole.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  position: relative;
-  padding: 2rem;
+.login__img img{
+    max-width:100%;
+    filter:drop-shadow(0 20px 40px rgba(0,0,0,.4));
 }
 
-
-/* Contenedor principal */
-.login__content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 3rem;
-  max-width: 900px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 1.5rem;
-  padding: 3rem 2rem;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-}
-
-.login__img {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.login__img img {
-  width: 260px;
-  height: auto;
-  object-fit: contain;
-  border-radius: 1rem;
-  background-color: rgba(255, 255, 255, 0.85);
-  padding: 1rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-}
+/* ===== FORMS ===== */
 .login__forms{
-  position: relative;
-  height: 368px;
-}
-.login__title {
-  font-size: 1.7rem;
-  font-weight: 700;
-  color: #3a3a3a;
-  margin-bottom: 2rem;
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 }
 
-.login__registre, .login__create{
-  position: absolute;
-  bottom: 1rem;
-  width: 100%;
-  background-color: var(--first-color-lighten);
-  padding: 2rem 1rem;
-  border-radius: 1rem;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(90,139,15,0.15);
-  animation-duration: .4s;
-  animation-name: animate-login;
+/* ===== FORM ===== */
+.login__registre,
+.login__create{
+    width:100%;
+    max-width:380px;
+    background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05));
+    padding:2.5rem 2rem;
+    border-radius:22px;
+    border:1px solid var(--border);
+    box-shadow:0 30px 60px rgba(0,0,0,.35);
+    animation:fadeUp .5s ease;
 }
 
-@keyframes animate-login{
-  0%{
-    transform: scale(1,1);
-  }
-  50%{
-    transform: scale(1.1,1.1);
-  }
-  100%{
-    transform: scale(1,1);
-  }
+@keyframes fadeUp{
+    from{opacity:0; transform:translateY(15px);}
+    to{opacity:1; transform:none;}
 }
 
+.login__title{
+    color:white;
+    font-size:2.2rem;
+    margin-bottom:1.8rem;
+    text-align:center;
+}
 
-
+/* ===== INPUTS ===== */
 .login__box{
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  column-gap: .5rem;
-  padding: 1.125rem 1rem;
-  background-color: #FFF;
-  margin-top: 1rem;
-  border-radius: .5rem;
-  border: 1px solid var(--first-color-light);
-  transition: all 0.3s ease;
+    display:flex;
+    align-items:center;
+    gap:.8rem;
+    background:var(--glass);
+    border:1px solid var(--border);
+    padding:1rem 1.3rem;
+    border-radius:14px;
+    margin-bottom:1.1rem;
+    transition:.3s;
 }
 
-.login__box:focus-within {
-  border-color: #243807;
-  box-shadow: 0 0 10px rgba(163, 245, 39, 0.3);
-}
-.login__icon {
-  color: #222d16;
-  font-size: 1.4rem;
-}
-.login__input {
-  border: none;
-  outline: none;
-  flex: 1;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
+.login__box:focus-within{
+    border-color:var(--green);
+    box-shadow:0 0 0 3px rgba(34,197,94,.15);
 }
 
+.login__icon{
+    font-size:1.25rem;
+    color:var(--text-muted);
+}
+
+.login__input{
+    background:none;
+    border:none;
+    outline:none;
+    color:white;
+    width:100%;
+    font-size:.95rem;
+}
 
 .login__input::placeholder{
-  font-size: var(--normal-font-size);
-  font-family: var(--body-font);
-  color: var(--first-color-light);
+    color:var(--text-muted);
 }
 
-.login__forgot{
-  display: block;
-  width: max-content;
-  margin-left: auto;
-  margin-top: .5rem;
-  font-size: var(--small-font-size);
-  font-weight: 600;
-  color: var(--first-color-light);
-}
-
-.login__button {
-  width: 100%;
-  padding: 0.9rem;
-  border: none;
-  border-radius: 0.6rem;
-  background: linear-gradient(90deg, #a3f527, #5a8b0f);
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: 0.3s;
-  margin-top: 1rem;
+/* ===== BOTÓN ===== */
+.login__button{
+    width:100%;
+    padding:1rem;
+    border-radius:999px;
+    border:none;
+    background:linear-gradient(135deg,var(--green),#4ade80);
+    color:white;
+    font-weight:600;
+    letter-spacing:.5px;
+    margin-top:1.5rem;
+    cursor:pointer;
+    transition:.25s;
 }
 
 .login__button:hover{
-  background-color: var(--first-color-dark);
-  color: #FFF;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(163,245,39,0.3);
+    transform:translateY(-2px);
+    box-shadow:0 15px 30px rgba(34,197,94,.35);
 }
 
-.login__account, .login__signin, .login__signup{
-  font-weight: 600;
-  font-size: var(--small-font-size);
+.login__button:active{
+    transform:none;
 }
 
-.login__account {
-  margin-top: 1rem;
-  font-size: 0.9rem;
-  color: #555;
+/* ===== LINKS ===== */
+.login__account{
+    display:inline-block;
+    margin-top:1.4rem;
+    color:var(--text-muted);
+    font-size:.85rem;
 }
 
-.login__signin, .login__signup{
-  color: var(--first-color);
-  cursor: pointer;
+.login__signin,
+.login__signup{
+    color:var(--green);
+    font-weight:500;
+    cursor:pointer;
 }
 
-.login__social{
-  margin-top: 2rem;
-}
-
-.login__social-icon{
-  font-size: 1.5rem;
-  color: var(--first-color-dark);
-  margin: 0 1.5rem;
-}
-
-/*Show login*/
-.block{
-  display: block;
-}
-
-/*Hidden login*/
+/* ===== OCULTO ===== */
 .none{
-  display: none;
+    display:none;
 }
 
-/* ===== MEDIA QUERIES =====*/
-@media screen and (min-width: 576px){
-  .login__forms{
-    width: 348px;
-    justify-self: center;
-  }
-}
-
-@media screen and (min-width: 1024px){
-  .login{
-    height: 90vh;
-    overflow: hidden;
-  }
-
-  .login__content{
-    grid-template-columns: repeat(2, max-content);
-    justify-content: center;
-    align-items: center;
-    margin-left: 10rem;
-  }
-
-  .login__img{
-    display: flex;
-    width: 600px;
-    height: 588px;
-    background-color: var(--first-color-lighten);
-    border-radius: 1rem;
-    padding-left: 1rem;
-  }
-
-  .login__img img{
-    width: 390px;
-    margin-top: 0;
-  }
-
-  .login__registre, .login__create{
-    left: -11rem;
-  }
-
-  .login__registre{
-    bottom: -2rem;
-  }
-
-  .login__create{
-    bottom: -5.5rem;
-  }
-  
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+    .login__content{
+        flex-direction:column;
+        gap:2rem;
+    }
+    .login__img{
+        display:none;
+    }
 }

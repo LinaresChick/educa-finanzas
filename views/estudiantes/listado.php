@@ -82,6 +82,108 @@ h1, h6 {
   color: white;
 }
 </style>
+<style>
+/* ================= RESPONSIVE MULTIPLATAFORMA ================= */
+
+/* Ajustes generales tabla */
+.table th,
+.table td {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+/* Botones acciones alineados */
+.table td:last-child .btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+    h1 {
+        font-size: 1.4rem;
+    }
+
+    .btn {
+        font-size: 0.85rem;
+    }
+
+    .card-header h6 {
+        font-size: 1rem;
+    }
+}
+
+/* ================= CELULARES ================= */
+@media (max-width: 768px) {
+
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* Tabla → Tarjetas */
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+        width: 100%;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tr {
+        background: #fff;
+        margin-bottom: 16px;
+        border-radius: 12px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        padding: 10px;
+    }
+
+    td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        border: none;
+        border-bottom: 1px solid #eee;
+        font-size: 0.9rem;
+    }
+
+    td:last-child {
+        border-bottom: none;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /* Etiquetas automáticas */
+    td:nth-child(1)::before { content: "ID"; font-weight: 600; }
+    td:nth-child(2)::before { content: "Nombres"; font-weight: 600; }
+    td:nth-child(3)::before { content: "Apellidos"; font-weight: 600; }
+    td:nth-child(4)::before { content: "DNI"; font-weight: 600; }
+    td:nth-child(5)::before { content: "Salón"; font-weight: 600; }
+    td:nth-child(6)::before { content: "Mención"; font-weight: 600; }
+    td:nth-child(7)::before { content: "Monto"; font-weight: 600; }
+    td:nth-child(8)::before { content: "Estado Pago"; font-weight: 600; }
+    td:nth-child(9)::before { content: "Estado"; font-weight: 600; }
+    td:nth-child(10)::before { content: "Acciones"; font-weight: 600; }
+
+    /* Botones full width */
+    .btn-group {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .btn-group .btn {
+        width: 100%;
+    }
+}
+</style>
+
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800"><?php echo $titulo; ?></h1>
